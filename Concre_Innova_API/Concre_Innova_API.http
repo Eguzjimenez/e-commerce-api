@@ -1,0 +1,6 @@
+@Concre_Innova_API_HostAddress = http://localhost:5222
+
+GET {{Concre_Innova_API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
