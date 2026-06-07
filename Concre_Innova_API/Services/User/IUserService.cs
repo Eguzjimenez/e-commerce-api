@@ -5,7 +5,11 @@ namespace Concre_Innova_API.Services
 {
     public interface IUserService
     {
-        Task<User> LoginAsync(string correo, string contrasena);
+        Task<UserLogin> LoginAsync(string correo, string contrasena);
+        Task<UserLogin> ValidateEmailAsync(string correo);
+        Task<UserLogin> ResetPasswordAsync(int idUsuario, string nuevaContrasena);
         Task<IEnumerable<UserResponseDto>> GetUsersAsync();
+        Task<Concre_Innova_API.Models.Entities.User> InsertUserAsync(Concre_Innova_API.Models.Entities.User user);
+        Task<Concre_Innova_API.Models.Entities.User> UpdateUserAsync(Concre_Innova_API.Models.Entities.User user);
     }
 }

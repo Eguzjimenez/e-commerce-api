@@ -1,4 +1,4 @@
-namespace Concre_Innova_API.Models.DTOs.Requests
+namespace Concre_Innova_API.Models.DTOs.Requests.Login
 {
     public class UserLoginDto
     {
