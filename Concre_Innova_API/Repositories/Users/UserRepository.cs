@@ -15,6 +15,89 @@ namespace Concre_Innova_API.Repositories.Users
             _connectionString = configuration.GetConnectionString("DefaultConnection") ?? string.Empty;
         }
 
+        public async Task<Models.Entities.User> UpdateUserAsync(Models.Entities.User user)
+        {
+            var result = new Models.Entities.User();
+
+            await using var conn = new SqlConnection(_connectionString);
+            await using var cmd = new SqlCommand("SP_ActualizarUsuario", conn)
+            {
+                CommandType = CommandType.StoredProcedure
+            };
+
+            cmd.Parameters.AddWithValue("@IdUsuario", user.IdUsuario ?? 0);
+            cmd.Parameters.AddWithValue("@Nombre", user.Nombre ?? string.Empty);
+            cmd.Parameters.AddWithValue("@Apellido", user.Apellido ?? string.Empty);
+            cmd.Parameters.AddWithValue("@Correo", user.Correo ?? string.Empty);
+            // If Contrasena is null or empty, pass DBNull to allow SP to skip password update
+            if (string.IsNullOrEmpty(user.Contrasena))
+                cmd.Parameters.AddWithValue("@Contrasena", DBNull.Value);
+            else
+                cmd.Parameters.AddWithValue("@Contrasena", user.Contrasena);
+
+            cmd.Parameters.AddWithValue("@Telefono", user.Telefono ?? string.Empty);
+            cmd.Parameters.AddWithValue("@IdRol", user.IdRol ?? 0);
+
+            await conn.OpenAsync();
+
+            try
+            {
+                await using var reader = await cmd.ExecuteReaderAsync();
+                if (await reader.ReadAsync())
+                {
+                    result.Codigo = reader.GetInt32(reader.GetOrdinal("Codigo"));
+                    result.Mensaje = reader.GetString(reader.GetOrdinal("Mensaje"));
+                }
+            }
+            catch (Exception ex)
+            {
+                result.Codigo = -1;
+                result.Mensaje = ex.Message;
+            }
+
+            return result;
+        }
+
+        public async Task<Models.Entities.User> InsertUserAsync(Models.Entities.User user)
+        {
+            var result = new Models.Entities.User();
+
+            await using var conn = new SqlConnection(_connectionString);
+            await using var cmd = new SqlCommand("SP_InsertarUsuario", conn)
+            {
+                CommandType = CommandType.StoredProcedure
+            };
+
+            cmd.Parameters.AddWithValue("@Nombre", user.Nombre ?? string.Empty);
+            cmd.Parameters.AddWithValue("@Apellido", user.Apellido ?? string.Empty);
+            cmd.Parameters.AddWithValue("@Correo", user.Correo ?? string.Empty);
+            cmd.Parameters.AddWithValue("@Contrasena", user.Contrasena ?? string.Empty);
+            cmd.Parameters.AddWithValue("@Telefono", user.Telefono ?? string.Empty);
+            cmd.Parameters.AddWithValue("@IdRol", user.IdRol ?? 0);
+
+            await conn.OpenAsync();
+
+            try
+            {
+                await using var reader = await cmd.ExecuteReaderAsync();
+                if (await reader.ReadAsync())
+                {
+                    result.Codigo = reader.GetInt32(reader.GetOrdinal("Codigo"));
+                    result.Mensaje = reader.GetString(reader.GetOrdinal("Mensaje"));
+
+                    if (result.Codigo == 1 && !reader.IsDBNull(reader.GetOrdinal("IdUsuario")))
+                        result.IdUsuario = reader.GetInt32(reader.GetOrdinal("IdUsuario"));
+                }
+            }
+            catch (Exception ex)
+            {
+                result.Codigo = -1;
+                result.Mensaje = ex.Message;
+            }
+
+            return result;
+        }
+
         public async Task<IEnumerable<UserResponseDto>> GetUsersAsync()
         {
             var list = new List<UserResponseDto>();
@@ -44,9 +127,9 @@ namespace Concre_Innova_API.Repositories.Users
             return list;
         }
 
-        public async Task<User> LoginAsync(string correo, string contrasena)
+        public async Task<UserLogin> LoginAsync(string correo, string contrasena)
         {
-            var result = new User();
+            var result = new UserLogin();
 
             await using var conn = new SqlConnection(_connectionString);
             await using var cmd = new SqlCommand("SP_Login", conn)
@@ -69,13 +152,11 @@ namespace Concre_Innova_API.Repositories.Users
 
                     if (result.Codigo == 1)
                     {
-                        result.IdUsuario = reader.GetInt32(reader.GetOrdinal("IdUsuario"));
-                        result.Nombre = reader.GetString(reader.GetOrdinal("Nombre"));
-                        result.Apellido = reader.GetString(reader.GetOrdinal("Apellido"));
-                        result.Correo = reader.GetString(reader.GetOrdinal("Correo"));
-                        result.Telefono = reader.GetString(reader.GetOrdinal("Telefono"));
-                        result.IdRol = reader.GetInt32(reader.GetOrdinal("IdRol"));
-                        result.NombreRol = reader.GetString(reader.GetOrdinal("NombreRol"));
+                        if (!reader.IsDBNull(reader.GetOrdinal("IdUsuario")))
+                            result.IdUsuario = reader.GetInt32(reader.GetOrdinal("IdUsuario"));
+
+                        if (!reader.IsDBNull(reader.GetOrdinal("IdRol")))
+                            result.IdRol = reader.GetInt32(reader.GetOrdinal("IdRol"));
                     }
                 }
             }
