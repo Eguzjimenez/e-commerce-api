@@ -5,6 +5,7 @@ using Concre_Innova_API.Services.Security;
 using Concre_Innova_API.Services;
 using Concre_Innova_API.Repositories.Bitacora;
 using Concre_Innova_API.Services.Bitacora;
+using Concre_Innova_API.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -38,6 +39,7 @@ builder.Services.AddCors(options =>
 // Controllers
 builder.Services.AddControllers();
 
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 builder.Services.AddScoped<Concre_Innova_API.Repositories.Users.IUserRepository, Concre_Innova_API.Repositories.Users.UserRepository>();
 builder.Services.AddScoped<ILoginRepository, LoginRepository>();
 builder.Services.AddScoped<IRecoveryRepository, RecoveryRepository>();

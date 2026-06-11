@@ -1,54 +1,94 @@
-using System.Net;
-using System.Net.Mail;
+using Concre_Innova_API.Models;
+using MailKit.Net.Smtp;
+using MailKit.Security;
+using Microsoft.Extensions.Options;
+using MimeKit;
 
 namespace Concre_Innova_API.Services.Email
 {
     public class EmailService : IEmailService
     {
-        private readonly IConfiguration _configuration;
+        private readonly EmailSettings _settings;
         private readonly ILogger<EmailService> _logger;
 
-        public EmailService(IConfiguration configuration, ILogger<EmailService> logger)
+        public EmailService(IOptions<EmailSettings> settings, ILogger<EmailService> logger)
         {
-            _configuration = configuration;
+            _settings = settings.Value;
             _logger = logger;
         }
 
         public async Task SendWelcomeEmailAsync(string toEmail, string name)
         {
-            var host = _configuration["Email:SmtpHost"];
-            var from = _configuration["Email:From"];
+            await SendEmailAsync(
+                toEmail,
+                "Bienvenido a Concre Innova",
+                $"Hola {name}, tu cuenta de cliente en Concre Innova fue creada correctamente.");
+        }
 
-            if (string.IsNullOrWhiteSpace(host) || string.IsNullOrWhiteSpace(from))
+        public async Task SendPasswordResetNotificationAsync(string toEmail, DateTime changedAt)
+        {
+            var body =
+                "Your password was successfully reset. If this was you, no action is needed. If this was not you, please contact support immediately." +
+                Environment.NewLine +
+                Environment.NewLine +
+                $"Date/time: {changedAt:yyyy-MM-dd HH:mm:ss} UTC";
+
+            await SendEmailAsync(
+                toEmail,
+                "Password reset notification",
+                body);
+        }
+
+        private async Task SendEmailAsync(string toEmail, string subject, string body)
+        {
+            if (string.IsNullOrWhiteSpace(_settings.Host) ||
+                string.IsNullOrWhiteSpace(_settings.SenderEmail))
             {
-                _logger.LogInformation("Correo de bienvenida simulado para {Email}.", toEmail);
+                _logger.LogInformation(
+                    "Correo simulado para {Email}. Asunto: {Subject}",
+                    toEmail,
+                    subject);
                 return;
             }
 
-            using var message = new MailMessage(from, toEmail)
-            {
-                Subject = "Bienvenido a Concre Innova",
-                Body = $"Hola {name}, tu cuenta de cliente en Concre Innova fue creada correctamente."
-            };
-
-            using var client = new SmtpClient(host)
-            {
-                Port = int.TryParse(_configuration["Email:SmtpPort"], out var port) ? port : 587,
-                EnableSsl = bool.TryParse(_configuration["Email:EnableSsl"], out var ssl) && ssl
-            };
-
-            var user = _configuration["Email:Username"];
-            var password = _configuration["Email:Password"];
-            if (!string.IsNullOrWhiteSpace(user) && !string.IsNullOrWhiteSpace(password))
-                client.Credentials = new NetworkCredential(user, password);
+            var message = new MimeMessage();
+            message.From.Add(new MailboxAddress(
+                _settings.SenderName ?? "Concre Innova",
+                _settings.SenderEmail));
+            message.To.Add(MailboxAddress.Parse(toEmail));
+            message.Subject = subject;
+            message.Body = new TextPart("plain") { Text = body };
 
             try
             {
-                await client.SendMailAsync(message);
+                using var client = new SmtpClient();
+                var socketOptions = _settings.UseSsl
+                    ? SecureSocketOptions.SslOnConnect
+                    : SecureSocketOptions.StartTlsWhenAvailable;
+
+                await client.ConnectAsync(_settings.Host, _settings.Port, socketOptions);
+
+                if (!string.IsNullOrWhiteSpace(_settings.Username) &&
+                    !string.IsNullOrWhiteSpace(_settings.Password))
+                {
+                    await client.AuthenticateAsync(_settings.Username, _settings.Password);
+                }
+
+                await client.SendAsync(message);
+                await client.DisconnectAsync(true);
+
+                _logger.LogInformation(
+                    "Correo {Subject} enviado a {Email}.",
+                    subject,
+                    toEmail);
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "No se pudo enviar el correo de bienvenida a {Email}.", toEmail);
+                _logger.LogWarning(
+                    ex,
+                    "No se pudo enviar el correo {Subject} a {Email}.",
+                    subject,
+                    toEmail);
             }
         }
     }

@@ -111,6 +111,13 @@ namespace Concre_Innova_API.Controllers
                 request.IdUsuario,
                 request.NuevaContrasena);
 
+            if (result.Codigo == 1)
+            {
+                var user = await _userService.GetUserByIdAsync(request.IdUsuario);
+                if (!string.IsNullOrWhiteSpace(user?.Correo))
+                    await _emailService.SendPasswordResetNotificationAsync(user.Correo, DateTime.UtcNow);
+            }
+
             return Ok(result);
         }
 
