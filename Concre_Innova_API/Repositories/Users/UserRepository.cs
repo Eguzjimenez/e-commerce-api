@@ -1,6 +1,7 @@
 using Concre_Innova_API.Models.DTOs.Responses;
 using Concre_Innova_API.Models.DTOs.Requests;
 using Concre_Innova_API.Models.Entities;
+using Concre_Innova_API.Security;
 using Microsoft.Data.SqlClient;
 using System.Data;
 
@@ -127,6 +128,82 @@ namespace Concre_Innova_API.Repositories.Users
             return list;
         }
 
+        public async Task<UserDetailResponseDto?> GetUserByIdAsync(int idUsuario)
+        {
+            await using var conn = new SqlConnection(_connectionString);
+            await using var cmd = new SqlCommand(@"
+                SELECT
+                    u.IdUsuario,
+                    u.Nombre,
+                    u.Apellido,
+                    u.Correo,
+                    u.Telefono,
+                    u.Estado,
+                    u.FechaRegistro,
+                    u.IdRol,
+                    r.NombreRol
+                FROM Usuarios u
+                INNER JOIN Roles r ON r.IdRol = u.IdRol
+                WHERE u.IdUsuario = @IdUsuario;", conn)
+            {
+                CommandType = CommandType.Text
+            };
+
+            cmd.Parameters.AddWithValue("@IdUsuario", idUsuario);
+
+            await conn.OpenAsync();
+
+            await using var reader = await cmd.ExecuteReaderAsync();
+            if (!await reader.ReadAsync())
+                return null;
+
+            return new UserDetailResponseDto
+            {
+                IdUsuario = reader.GetInt32(reader.GetOrdinal("IdUsuario")),
+                Nombre = reader.GetString(reader.GetOrdinal("Nombre")),
+                Apellido = reader.GetString(reader.GetOrdinal("Apellido")),
+                Correo = reader.GetString(reader.GetOrdinal("Correo")),
+                Telefono = reader.IsDBNull(reader.GetOrdinal("Telefono")) ? string.Empty : reader.GetString(reader.GetOrdinal("Telefono")),
+                Estado = reader.IsDBNull(reader.GetOrdinal("Estado")) ? string.Empty : reader.GetString(reader.GetOrdinal("Estado")),
+                FechaRegistro = reader.IsDBNull(reader.GetOrdinal("FechaRegistro")) ? null : reader.GetDateTime(reader.GetOrdinal("FechaRegistro")),
+                IdRol = reader.GetInt32(reader.GetOrdinal("IdRol")),
+                NombreRol = reader.GetString(reader.GetOrdinal("NombreRol"))
+            };
+        }
+
+        public async Task<Models.Entities.User> DeactivateUserAsync(int idUsuario)
+        {
+            var result = new Models.Entities.User();
+
+            await using var conn = new SqlConnection(_connectionString);
+            await using var cmd = new SqlCommand("SP_DesactivarUsuario", conn)
+            {
+                CommandType = CommandType.StoredProcedure
+            };
+
+            cmd.Parameters.AddWithValue("@IdUsuario", idUsuario);
+
+            await conn.OpenAsync();
+
+            try
+            {
+                await using var reader = await cmd.ExecuteReaderAsync();
+                if (await reader.ReadAsync())
+                {
+                    result.Codigo = reader.GetInt32(reader.GetOrdinal("Codigo"));
+                    result.Mensaje = reader.GetString(reader.GetOrdinal("Mensaje"));
+                    result.IdUsuario = idUsuario;
+                }
+            }
+            catch (Exception ex)
+            {
+                result.Codigo = -1;
+                result.Mensaje = ex.Message;
+            }
+
+            return result;
+        }
+
         public async Task<UserLogin> LoginAsync(string correo, string contrasena)
         {
             var result = new UserLogin();
@@ -157,6 +234,14 @@ namespace Concre_Innova_API.Repositories.Users
 
                         if (!reader.IsDBNull(reader.GetOrdinal("IdRol")))
                             result.IdRol = reader.GetInt32(reader.GetOrdinal("IdRol"));
+
+                        if (result.IdRol == AppRoles.Inactivo)
+                        {
+                            result.Codigo = 0;
+                            result.Mensaje = "La cuenta se encuentra inactiva.";
+                            result.IdUsuario = null;
+                            result.IdRol = null;
+                        }
                     }
                 }
             }
