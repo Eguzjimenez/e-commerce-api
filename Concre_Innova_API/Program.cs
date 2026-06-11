@@ -3,6 +3,8 @@ using Concre_Innova_API.Services.Audit;
 using Concre_Innova_API.Services.Email;
 using Concre_Innova_API.Services.Security;
 using Concre_Innova_API.Services;
+using Concre_Innova_API.Repositories.Bitacora;
+using Concre_Innova_API.Services.Bitacora;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -47,6 +49,9 @@ builder.Services.AddScoped<IRequestUserContextService, RequestUserContextService
 builder.Services.AddScoped<IAuditService, AuditService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 
+// Bitacora
+builder.Services.AddScoped<IBitacoraRepository, BitacoraRepository>();
+builder.Services.AddScoped<IBitacoraService, BitacoraService>();
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
