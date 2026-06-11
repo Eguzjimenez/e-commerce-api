@@ -1,5 +1,7 @@
 using Concre_Innova_API.Repositories.Login;
 using Concre_Innova_API.Services;
+using Concre_Innova_API.Repositories.Bitacora;
+using Concre_Innova_API.Services.Bitacora;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,7 +31,9 @@ builder.Services.AddScoped<Concre_Innova_API.Services.IUserService, Concre_Innov
 builder.Services.AddScoped<IPasswordResetRepository, PasswordResetRepository>();
 builder.Services.AddScoped<Concre_Innova_API.Repositories.Roles.IRoleRepository, Concre_Innova_API.Repositories.Roles.RoleRepository>();
 builder.Services.AddScoped<Concre_Innova_API.Services.Role.IRoleService, Concre_Innova_API.Services.Role.RoleService>();
-
+// Bitacora
+builder.Services.AddScoped<IBitacoraRepository, BitacoraRepository>();
+builder.Services.AddScoped<IBitacoraService, BitacoraService>();
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
