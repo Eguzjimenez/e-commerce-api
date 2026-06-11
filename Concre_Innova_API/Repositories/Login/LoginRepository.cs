@@ -1,4 +1,5 @@
 using Concre_Innova_API.Models.Entities;
+using Concre_Innova_API.Security;
 using Microsoft.Data.SqlClient;
 using System.Data;
 
@@ -43,6 +44,14 @@ namespace Concre_Innova_API.Repositories.Login
 
                         if (!reader.IsDBNull(reader.GetOrdinal("IdRol")))
                             result.IdRol = reader.GetInt32(reader.GetOrdinal("IdRol"));
+
+                        if (result.IdRol == AppRoles.Inactivo)
+                        {
+                            result.Codigo = 0;
+                            result.Mensaje = "La cuenta se encuentra inactiva.";
+                            result.IdUsuario = null;
+                            result.IdRol = null;
+                        }
                     }
                 }
             }

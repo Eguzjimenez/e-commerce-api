@@ -35,6 +35,11 @@ namespace Concre_Innova_API.Services
             return _repo.GetUsersAsync();
         }
 
+        public Task<UserDetailResponseDto?> GetUserByIdAsync(int idUsuario)
+        {
+            return _repo.GetUserByIdAsync(idUsuario);
+        }
+
         public Task<UserLogin> ResetPasswordAsync(int idUsuario, string nuevaContrasena)
         {
             return _passwordResetRepo.ResetPasswordAsync(idUsuario, nuevaContrasena);
@@ -48,6 +53,11 @@ namespace Concre_Innova_API.Services
         public Task<Models.Entities.User> UpdateUserAsync(Models.Entities.User user)
         {
             return _repo.UpdateUserAsync(user);
+        }
+
+        public Task<Models.Entities.User> DeactivateUserAsync(int idUsuario)
+        {
+            return _repo.DeactivateUserAsync(idUsuario);
         }
     }
 }

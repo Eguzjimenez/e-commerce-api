@@ -9,7 +9,9 @@ namespace Concre_Innova_API.Repositories.Users
     public interface IUserRepository
     {
         Task<IEnumerable<UserResponseDto>> GetUsersAsync();
+        Task<UserDetailResponseDto?> GetUserByIdAsync(int idUsuario);
         Task<Concre_Innova_API.Models.Entities.User> InsertUserAsync(Concre_Innova_API.Models.Entities.User user);
         Task<Concre_Innova_API.Models.Entities.User> UpdateUserAsync(Concre_Innova_API.Models.Entities.User user);
+        Task<Concre_Innova_API.Models.Entities.User> DeactivateUserAsync(int idUsuario);
     }
 }
