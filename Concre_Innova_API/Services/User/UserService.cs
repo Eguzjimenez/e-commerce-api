@@ -12,7 +12,11 @@ namespace Concre_Innova_API.Services
         private readonly IRecoveryRepository _recoveryRepo;
         private readonly IPasswordResetRepository _passwordResetRepo;
 
-        public UserService(IUserRepository repo, ILoginRepository loginRepo, IRecoveryRepository recoveryRepo, IPasswordResetRepository passwordResetRepo)
+        public UserService(
+            IUserRepository repo,
+            ILoginRepository loginRepo,
+            IRecoveryRepository recoveryRepo,
+            IPasswordResetRepository passwordResetRepo)
         {
             _repo = repo;
             _loginRepo = loginRepo;
@@ -28,6 +32,18 @@ namespace Concre_Innova_API.Services
         public Task<UserLogin> ValidateEmailAsync(string correo)
         {
             return _recoveryRepo.ValidateEmailAsync(correo);
+        }
+
+        // NUEVO
+        public Task<UserLogin> GenerateRecoveryTokenAsync(int idUsuario, string correo)
+        {
+            return _recoveryRepo.GenerateRecoveryTokenAsync(idUsuario, correo);
+        }
+
+        // NUEVO
+        public Task<UserLogin> ValidateRecoveryTokenAsync(string token)
+        {
+            return _recoveryRepo.ValidateRecoveryTokenAsync(token);
         }
 
         public Task<IEnumerable<UserResponseDto>> GetUsersAsync()

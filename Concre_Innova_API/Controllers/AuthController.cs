@@ -29,6 +29,7 @@ namespace Concre_Innova_API.Controllers
                 return BadRequest(new { message = "Correo y Contrasena son requeridos." });
 
             UserLogin result = await _userService.LoginAsync(request.Correo, request.Contrasena);
+
             if (result.Codigo != 1)
                 return Unauthorized(result);
 
@@ -53,6 +54,7 @@ namespace Concre_Innova_API.Controllers
                 return BadRequest(new { message = "El formato del correo no es valido." });
 
             var (nombre, apellido) = SplitFullName(request.Nombre);
+
             var user = new User
             {
                 Nombre = nombre,
@@ -64,15 +66,21 @@ namespace Concre_Innova_API.Controllers
             };
 
             var result = await _userService.InsertUserAsync(user);
+
             if (result == null)
                 return StatusCode(500, "Error creating client");
 
             if (result.Codigo != 1)
                 return BadRequest(result.Mensaje);
 
-            await _emailService.SendWelcomeEmailAsync(request.Correo.Trim(), request.Nombre.Trim());
+            await _emailService.SendWelcomeEmailAsync(
+                request.Correo.Trim(),
+                request.Nombre.Trim());
 
-            return CreatedAtAction(nameof(Login), new { id = result.IdUsuario }, result);
+            return CreatedAtAction(
+                nameof(Login),
+                new { id = result.IdUsuario },
+                result);
         }
 
         [HttpPost("validate-email")]
@@ -82,16 +90,62 @@ namespace Concre_Innova_API.Controllers
                 return BadRequest(new { message = "Correo es requerido." });
 
             var result = await _userService.ValidateEmailAsync(request.Correo);
+
             return Ok(result);
         }
 
         [HttpPost("reset-password")]
         public async Task<IActionResult> ResetPassword([FromBody] PasswordResetRequest request)
         {
-            if (request == null || request.IdUsuario <= 0 || string.IsNullOrEmpty(request.NuevaContrasena))
-                return BadRequest(new { message = "IdUsuario y NuevaContrasena son requeridos." });
+            if (request == null ||
+                request.IdUsuario <= 0 ||
+                string.IsNullOrEmpty(request.NuevaContrasena))
+            {
+                return BadRequest(new
+                {
+                    message = "IdUsuario y NuevaContrasena son requeridos."
+                });
+            }
 
-            var result = await _userService.ResetPasswordAsync(request.IdUsuario, request.NuevaContrasena);
+            var result = await _userService.ResetPasswordAsync(
+                request.IdUsuario,
+                request.NuevaContrasena);
+
+            return Ok(result);
+        }
+
+        [HttpPost("generate-recovery-token")]
+        public async Task<IActionResult> GenerateRecoveryToken([FromBody] EmailValidationRequest request)
+        {
+            if (request == null || string.IsNullOrWhiteSpace(request.Correo))
+                return BadRequest(new { message = "Correo es requerido." });
+
+            var validationResult = await _userService.ValidateEmailAsync(request.Correo);
+
+            if (validationResult.Codigo != 1)
+                return BadRequest(validationResult);
+
+            if (!validationResult.IdUsuario.HasValue)
+                return BadRequest(new { message = "No se pudo identificar el usuario." });
+
+            var tokenResult = await _userService.GenerateRecoveryTokenAsync(
+                validationResult.IdUsuario.Value,
+                request.Correo);
+
+            return Ok(tokenResult);
+        }
+
+        [HttpPost("validate-recovery-token")]
+        public async Task<IActionResult> ValidateRecoveryToken([FromBody] string token)
+        {
+            if (string.IsNullOrWhiteSpace(token))
+                return BadRequest(new { message = "El token es requerido." });
+
+            var result = await _userService.ValidateRecoveryTokenAsync(token);
+
+            if (result.Codigo != 1)
+                return BadRequest(result);
+
             return Ok(result);
         }
 
@@ -100,6 +154,7 @@ namespace Concre_Innova_API.Controllers
             try
             {
                 var address = new MailAddress(email);
+
                 return address.Address == email.Trim();
             }
             catch
@@ -110,9 +165,19 @@ namespace Concre_Innova_API.Controllers
 
         private static (string Nombre, string Apellido) SplitFullName(string fullName)
         {
-            var parts = fullName.Trim().Split(' ', 2, StringSplitOptions.RemoveEmptyEntries);
-            var nombre = parts.Length > 0 ? parts[0] : string.Empty;
-            var apellido = parts.Length > 1 ? parts[1] : "Cliente";
+            var parts = fullName
+                .Trim()
+                .Split(' ', 2, StringSplitOptions.RemoveEmptyEntries);
+
+            var nombre =
+                parts.Length > 0
+                    ? parts[0]
+                    : string.Empty;
+
+            var apellido =
+                parts.Length > 1
+                    ? parts[1]
+                    : "Cliente";
 
             return (nombre, apellido);
         }

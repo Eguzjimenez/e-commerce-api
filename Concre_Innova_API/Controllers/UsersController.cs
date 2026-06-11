@@ -6,6 +6,7 @@ using Concre_Innova_API.Models.Entities;
 using Concre_Innova_API.Security;
 using Concre_Innova_API.Services.Audit;
 using Concre_Innova_API.Services.Security;
+using System.Net.Mail;
 
 namespace Concre_Innova_API.Controllers
 {
@@ -77,13 +78,28 @@ namespace Concre_Innova_API.Controllers
             if (request == null)
                 return BadRequest(new { message = "La informacion del usuario es requerida." });
 
+            if (string.IsNullOrWhiteSpace(request.Nombre) ||
+                string.IsNullOrWhiteSpace(request.Apellido) ||
+                string.IsNullOrWhiteSpace(request.Correo) ||
+                string.IsNullOrWhiteSpace(request.Contrasena) ||
+                string.IsNullOrWhiteSpace(request.Telefono) ||
+                request.IdRol <= 0)
+            {
+                return BadRequest(new { message = "Todos los campos son obligatorios." });
+            }
+
+            if (!IsValidEmail(request.Correo))
+            {
+                return BadRequest(new { message = "El formato del correo no es valido." });
+            }
+
             var user = new User
             {
                 Nombre = request.Nombre,
                 Apellido = request.Apellido,
-                Correo = request.Correo,
+                Correo = request.Correo.Trim(),
                 Contrasena = request.Contrasena,
-                Telefono = request.Telefono,
+                Telefono = request.Telefono.Trim(),
                 IdRol = request.IdRol
             };
 
@@ -117,14 +133,28 @@ namespace Concre_Innova_API.Controllers
             if (request == null || request.IdUsuario <= 0)
                 return BadRequest(new { message = "La informacion del usuario es requerida." });
 
+            if (string.IsNullOrWhiteSpace(request.Nombre) ||
+                string.IsNullOrWhiteSpace(request.Apellido) ||
+                string.IsNullOrWhiteSpace(request.Correo) ||
+                string.IsNullOrWhiteSpace(request.Telefono) ||
+                request.IdRol <= 0)
+            {
+                return BadRequest(new { message = "Nombre, apellido, correo, telefono e IdRol son requeridos." });
+            }
+
+            if (!IsValidEmail(request.Correo))
+            {
+                return BadRequest(new { message = "El formato del correo no es valido." });
+            }
+
             var user = new User
             {
                 IdUsuario = request.IdUsuario,
                 Nombre = request.Nombre,
                 Apellido = request.Apellido,
-                Correo = request.Correo,
+                Correo = request.Correo.Trim(),
                 Contrasena = request.Contrasena,
-                Telefono = request.Telefono,
+                Telefono = request.Telefono.Trim(),
                 IdRol = request.IdRol
             };
 
@@ -172,6 +202,19 @@ namespace Concre_Innova_API.Controllers
             }
 
             return BadRequest(result.Mensaje);
+        }
+
+        private static bool IsValidEmail(string email)
+        {
+            try
+            {
+                var address = new MailAddress(email);
+                return address.Address == email.Trim();
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         private async Task<ActionResult?> RequireAdminAsync(
