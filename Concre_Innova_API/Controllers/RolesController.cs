@@ -1,9 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
-using Concre_Innova_API.Services.Role;
-using Concre_Innova_API.Models.DTOs.Responses;
-using Concre_Innova_API.Security;
-using Concre_Innova_API.Services.Audit;
-using Concre_Innova_API.Services.Security;
+using Concre_Innova_API.Application.Interfaces.Services;
+using Concre_Innova_API.Application.DTOs.Responses;
+using Concre_Innova_API.Domain.Constants;
 
 namespace Concre_Innova_API.Controllers
 {

@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
-using Concre_Innova_API.Models.DTOs.Requests;
-using Concre_Innova_API.Services.Bitacora;
+using Concre_Innova_API.Application.DTOs.Requests;
+using Concre_Innova_API.Application.Interfaces.Services;
 
 namespace Concre_Innova_API.Controllers
 {
