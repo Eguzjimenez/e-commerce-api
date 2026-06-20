@@ -1,12 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
-using Concre_Innova_API.Models.DTOs.Responses;
-using Concre_Innova_API.Services;
-using Concre_Innova_API.Models.DTOs.Requests;
-using Concre_Innova_API.Models.Entities;
-using Concre_Innova_API.Security;
-using Concre_Innova_API.Services.Audit;
-using Concre_Innova_API.Services.Security;
-using System.Net.Mail;
+using Concre_Innova_API.Application.Mappers;
+using Concre_Innova_API.Application.DTOs.Responses;
+using Concre_Innova_API.Application.Interfaces.Services;
+using Concre_Innova_API.Application.Interfaces.Validators;
+using Concre_Innova_API.Application.DTOs.Requests;
+using Concre_Innova_API.Application.Security;
+using Concre_Innova_API.Domain.Entities;
+using Concre_Innova_API.Domain.Constants;
 
 namespace Concre_Innova_API.Controllers
 {
@@ -17,15 +17,18 @@ namespace Concre_Innova_API.Controllers
         private readonly IUserService _userService;
         private readonly IRequestUserContextService _requestUserContextService;
         private readonly IAuditService _auditService;
+        private readonly IUserRequestValidator _validator;
 
         public UsersController(
             IUserService userService,
             IRequestUserContextService requestUserContextService,
-            IAuditService auditService)
+            IAuditService auditService,
+            IUserRequestValidator validator)
         {
             _userService = userService;
             _requestUserContextService = requestUserContextService;
             _auditService = auditService;
+            _validator = validator;
         }
 
         [HttpGet("UserList")]
@@ -75,34 +78,11 @@ namespace Concre_Innova_API.Controllers
             if (denied != null)
                 return denied;
 
-            if (request == null)
-                return BadRequest(new { message = "La informacion del usuario es requerida." });
+            var validationMessage = _validator.ValidateCreate(request);
+            if (validationMessage != null)
+                return BadRequest(new { message = validationMessage });
 
-            if (string.IsNullOrWhiteSpace(request.Nombre) ||
-                string.IsNullOrWhiteSpace(request.Apellido) ||
-                string.IsNullOrWhiteSpace(request.Correo) ||
-                string.IsNullOrWhiteSpace(request.Contrasena) ||
-                string.IsNullOrWhiteSpace(request.Telefono) ||
-                request.IdRol <= 0)
-            {
-                return BadRequest(new { message = "Todos los campos son obligatorios." });
-            }
-
-            if (!IsValidEmail(request.Correo))
-            {
-                return BadRequest(new { message = "El formato del correo no es valido." });
-            }
-
-            var user = new User
-            {
-                Nombre = request.Nombre,
-                Apellido = request.Apellido,
-                Correo = request.Correo.Trim(),
-                Contrasena = request.Contrasena,
-                Telefono = request.Telefono.Trim(),
-                IdRol = request.IdRol
-            };
-
+            var user = request.ToUser();
             var result = await _userService.InsertUserAsync(user);
 
             if (result == null)
@@ -130,34 +110,11 @@ namespace Concre_Innova_API.Controllers
             if (denied != null)
                 return denied;
 
-            if (request == null || request.IdUsuario <= 0)
-                return BadRequest(new { message = "La informacion del usuario es requerida." });
+            var validationMessage = _validator.ValidateUpdate(request);
+            if (validationMessage != null)
+                return BadRequest(new { message = validationMessage });
 
-            if (string.IsNullOrWhiteSpace(request.Nombre) ||
-                string.IsNullOrWhiteSpace(request.Apellido) ||
-                string.IsNullOrWhiteSpace(request.Correo) ||
-                string.IsNullOrWhiteSpace(request.Telefono) ||
-                request.IdRol <= 0)
-            {
-                return BadRequest(new { message = "Nombre, apellido, correo, telefono e IdRol son requeridos." });
-            }
-
-            if (!IsValidEmail(request.Correo))
-            {
-                return BadRequest(new { message = "El formato del correo no es valido." });
-            }
-
-            var user = new User
-            {
-                IdUsuario = request.IdUsuario,
-                Nombre = request.Nombre,
-                Apellido = request.Apellido,
-                Correo = request.Correo.Trim(),
-                Contrasena = request.Contrasena,
-                Telefono = request.Telefono.Trim(),
-                IdRol = request.IdRol
-            };
-
+            var user = request.ToUser();
             var result = await _userService.UpdateUserAsync(user);
 
             if (result == null)
@@ -202,19 +159,6 @@ namespace Concre_Innova_API.Controllers
             }
 
             return BadRequest(result.Mensaje);
-        }
-
-        private static bool IsValidEmail(string email)
-        {
-            try
-            {
-                var address = new MailAddress(email);
-                return address.Address == email.Trim();
-            }
-            catch
-            {
-                return false;
-            }
         }
 
         private async Task<ActionResult?> RequireAdminAsync(

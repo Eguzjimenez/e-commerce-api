@@ -1,11 +1,4 @@
-using Concre_Innova_API.Repositories.Login;
-using Concre_Innova_API.Services.Audit;
-using Concre_Innova_API.Services.Email;
-using Concre_Innova_API.Services.Security;
-using Concre_Innova_API.Services;
-using Concre_Innova_API.Repositories.Bitacora;
-using Concre_Innova_API.Services.Bitacora;
-using Concre_Innova_API.Models;
+using Concre_Innova_API.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -38,22 +31,7 @@ builder.Services.AddCors(options =>
 
 // Controllers
 builder.Services.AddControllers();
-
-builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
-builder.Services.AddScoped<Concre_Innova_API.Repositories.Users.IUserRepository, Concre_Innova_API.Repositories.Users.UserRepository>();
-builder.Services.AddScoped<ILoginRepository, LoginRepository>();
-builder.Services.AddScoped<IRecoveryRepository, RecoveryRepository>();
-builder.Services.AddScoped<Concre_Innova_API.Services.IUserService, Concre_Innova_API.Services.UserService>();
-builder.Services.AddScoped<IPasswordResetRepository, PasswordResetRepository>();
-builder.Services.AddScoped<Concre_Innova_API.Repositories.Roles.IRoleRepository, Concre_Innova_API.Repositories.Roles.RoleRepository>();
-builder.Services.AddScoped<Concre_Innova_API.Services.Role.IRoleService, Concre_Innova_API.Services.Role.RoleService>();
-builder.Services.AddScoped<IRequestUserContextService, RequestUserContextService>();
-builder.Services.AddScoped<IAuditService, AuditService>();
-builder.Services.AddScoped<IEmailService, EmailService>();
-
-// Bitacora
-builder.Services.AddScoped<IBitacoraRepository, BitacoraRepository>();
-builder.Services.AddScoped<IBitacoraService, BitacoraService>();
+builder.Services.AddApplicationServices(builder.Configuration);
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())

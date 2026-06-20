@@ -19,7 +19,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Mappers\" />
     <Folder Include="wwwroot\swagger-ui\" />
   </ItemGroup>
 
