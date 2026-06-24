@@ -1,9 +1,10 @@
-using Microsoft.AspNetCore.Mvc;
-using Concre_Innova_API.Application.Interfaces.Services;
 using Concre_Innova_API.Application.DTOs.Requests;
 using Concre_Innova_API.Application.DTOs.Responses;
+using Concre_Innova_API.Application.Interfaces.Services;
+using Concre_Innova_API.Application.Interfaces.Validators;
 using Concre_Innova_API.Application.Security;
 using Concre_Innova_API.Domain.Constants;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Concre_Innova_API.Controllers
 {
@@ -14,30 +15,65 @@ namespace Concre_Innova_API.Controllers
         private readonly ICatalogoService _catalogoService;
         private readonly IRequestUserContextService _requestUserContextService;
         private readonly IAuditService _auditService;
+        private readonly IProductoRequestValidator _productoRequestValidator;
 
         public ProductosController(
             ICatalogoService catalogoService,
             IRequestUserContextService requestUserContextService,
-            IAuditService auditService)
+            IAuditService auditService,
+            IProductoRequestValidator productoRequestValidator)
         {
             _catalogoService = catalogoService;
             _requestUserContextService = requestUserContextService;
             _auditService = auditService;
+            _productoRequestValidator = productoRequestValidator;
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<CatalogoProductoResponseDto>>> ObtenerCatalogoProductos()
+        public async Task<ActionResult<IEnumerable<CatalogoProductoResponseDto>>> ObtenerCatalogoProductos(
+            [FromQuery] string? busqueda = null,
+            [FromQuery] string? ordenarPor = null,
+            [FromQuery] string? direccionOrden = null,
+            [FromQuery] int? idCategoria = null)
         {
             try
             {
-                var productos = await _catalogoService.ObtenerCatalogoProductosAsync();
+                var query = new CatalogoProductoQuery
+                {
+                    Busqueda = busqueda,
+                    OrdenarPor = ordenarPor,
+                    DireccionOrden = direccionOrden,
+                    IdCategoria = idCategoria
+                };
+
+                var productos = await _catalogoService.ObtenerCatalogoProductosAsync(query);
                 return Ok(productos);
             }
             catch (Exception ex)
             {
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
-                    new { message = "Error al obtener el catálogo de productos.", error = ex.Message });
+                    new { message = "Error al obtener el catalogo de productos.", error = ex.Message });
+            }
+        }
+
+        [HttpGet("{idProducto:int}")]
+        public async Task<ActionResult<CatalogoProductoResponseDto>> ObtenerProductoPorId(int idProducto)
+        {
+            try
+            {
+                var producto = await _catalogoService.ObtenerProductoPorIdAsync(idProducto);
+
+                if (producto is null)
+                    return NotFound(new { message = "Producto no encontrado." });
+
+                return Ok(producto);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(
+                    StatusCodes.Status500InternalServerError,
+                    new { message = "Error al obtener el detalle del producto.", error = ex.Message });
             }
         }
 
@@ -48,6 +84,10 @@ namespace Concre_Innova_API.Controllers
             var denied = await RequireAdminAsync(userContext, "Productos", "CREATE");
             if (denied != null)
                 return denied;
+
+            var validationMessage = _productoRequestValidator.ValidateCreate(request);
+            if (validationMessage is not null)
+                return BadRequest(new { message = validationMessage });
 
             await _auditService.RecordAsync(
                 userContext,
@@ -69,16 +109,14 @@ namespace Concre_Innova_API.Controllers
 
                     return Ok(result);
                 }
-                else
-                {
-                    await _auditService.RecordAsync(
-                        userContext,
-                        "Productos",
-                        "FAILED",
-                        $"Error al insertar producto: {result.Mensaje}");
 
-                    return BadRequest(result);
-                }
+                await _auditService.RecordAsync(
+                    userContext,
+                    "Productos",
+                    "FAILED",
+                    $"Error al insertar producto: {result.Mensaje}");
+
+                return BadRequest(result);
             }
             catch (Exception ex)
             {
@@ -86,7 +124,7 @@ namespace Concre_Innova_API.Controllers
                     userContext,
                     "Productos",
                     "ERROR",
-                    $"Excepción al insertar producto: {ex.Message}");
+                    $"Excepcion al insertar producto: {ex.Message}");
 
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
@@ -94,13 +132,19 @@ namespace Concre_Innova_API.Controllers
             }
         }
 
-        [HttpPut("{idProducto}")]
-        public async Task<ActionResult<OperacionResponseDto>> ActualizarProducto(int idProducto, [FromBody] UpdateProductoRequest request)
+        [HttpPut("{idProducto:int}")]
+        public async Task<ActionResult<OperacionResponseDto>> ActualizarProducto(
+            int idProducto,
+            [FromBody] UpdateProductoRequest request)
         {
             var userContext = _requestUserContextService.GetCurrentUser(HttpContext);
             var denied = await RequireAdminAsync(userContext, "Productos", "UPDATE");
             if (denied != null)
                 return denied;
+
+            var validationMessage = _productoRequestValidator.ValidateUpdate(request);
+            if (validationMessage is not null)
+                return BadRequest(new { message = validationMessage });
 
             if (idProducto != request.IdProducto)
             {
@@ -127,16 +171,14 @@ namespace Concre_Innova_API.Controllers
 
                     return Ok(result);
                 }
-                else
-                {
-                    await _auditService.RecordAsync(
-                        userContext,
-                        "Productos",
-                        "FAILED",
-                        $"Error al actualizar producto ID: {idProducto}. {result.Mensaje}");
 
-                    return BadRequest(result);
-                }
+                await _auditService.RecordAsync(
+                    userContext,
+                    "Productos",
+                    "FAILED",
+                    $"Error al actualizar producto ID: {idProducto}. {result.Mensaje}");
+
+                return BadRequest(result);
             }
             catch (Exception ex)
             {
@@ -144,7 +186,7 @@ namespace Concre_Innova_API.Controllers
                     userContext,
                     "Productos",
                     "ERROR",
-                    $"Excepción al actualizar producto ID: {idProducto}. {ex.Message}");
+                    $"Excepcion al actualizar producto ID: {idProducto}. {ex.Message}");
 
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
@@ -152,7 +194,7 @@ namespace Concre_Innova_API.Controllers
             }
         }
 
-        [HttpDelete("{idProducto}")]
+        [HttpDelete("{idProducto:int}")]
         public async Task<ActionResult<OperacionResponseDto>> EliminarProducto(int idProducto)
         {
             var userContext = _requestUserContextService.GetCurrentUser(HttpContext);
@@ -180,16 +222,14 @@ namespace Concre_Innova_API.Controllers
 
                     return Ok(result);
                 }
-                else
-                {
-                    await _auditService.RecordAsync(
-                        userContext,
-                        "Productos",
-                        "FAILED",
-                        $"Error al eliminar producto ID: {idProducto}. {result.Mensaje}");
 
-                    return BadRequest(result);
-                }
+                await _auditService.RecordAsync(
+                    userContext,
+                    "Productos",
+                    "FAILED",
+                    $"Error al eliminar producto ID: {idProducto}. {result.Mensaje}");
+
+                return BadRequest(result);
             }
             catch (Exception ex)
             {
@@ -197,7 +237,7 @@ namespace Concre_Innova_API.Controllers
                     userContext,
                     "Productos",
                     "ERROR",
-                    $"Excepción al eliminar producto ID: {idProducto}. {ex.Message}");
+                    $"Excepcion al eliminar producto ID: {idProducto}. {ex.Message}");
 
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,

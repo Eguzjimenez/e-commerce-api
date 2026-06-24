@@ -19,6 +19,21 @@ namespace Concre_Innova_API.Application.Services
             return _repo.ObtenerCatalogoProductosAsync();
         }
 
+        public Task<IEnumerable<CatalogoProductoResponseDto>> ObtenerCatalogoProductosAsync(CatalogoProductoQuery? query)
+        {
+            if (query is null || !query.HasCriteria)
+            {
+                return ObtenerCatalogoProductosAsync();
+            }
+
+            return _repo.BuscarCatalogoProductosAsync(query);
+        }
+
+        public Task<CatalogoProductoResponseDto?> ObtenerProductoPorIdAsync(int idProducto)
+        {
+            return _repo.ObtenerProductoPorIdAsync(idProducto);
+        }
+
         public Task<IEnumerable<CategoriaResponseDto>> ObtenerCategoriasAsync()
         {
             return _repo.ObtenerCategoriasAsync();

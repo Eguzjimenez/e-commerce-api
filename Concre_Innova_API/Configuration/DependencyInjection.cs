@@ -45,6 +45,7 @@ namespace Concre_Innova_API.Configuration
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<IAuthRequestValidator, AuthRequestValidator>();
             services.AddScoped<IUserRequestValidator, UserRequestValidator>();
+            services.AddScoped<IProductoRequestValidator, ProductoRequestValidator>();
 
             return services;
         }
