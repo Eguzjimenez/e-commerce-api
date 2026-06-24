@@ -8,6 +8,7 @@ using Concre_Innova_API.Infrastructure.Audit;
 using Concre_Innova_API.Infrastructure.Data;
 using Concre_Innova_API.Infrastructure.Email;
 using Concre_Innova_API.Infrastructure.Repositories.Bitacora;
+using Concre_Innova_API.Infrastructure.Repositories.Catalogo;
 using Concre_Innova_API.Infrastructure.Repositories.Login;
 using Concre_Innova_API.Infrastructure.Repositories.Roles;
 using Concre_Innova_API.Infrastructure.Repositories.Users;
@@ -33,10 +34,12 @@ namespace Concre_Innova_API.Configuration
             services.AddScoped<IPasswordResetRepository, PasswordResetRepository>();
             services.AddScoped<IRoleRepository, RoleRepository>();
             services.AddScoped<IBitacoraRepository, BitacoraRepository>();
+            services.AddScoped<ICatalogoRepository, CatalogoRepository>();
 
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IRoleService, RoleService>();
             services.AddScoped<IBitacoraService, BitacoraService>();
+            services.AddScoped<ICatalogoService, CatalogoService>();
             services.AddScoped<IRequestUserContextService, RequestUserContextService>();
             services.AddScoped<IAuditService, AuditService>();
             services.AddScoped<IEmailService, EmailService>();
