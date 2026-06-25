@@ -58,14 +58,91 @@ namespace Concre_Innova_API.Application.Services
             return _repo.ObtenerCategoriasAsync();
         }
 
-        public Task<OperacionResponseDto> InsertarProductoAsync(CreateProductoRequest request)
+        public Task<IEnumerable<CategoriaResponseDto>> ObtenerCategoriasAdministracionAsync()
         {
-            return _repo.InsertarProductoAsync(request);
+            return _repo.ObtenerCategoriasAdministracionAsync();
         }
 
-        public Task<OperacionResponseDto> ActualizarProductoAsync(UpdateProductoRequest request)
+        public Task<CategoriaOperacionResponseDto> InsertarCategoriaAsync(CreateCategoriaRequest request)
         {
-            return _repo.ActualizarProductoAsync(request);
+            return _repo.InsertarCategoriaAsync(request);
+        }
+
+        public Task<CategoriaOperacionResponseDto> ActualizarCategoriaAsync(UpdateCategoriaRequest request)
+        {
+            return _repo.ActualizarCategoriaAsync(request);
+        }
+
+        public Task<CategoriaOperacionResponseDto> EliminarCategoriaAsync(int idCategoria)
+        {
+            return _repo.EliminarCategoriaAsync(idCategoria);
+        }
+
+        public Task<IEnumerable<TipoProductoResponseDto>> ObtenerTiposProductoAsync()
+        {
+            return _repo.ObtenerTiposProductoAsync();
+        }
+
+        public Task<IEnumerable<TipoProductoResponseDto>> ObtenerTiposProductoAdministracionAsync()
+        {
+            return _repo.ObtenerTiposProductoAdministracionAsync();
+        }
+
+        public Task<TipoProductoOperacionResponseDto> InsertarTipoProductoAsync(CreateTipoProductoRequest request)
+        {
+            return _repo.InsertarTipoProductoAsync(request);
+        }
+
+        public Task<TipoProductoOperacionResponseDto> ActualizarTipoProductoAsync(UpdateTipoProductoRequest request)
+        {
+            return _repo.ActualizarTipoProductoAsync(request);
+        }
+
+        public Task<TipoProductoOperacionResponseDto> EliminarTipoProductoAsync(int idTipo)
+        {
+            return _repo.EliminarTipoProductoAsync(idTipo);
+        }
+
+        public async Task<OperacionResponseDto> InsertarProductoAsync(CreateProductoRequest request)
+        {
+            if (request.IdTipo.HasValue)
+            {
+                var esCombinacionValida = await _repo.EsCombinacionTipoCategoriaValidaAsync(
+                    request.IdCategoria,
+                    request.IdTipo.Value);
+
+                if (!esCombinacionValida)
+                {
+                    return new OperacionResponseDto
+                    {
+                        Codigo = 0,
+                        Mensaje = "La combinacion de categoria y tipo de producto seleccionada no es valida."
+                    };
+                }
+            }
+
+            return await _repo.InsertarProductoAsync(request);
+        }
+
+        public async Task<OperacionResponseDto> ActualizarProductoAsync(UpdateProductoRequest request)
+        {
+            if (request.IdTipo.HasValue)
+            {
+                var esCombinacionValida = await _repo.EsCombinacionTipoCategoriaValidaAsync(
+                    request.IdCategoria,
+                    request.IdTipo.Value);
+
+                if (!esCombinacionValida)
+                {
+                    return new OperacionResponseDto
+                    {
+                        Codigo = 0,
+                        Mensaje = "La combinacion de categoria y tipo de producto seleccionada no es valida."
+                    };
+                }
+            }
+
+            return await _repo.ActualizarProductoAsync(request);
         }
 
         public Task<OperacionResponseDto> EliminarProductoAsync(int idProducto)

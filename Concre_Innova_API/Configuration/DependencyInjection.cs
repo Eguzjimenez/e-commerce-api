@@ -46,6 +46,8 @@ namespace Concre_Innova_API.Configuration
             services.AddScoped<IAuthRequestValidator, AuthRequestValidator>();
             services.AddScoped<IUserRequestValidator, UserRequestValidator>();
             services.AddScoped<IProductoRequestValidator, ProductoRequestValidator>();
+            services.AddScoped<ICategoriaRequestValidator, CategoriaRequestValidator>();
+            services.AddScoped<ITipoProductoRequestValidator, TipoProductoRequestValidator>();
 
             return services;
         }
