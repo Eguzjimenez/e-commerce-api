@@ -10,6 +10,7 @@ namespace Concre_Innova_API.Application.DTOs.Requests
         public string? OrdenarPor { get; set; }
         public string? DireccionOrden { get; set; }
         public int? IdCategoria { get; set; }
+        public int? IdTipo { get; set; }
         public decimal? PrecioMinimo { get; set; }
         public decimal? PrecioMaximo { get; set; }
         public string? Disponibilidad { get; set; }
@@ -31,6 +32,8 @@ namespace Concre_Innova_API.Application.DTOs.Requests
                 : AscendingSort;
 
         public bool HasCategoryFilter => IdCategoria.HasValue && IdCategoria.Value > 0;
+
+        public bool HasTypeIdFilter => IdTipo.HasValue && IdTipo.Value > 0;
 
         public decimal? NormalizedMinimumPrice =>
             PrecioMinimo.HasValue && PrecioMinimo.Value >= 0 ? PrecioMinimo.Value : null;
@@ -56,6 +59,7 @@ namespace Concre_Innova_API.Application.DTOs.Requests
             NormalizedSearchTerm is not null ||
             NormalizedSortField is not null ||
             HasCategoryFilter ||
+            HasTypeIdFilter ||
             NormalizedMinimumPrice.HasValue ||
             NormalizedMaximumPrice.HasValue ||
             NormalizedAvailability is not null ||
