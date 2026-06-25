@@ -52,6 +52,26 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Catalogo
             return await reader.ReadAsync() ? MapCatalogProduct(reader) : null;
         }
 
+        public async Task<IEnumerable<CatalogoProductoResponseDto>> ObtenerProductosRelacionadosAsync(
+            int idProducto,
+            int limite)
+        {
+            var productos = new List<CatalogoProductoResponseDto>();
+
+            await using var conn = _connectionFactory.CreateConnection();
+            await using var cmd = CreateRelatedProductsCommand(conn, idProducto, limite);
+
+            await conn.OpenAsync();
+
+            await using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                productos.Add(MapCatalogProduct(reader));
+            }
+
+            return productos;
+        }
+
         public async Task<IEnumerable<CategoriaResponseDto>> ObtenerCategoriasAsync()
         {
             var categorias = new List<CategoriaResponseDto>();
@@ -329,6 +349,77 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Catalogo
             };
 
             AddCatalogQueryParameters(cmd, query);
+            return cmd;
+        }
+
+        private static SqlCommand CreateRelatedProductsCommand(
+            SqlConnection conn,
+            int productId,
+            int limit)
+        {
+            var cmd = new SqlCommand(
+                """
+                DECLARE
+                    @BaseCategoryId INT,
+                    @BaseSize VARCHAR(80),
+                    @BaseMaterial VARCHAR(80),
+                    @BasePrice DECIMAL(18, 2);
+
+                SELECT
+                    @BaseCategoryId = p.IdCategoria,
+                    @BaseSize = NULLIF(p.Tamano, 'No especificado'),
+                    @BaseMaterial = NULLIF(p.Material, 'No especificado'),
+                    @BasePrice = p.Precio
+                FROM Productos p
+                WHERE p.IdProducto = @IdProducto
+                    AND p.Estado = 'Activo';
+
+                SELECT TOP (@Limite)
+                    p.IdProducto,
+                    p.Nombre,
+                    ISNULL(CONVERT(NVARCHAR(MAX), p.Descripcion), '') AS Descripcion,
+                    p.Precio,
+                    ISNULL(p.Imagen, '') AS Imagen,
+                    p.IdCategoria,
+                    c.NombreCategoria,
+                    ISNULL(p.Tamano, '') AS Tamano,
+                    ISNULL(p.Material, '') AS Material,
+                    COALESCE(i.CantidadDisponible, p.Stock, 0) AS Stock,
+                    CASE
+                        WHEN COALESCE(i.CantidadDisponible, p.Stock, 0) <= 0 THEN 'Agotado'
+                        ELSE 'Disponible'
+                    END AS Disponibilidad
+                FROM Productos p
+                INNER JOIN Categorias c ON c.IdCategoria = p.IdCategoria
+                LEFT JOIN Inventario i ON i.IdProducto = p.IdProducto
+                WHERE p.Estado = 'Activo'
+                    AND p.IdProducto <> @IdProducto
+                    AND @BaseCategoryId IS NOT NULL
+                    AND (
+                        p.IdCategoria = @BaseCategoryId
+                        OR (@BaseMaterial IS NOT NULL
+                            AND p.Material COLLATE Latin1_General_CI_AI = @BaseMaterial)
+                        OR (@BaseSize IS NOT NULL
+                            AND p.Tamano COLLATE Latin1_General_CI_AI = @BaseSize)
+                    )
+                ORDER BY
+                    (
+                        CASE WHEN p.IdCategoria = @BaseCategoryId THEN 4 ELSE 0 END +
+                        CASE WHEN @BaseMaterial IS NOT NULL
+                            AND p.Material COLLATE Latin1_General_CI_AI = @BaseMaterial THEN 2 ELSE 0 END +
+                        CASE WHEN @BaseSize IS NOT NULL
+                            AND p.Tamano COLLATE Latin1_General_CI_AI = @BaseSize THEN 1 ELSE 0 END
+                    ) DESC,
+                    ABS(p.Precio - @BasePrice) ASC,
+                    p.IdProducto DESC;
+                """,
+                conn)
+            {
+                CommandType = CommandType.Text
+            };
+
+            cmd.Parameters.Add("@IdProducto", SqlDbType.Int).Value = productId;
+            cmd.Parameters.Add("@Limite", SqlDbType.Int).Value = limit;
             return cmd;
         }
 

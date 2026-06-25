@@ -89,6 +89,24 @@ namespace Concre_Innova_API.Controllers
             }
         }
 
+        [HttpGet("{idProducto:int}/relacionados")]
+        public async Task<ActionResult<IEnumerable<CatalogoProductoResponseDto>>> ObtenerProductosRelacionados(
+            int idProducto,
+            [FromQuery] int limite = 4)
+        {
+            try
+            {
+                var productos = await _catalogoService.ObtenerProductosRelacionadosAsync(idProducto, limite);
+                return Ok(productos);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(
+                    StatusCodes.Status500InternalServerError,
+                    new { message = "Error al obtener los productos relacionados.", error = ex.Message });
+            }
+        }
+
         [HttpPost]
         public async Task<ActionResult<OperacionResponseDto>> InsertarProducto([FromBody] CreateProductoRequest request)
         {

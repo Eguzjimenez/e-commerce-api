@@ -7,6 +7,9 @@ namespace Concre_Innova_API.Application.Services
 {
     public class CatalogoService : ICatalogoService
     {
+        private const int DefaultRelatedProductsLimit = 4;
+        private const int MaximumRelatedProductsLimit = 8;
+
         private readonly ICatalogoRepository _repo;
 
         public CatalogoService(ICatalogoRepository repo)
@@ -32,6 +35,22 @@ namespace Concre_Innova_API.Application.Services
         public Task<CatalogoProductoResponseDto?> ObtenerProductoPorIdAsync(int idProducto)
         {
             return _repo.ObtenerProductoPorIdAsync(idProducto);
+        }
+
+        public Task<IEnumerable<CatalogoProductoResponseDto>> ObtenerProductosRelacionadosAsync(
+            int idProducto,
+            int limite)
+        {
+            if (idProducto <= 0)
+            {
+                return Task.FromResult(Enumerable.Empty<CatalogoProductoResponseDto>());
+            }
+
+            var normalizedLimit = limite <= 0
+                ? DefaultRelatedProductsLimit
+                : Math.Min(limite, MaximumRelatedProductsLimit);
+
+            return _repo.ObtenerProductosRelacionadosAsync(idProducto, normalizedLimit);
         }
 
         public Task<IEnumerable<CategoriaResponseDto>> ObtenerCategoriasAsync()

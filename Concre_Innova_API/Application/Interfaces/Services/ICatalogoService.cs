@@ -8,6 +8,7 @@ namespace Concre_Innova_API.Application.Interfaces.Services
         Task<IEnumerable<CatalogoProductoResponseDto>> ObtenerCatalogoProductosAsync();
         Task<IEnumerable<CatalogoProductoResponseDto>> ObtenerCatalogoProductosAsync(CatalogoProductoQuery? query);
         Task<CatalogoProductoResponseDto?> ObtenerProductoPorIdAsync(int idProducto);
+        Task<IEnumerable<CatalogoProductoResponseDto>> ObtenerProductosRelacionadosAsync(int idProducto, int limite);
         Task<IEnumerable<CategoriaResponseDto>> ObtenerCategoriasAsync();
         Task<OperacionResponseDto> InsertarProductoAsync(CreateProductoRequest request);
         Task<OperacionResponseDto> ActualizarProductoAsync(UpdateProductoRequest request);
