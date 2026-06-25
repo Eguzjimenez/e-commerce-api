@@ -9,6 +9,8 @@ namespace Concre_Innova_API.Application.DTOs.Responses
         public string Imagen { get; set; } = string.Empty;
         public int IdCategoria { get; set; }
         public string NombreCategoria { get; set; } = string.Empty;
+        public string Tamano { get; set; } = string.Empty;
+        public string Material { get; set; } = string.Empty;
         public int Stock { get; set; }
         public string Disponibilidad { get; set; } = string.Empty;
     }

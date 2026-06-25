@@ -34,7 +34,13 @@ namespace Concre_Innova_API.Controllers
             [FromQuery] string? busqueda = null,
             [FromQuery] string? ordenarPor = null,
             [FromQuery] string? direccionOrden = null,
-            [FromQuery] int? idCategoria = null)
+            [FromQuery] int? idCategoria = null,
+            [FromQuery] decimal? precioMinimo = null,
+            [FromQuery] decimal? precioMaximo = null,
+            [FromQuery] string? disponibilidad = null,
+            [FromQuery] string? tamano = null,
+            [FromQuery] string? material = null,
+            [FromQuery] string? tipo = null)
         {
             try
             {
@@ -43,7 +49,13 @@ namespace Concre_Innova_API.Controllers
                     Busqueda = busqueda,
                     OrdenarPor = ordenarPor,
                     DireccionOrden = direccionOrden,
-                    IdCategoria = idCategoria
+                    IdCategoria = idCategoria,
+                    PrecioMinimo = precioMinimo,
+                    PrecioMaximo = precioMaximo,
+                    Disponibilidad = disponibilidad,
+                    Tamano = tamano,
+                    Material = material,
+                    Tipo = tipo
                 };
 
                 var productos = await _catalogoService.ObtenerCatalogoProductosAsync(query);

@@ -9,8 +9,6 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Catalogo
 {
     public class CatalogoRepository : ICatalogoRepository
     {
-        private const string NoServerResponseMessage = "No se recibio respuesta del servidor.";
-
         private readonly ISqlConnectionFactory _connectionFactory;
 
         public CatalogoRepository(ISqlConnectionFactory connectionFactory)
@@ -103,10 +101,10 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Catalogo
                 await using var insertProductCommand = new SqlCommand(
                     """
                     INSERT INTO Productos
-                        (Nombre, Descripcion, Precio, Stock, Imagen, Estado, IdCategoria)
+                        (Nombre, Descripcion, Precio, Stock, Imagen, Estado, IdCategoria, Tamano, Material)
                     OUTPUT INSERTED.IdProducto
                     VALUES
-                        (@Nombre, @Descripcion, @Precio, @CantidadDisponible, @Imagen, 'Activo', @IdCategoria);
+                        (@Nombre, @Descripcion, @Precio, @CantidadDisponible, @Imagen, 'Activo', @IdCategoria, @Tamano, @Material);
                     """,
                     conn,
                     (SqlTransaction)transaction)
@@ -169,6 +167,8 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Catalogo
                         Precio = @Precio,
                         Imagen = COALESCE(@Imagen, Imagen),
                         IdCategoria = @IdCategoria,
+                        Tamano = COALESCE(@Tamano, Tamano),
+                        Material = COALESCE(@Material, Material),
                         Stock = @CantidadDisponible,
                         Estado = @Estado
                     WHERE IdProducto = @IdProducto;
@@ -286,6 +286,8 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Catalogo
                     ISNULL(p.Imagen, '') AS Imagen,
                     p.IdCategoria,
                     c.NombreCategoria,
+                    ISNULL(p.Tamano, '') AS Tamano,
+                    ISNULL(p.Material, '') AS Material,
                     COALESCE(i.CantidadDisponible, p.Stock, 0) AS Stock,
                     CASE
                         WHEN COALESCE(i.CantidadDisponible, p.Stock, 0) <= 0 THEN 'Agotado'
@@ -296,10 +298,25 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Catalogo
                 LEFT JOIN Inventario i ON i.IdProducto = p.IdProducto
                 WHERE p.Estado = 'Activo'
                     AND (@Busqueda IS NULL
-                        OR p.Nombre LIKE @BusquedaPattern ESCAPE '\'
-                        OR CONVERT(NVARCHAR(MAX), p.Descripcion) LIKE @BusquedaPattern ESCAPE '\'
-                        OR c.NombreCategoria LIKE @BusquedaPattern ESCAPE '\')
+                        OR p.Nombre COLLATE Latin1_General_CI_AI LIKE @BusquedaPattern ESCAPE '\'
+                        OR CONVERT(NVARCHAR(MAX), p.Descripcion) COLLATE Latin1_General_CI_AI LIKE @BusquedaPattern ESCAPE '\'
+                        OR p.Tamano COLLATE Latin1_General_CI_AI LIKE @BusquedaPattern ESCAPE '\'
+                        OR p.Material COLLATE Latin1_General_CI_AI LIKE @BusquedaPattern ESCAPE '\'
+                        OR c.NombreCategoria COLLATE Latin1_General_CI_AI LIKE @BusquedaPattern ESCAPE '\')
                     AND (@IdCategoria IS NULL OR p.IdCategoria = @IdCategoria)
+                    AND (@PrecioMinimo IS NULL OR p.Precio >= @PrecioMinimo)
+                    AND (@PrecioMaximo IS NULL OR p.Precio <= @PrecioMaximo)
+                    AND (@Disponibilidad IS NULL
+                        OR (@Disponibilidad = 'disponible' AND COALESCE(i.CantidadDisponible, p.Stock, 0) > 0)
+                        OR (@Disponibilidad = 'agotado' AND COALESCE(i.CantidadDisponible, p.Stock, 0) <= 0))
+                    AND (@Tamano IS NULL
+                        OR p.Tamano COLLATE Latin1_General_CI_AI = @Tamano)
+                    AND (@Material IS NULL
+                        OR p.Material COLLATE Latin1_General_CI_AI = @Material)
+                    AND (@Tipo IS NULL
+                        OR p.Nombre COLLATE Latin1_General_CI_AI LIKE @TipoPattern ESCAPE '\'
+                        OR CONVERT(NVARCHAR(MAX), p.Descripcion) COLLATE Latin1_General_CI_AI LIKE @TipoPattern ESCAPE '\'
+                        OR c.NombreCategoria COLLATE Latin1_General_CI_AI LIKE @TipoPattern ESCAPE '\')
                     AND (@IdProducto IS NULL OR p.IdProducto = @IdProducto)
                 ORDER BY
                     CASE WHEN @OrdenarPor = 'precio' AND @DireccionOrden = 'asc' THEN p.Precio END ASC,
@@ -320,17 +337,51 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Catalogo
             var searchTerm = query.NormalizedSearchTerm;
             var searchPattern = searchTerm is null ? null : $"%{EscapeLikeValue(searchTerm)}%";
 
-            cmd.Parameters.Add("@Busqueda", SqlDbType.NVarChar, 255).Value =
-                searchTerm is null ? DBNull.Value : searchTerm;
-            cmd.Parameters.Add("@BusquedaPattern", SqlDbType.NVarChar, -1).Value =
-                searchPattern is null ? DBNull.Value : searchPattern;
+            AddNullableTextParameter(cmd, "@Busqueda", searchTerm);
+            AddNullableTextParameter(cmd, "@BusquedaPattern", searchPattern, -1);
             cmd.Parameters.Add("@IdCategoria", SqlDbType.Int).Value =
                 query.HasCategoryFilter ? query.IdCategoria!.Value : DBNull.Value;
+            AddNullableDecimalParameter(cmd, "@PrecioMinimo", query.NormalizedMinimumPrice);
+            AddNullableDecimalParameter(cmd, "@PrecioMaximo", query.NormalizedMaximumPrice);
+            AddNullableTextParameter(cmd, "@Disponibilidad", query.NormalizedAvailability, 20);
+            AddNullableTextParameter(cmd, "@Tamano", query.NormalizedSize, 80);
+            AddNullableTextParameter(cmd, "@Material", query.NormalizedMaterial, 80);
+            AddTextFilterParameters(cmd, "@Tipo", "@TipoPattern", query.NormalizedType);
             cmd.Parameters.Add("@IdProducto", SqlDbType.Int).Value = DBNull.Value;
-            cmd.Parameters.Add("@OrdenarPor", SqlDbType.NVarChar, 20).Value =
-                query.NormalizedSortField is null ? DBNull.Value : query.NormalizedSortField;
-            cmd.Parameters.Add("@DireccionOrden", SqlDbType.NVarChar, 10).Value =
-                query.NormalizedSortDirection;
+            AddNullableTextParameter(cmd, "@OrdenarPor", query.NormalizedSortField, 20);
+            AddNullableTextParameter(cmd, "@DireccionOrden", query.NormalizedSortDirection, 10);
+        }
+
+        private static void AddTextFilterParameters(
+            SqlCommand cmd,
+            string valueParameterName,
+            string patternParameterName,
+            string? value)
+        {
+            var pattern = value is null ? null : $"%{EscapeLikeValue(value)}%";
+            AddNullableTextParameter(cmd, valueParameterName, value);
+            AddNullableTextParameter(cmd, patternParameterName, pattern, -1);
+        }
+
+        private static void AddNullableTextParameter(
+            SqlCommand cmd,
+            string parameterName,
+            string? value,
+            int size = 255)
+        {
+            cmd.Parameters.Add(parameterName, SqlDbType.NVarChar, size).Value =
+                value is null ? DBNull.Value : value;
+        }
+
+        private static void AddNullableDecimalParameter(
+            SqlCommand cmd,
+            string parameterName,
+            decimal? value)
+        {
+            var parameter = cmd.Parameters.Add(parameterName, SqlDbType.Decimal);
+            parameter.Precision = 18;
+            parameter.Scale = 2;
+            parameter.Value = value.HasValue ? value.Value : (object)DBNull.Value;
         }
 
         private static string EscapeLikeValue(string value)
@@ -349,6 +400,8 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Catalogo
             cmd.Parameters.Add("@Precio", SqlDbType.Decimal).Value = request.Precio;
             cmd.Parameters.Add("@Imagen", SqlDbType.VarChar, 255).Value = request.Imagen;
             cmd.Parameters.Add("@IdCategoria", SqlDbType.Int).Value = request.IdCategoria;
+            cmd.Parameters.Add("@Tamano", SqlDbType.VarChar, 80).Value = GetProductAttributeValue(request.Tamano);
+            cmd.Parameters.Add("@Material", SqlDbType.VarChar, 80).Value = GetProductAttributeValue(request.Material);
             cmd.Parameters.Add("@CantidadDisponible", SqlDbType.Int).Value = request.CantidadDisponible;
             cmd.Parameters.Add("@CantidadMinima", SqlDbType.Int).Value = request.CantidadMinima;
         }
@@ -361,8 +414,20 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Catalogo
             cmd.Parameters.Add("@Imagen", SqlDbType.VarChar, 255).Value =
                 string.IsNullOrWhiteSpace(request.Imagen) ? DBNull.Value : request.Imagen;
             cmd.Parameters.Add("@IdCategoria", SqlDbType.Int).Value = request.IdCategoria;
+            cmd.Parameters.Add("@Tamano", SqlDbType.VarChar, 80).Value = GetNullableProductAttributeValue(request.Tamano);
+            cmd.Parameters.Add("@Material", SqlDbType.VarChar, 80).Value = GetNullableProductAttributeValue(request.Material);
             cmd.Parameters.Add("@CantidadDisponible", SqlDbType.Int).Value = request.CantidadDisponible;
             cmd.Parameters.Add("@CantidadMinima", SqlDbType.Int).Value = request.CantidadMinima;
+        }
+
+        private static string GetProductAttributeValue(string? value)
+        {
+            return string.IsNullOrWhiteSpace(value) ? "No especificado" : value.Trim();
+        }
+
+        private static object GetNullableProductAttributeValue(string? value)
+        {
+            return string.IsNullOrWhiteSpace(value) ? DBNull.Value : value.Trim();
         }
 
         private static CatalogoProductoResponseDto MapCatalogProduct(SqlDataReader reader)
@@ -376,6 +441,8 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Catalogo
                 Imagen = GetString(reader, "Imagen"),
                 IdCategoria = GetInt32(reader, "IdCategoria"),
                 NombreCategoria = GetString(reader, "NombreCategoria"),
+                Tamano = GetString(reader, "Tamano"),
+                Material = GetString(reader, "Material"),
                 Stock = GetInt32(reader, "Stock"),
                 Disponibilidad = GetString(reader, "Disponibilidad")
             };
@@ -393,33 +460,10 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Catalogo
             return reader.IsDBNull(ordinal) ? 0 : reader.GetInt32(ordinal);
         }
 
-        private static int? GetNullableInt32(SqlDataReader reader, string columnName)
-        {
-            if (!TryGetOrdinal(reader, columnName, out var ordinal) || reader.IsDBNull(ordinal))
-                return null;
-
-            return reader.GetInt32(ordinal);
-        }
-
         private static decimal GetDecimal(SqlDataReader reader, string columnName)
         {
             var ordinal = reader.GetOrdinal(columnName);
             return reader.IsDBNull(ordinal) ? 0 : reader.GetDecimal(ordinal);
-        }
-
-        private static bool TryGetOrdinal(SqlDataReader reader, string columnName, out int ordinal)
-        {
-            for (var index = 0; index < reader.FieldCount; index++)
-            {
-                if (string.Equals(reader.GetName(index), columnName, StringComparison.OrdinalIgnoreCase))
-                {
-                    ordinal = index;
-                    return true;
-                }
-            }
-
-            ordinal = -1;
-            return false;
         }
     }
 }

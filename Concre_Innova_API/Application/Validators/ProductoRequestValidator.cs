@@ -14,6 +14,8 @@ namespace Concre_Innova_API.Application.Validators
                 request.Nombre,
                 request.Precio,
                 request.IdCategoria,
+                request.Tamano,
+                request.Material,
                 request.CantidadDisponible,
                 request.CantidadMinima);
         }
@@ -33,6 +35,8 @@ namespace Concre_Innova_API.Application.Validators
                 request.Nombre,
                 request.Precio,
                 request.IdCategoria,
+                request.Tamano,
+                request.Material,
                 request.CantidadDisponible,
                 request.CantidadMinima);
         }
@@ -41,6 +45,8 @@ namespace Concre_Innova_API.Application.Validators
             string nombre,
             decimal precio,
             int idCategoria,
+            string? tamano,
+            string? material,
             int cantidadDisponible,
             int cantidadMinima)
         {
@@ -53,6 +59,12 @@ namespace Concre_Innova_API.Application.Validators
             if (idCategoria <= 0)
                 return "La categoria del producto es requerida.";
 
+            if (HasInvalidAttributeLength(tamano))
+                return "El tamano del producto no puede superar 80 caracteres.";
+
+            if (HasInvalidAttributeLength(material))
+                return "El material del producto no puede superar 80 caracteres.";
+
             if (cantidadDisponible < 0)
                 return "La cantidad disponible no puede ser negativa.";
 
@@ -60,6 +72,11 @@ namespace Concre_Innova_API.Application.Validators
                 return "La cantidad minima no puede ser negativa.";
 
             return null;
+        }
+
+        private static bool HasInvalidAttributeLength(string? value)
+        {
+            return !string.IsNullOrWhiteSpace(value) && value.Trim().Length > 80;
         }
     }
 }
