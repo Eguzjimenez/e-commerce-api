@@ -51,12 +51,26 @@ namespace Concre_Innova_API.Application.Validators
                 : null;
         }
 
+        public string? ValidateRecoveryCode(RecoveryCodeVerificationRequest? request)
+        {
+            if (request == null ||
+                string.IsNullOrWhiteSpace(request.Correo) ||
+                string.IsNullOrWhiteSpace(request.Codigo))
+            {
+                return "Correo y codigo son requeridos.";
+            }
+
+            return request.Codigo.Trim().Length == 6 && request.Codigo.Trim().All(char.IsDigit)
+                ? null
+                : "El codigo debe tener 6 digitos.";
+        }
+
         public string? ValidatePasswordReset(PasswordResetRequest? request)
         {
             return request == null ||
-                request.IdUsuario <= 0 ||
+                string.IsNullOrWhiteSpace(request.RecoveryToken) ||
                 string.IsNullOrEmpty(request.NuevaContrasena)
-                ? "IdUsuario y NuevaContrasena son requeridos."
+                ? "RecoveryToken y NuevaContrasena son requeridos."
                 : null;
         }
 

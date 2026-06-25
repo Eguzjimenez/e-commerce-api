@@ -87,12 +87,15 @@ namespace Concre_Innova_API.Controllers
                 return BadRequest(new { message = validationMessage });
 
             var result = await _userService.ResetPasswordAsync(
-                request!.IdUsuario,
+                request!.RecoveryToken!,
                 request.NuevaContrasena!);
 
             if (result.Codigo == 1)
             {
-                var user = await _userService.GetUserByIdAsync(request.IdUsuario);
+                var user = result.IdUsuario.HasValue
+                    ? await _userService.GetUserByIdAsync(result.IdUsuario.Value)
+                    : null;
+
                 if (!string.IsNullOrWhiteSpace(user?.Correo))
                     await _emailService.SendPasswordResetNotificationAsync(user.Correo, DateTime.UtcNow);
             }
@@ -119,7 +122,35 @@ namespace Concre_Innova_API.Controllers
                 validationResult.IdUsuario.Value,
                 request.Correo!);
 
+            if (tokenResult.Codigo == 1 &&
+                !string.IsNullOrWhiteSpace(tokenResult.Correo) &&
+                !string.IsNullOrWhiteSpace(tokenResult.CodigoRecuperacion) &&
+                tokenResult.ExpiraEn.HasValue)
+            {
+                await _emailService.SendPasswordRecoveryCodeAsync(
+                    tokenResult.Correo,
+                    tokenResult.CodigoRecuperacion,
+                    tokenResult.ExpiraEn.Value);
+            }
+
             return Ok(tokenResult);
+        }
+
+        [HttpPost("verify-recovery-code")]
+        public async Task<IActionResult> VerifyRecoveryCode([FromBody] RecoveryCodeVerificationRequest request)
+        {
+            var validationMessage = _validator.ValidateRecoveryCode(request);
+            if (validationMessage != null)
+                return BadRequest(new { message = validationMessage });
+
+            var result = await _userService.ValidateRecoveryCodeAsync(
+                request!.Correo!,
+                request.Codigo!);
+
+            if (result.Codigo != 1)
+                return BadRequest(result);
+
+            return Ok(result);
         }
 
         [HttpPost("validate-recovery-token")]

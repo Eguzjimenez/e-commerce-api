@@ -34,9 +34,14 @@ namespace Concre_Innova_API.Application.Services
             return _recoveryRepository.ValidateEmailAsync(correo);
         }
 
-        public Task<UserLogin> GenerateRecoveryTokenAsync(int idUsuario, string correo)
+        public Task<RecoveryCodeGenerationResponseDto> GenerateRecoveryTokenAsync(int idUsuario, string correo)
         {
             return _recoveryRepository.GenerateRecoveryTokenAsync(idUsuario, correo);
+        }
+
+        public Task<RecoveryCodeVerificationResponseDto> ValidateRecoveryCodeAsync(string correo, string codigo)
+        {
+            return _recoveryRepository.ValidateRecoveryCodeAsync(correo, codigo);
         }
 
         public Task<UserLogin> ValidateRecoveryTokenAsync(string token)
@@ -57,6 +62,27 @@ namespace Concre_Innova_API.Application.Services
         public Task<UserLogin> ResetPasswordAsync(int idUsuario, string nuevaContrasena)
         {
             return _passwordResetRepository.ResetPasswordAsync(idUsuario, nuevaContrasena);
+        }
+
+        public async Task<UserLogin> ResetPasswordAsync(string recoveryToken, string nuevaContrasena)
+        {
+            var tokenResult = await _recoveryRepository.ConsumeRecoveryTokenAsync(recoveryToken);
+
+            if (tokenResult.Codigo != 1 || !tokenResult.IdUsuario.HasValue)
+            {
+                return tokenResult;
+            }
+
+            var resetResult = await _passwordResetRepository.ResetPasswordAsync(
+                tokenResult.IdUsuario.Value,
+                nuevaContrasena);
+
+            if (resetResult.Codigo == 1)
+            {
+                resetResult.IdUsuario = tokenResult.IdUsuario;
+            }
+
+            return resetResult;
         }
 
         public Task<User> InsertUserAsync(User user)
