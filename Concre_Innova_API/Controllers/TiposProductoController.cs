@@ -10,101 +10,101 @@ namespace Concre_Innova_API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class CategoriasController : ControllerBase
+    public class TiposProductoController : ControllerBase
     {
         private readonly ICatalogoService _catalogoService;
         private readonly IRequestUserContextService _requestUserContextService;
         private readonly IAuditService _auditService;
-        private readonly ICategoriaRequestValidator _categoriaRequestValidator;
+        private readonly ITipoProductoRequestValidator _tipoProductoRequestValidator;
 
-        public CategoriasController(
+        public TiposProductoController(
             ICatalogoService catalogoService,
             IRequestUserContextService requestUserContextService,
             IAuditService auditService,
-            ICategoriaRequestValidator categoriaRequestValidator)
+            ITipoProductoRequestValidator tipoProductoRequestValidator)
         {
             _catalogoService = catalogoService;
             _requestUserContextService = requestUserContextService;
             _auditService = auditService;
-            _categoriaRequestValidator = categoriaRequestValidator;
+            _tipoProductoRequestValidator = tipoProductoRequestValidator;
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<CategoriaResponseDto>>> ObtenerCategorias()
+        public async Task<ActionResult<IEnumerable<TipoProductoResponseDto>>> ObtenerTiposProducto()
         {
             try
             {
-                var categorias = await _catalogoService.ObtenerCategoriasAsync();
-                return Ok(categorias);
+                var tipos = await _catalogoService.ObtenerTiposProductoAsync();
+                return Ok(tipos);
             }
             catch (Exception ex)
             {
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
-                    new { message = "Error al obtener las categorias.", error = ex.Message });
+                    new { message = "Error al obtener los tipos de producto.", error = ex.Message });
             }
         }
 
         [HttpGet("administracion")]
-        public async Task<ActionResult<IEnumerable<CategoriaResponseDto>>> ObtenerCategoriasAdministracion()
+        public async Task<ActionResult<IEnumerable<TipoProductoResponseDto>>> ObtenerTiposProductoAdministracion()
         {
             var userContext = _requestUserContextService.GetCurrentUser(HttpContext);
-            var denied = await RequireAdminAsync(userContext, "Categorias", "READ");
+            var denied = await RequireAdminAsync(userContext, "TiposProducto", "READ");
             if (denied != null)
                 return denied;
 
             try
             {
-                var categorias = await _catalogoService.ObtenerCategoriasAdministracionAsync();
-                return Ok(categorias);
+                var tipos = await _catalogoService.ObtenerTiposProductoAdministracionAsync();
+                return Ok(tipos);
             }
             catch (Exception ex)
             {
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
-                    new { message = "Error al obtener las categorias.", error = ex.Message });
+                    new { message = "Error al obtener los tipos de producto.", error = ex.Message });
             }
         }
 
         [HttpPost]
-        public async Task<ActionResult<CategoriaOperacionResponseDto>> InsertarCategoria(
-            [FromBody] CreateCategoriaRequest request)
+        public async Task<ActionResult<TipoProductoOperacionResponseDto>> InsertarTipoProducto(
+            [FromBody] CreateTipoProductoRequest request)
         {
             var userContext = _requestUserContextService.GetCurrentUser(HttpContext);
-            var denied = await RequireAdminAsync(userContext, "Categorias", "CREATE");
+            var denied = await RequireAdminAsync(userContext, "TiposProducto", "CREATE");
             if (denied != null)
                 return denied;
 
-            var validationMessage = _categoriaRequestValidator.ValidateCreate(request);
+            var validationMessage = _tipoProductoRequestValidator.ValidateCreate(request);
             if (validationMessage is not null)
                 return BadRequest(new { message = validationMessage });
 
             await _auditService.RecordAsync(
                 userContext,
-                "Categorias",
+                "TiposProducto",
                 "CREATE",
-                $"Intento de insertar categoria: {request.NombreCategoria}");
+                $"Intento de insertar tipo de producto: {request.NombreTipo}");
 
             try
             {
-                var result = await _catalogoService.InsertarCategoriaAsync(request);
+                var result = await _catalogoService.InsertarTipoProductoAsync(request);
 
                 if (result.Codigo == 1)
                 {
                     await _auditService.RecordAsync(
                         userContext,
-                        "Categorias",
+                        "TiposProducto",
                         "SUCCESS",
-                        $"Categoria '{request.NombreCategoria}' insertada exitosamente. ID: {result.IdCategoria}");
+                        $"Tipo de producto '{request.NombreTipo}' insertado exitosamente. ID: {result.IdTipo}");
 
                     return Ok(result);
                 }
 
                 await _auditService.RecordAsync(
                     userContext,
-                    "Categorias",
+                    "TiposProducto",
                     "FAILED",
-                    $"Error al insertar categoria: {result.Mensaje}");
+                    $"Error al insertar tipo de producto: {result.Mensaje}");
 
                 return BadRequest(result);
             }
@@ -112,61 +112,61 @@ namespace Concre_Innova_API.Controllers
             {
                 await _auditService.RecordAsync(
                     userContext,
-                    "Categorias",
+                    "TiposProducto",
                     "ERROR",
-                    $"Excepcion al insertar categoria: {ex.Message}");
+                    $"Excepcion al insertar tipo de producto: {ex.Message}");
 
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
-                    new { message = "Error al insertar la categoria.", error = ex.Message });
+                    new { message = "Error al insertar el tipo de producto.", error = ex.Message });
             }
         }
 
-        [HttpPut("{idCategoria:int}")]
-        public async Task<ActionResult<CategoriaOperacionResponseDto>> ActualizarCategoria(
-            int idCategoria,
-            [FromBody] UpdateCategoriaRequest request)
+        [HttpPut("{idTipo:int}")]
+        public async Task<ActionResult<TipoProductoOperacionResponseDto>> ActualizarTipoProducto(
+            int idTipo,
+            [FromBody] UpdateTipoProductoRequest request)
         {
             var userContext = _requestUserContextService.GetCurrentUser(HttpContext);
-            var denied = await RequireAdminAsync(userContext, "Categorias", "UPDATE");
+            var denied = await RequireAdminAsync(userContext, "TiposProducto", "UPDATE");
             if (denied != null)
                 return denied;
 
-            var validationMessage = _categoriaRequestValidator.ValidateUpdate(request);
+            var validationMessage = _tipoProductoRequestValidator.ValidateUpdate(request);
             if (validationMessage is not null)
                 return BadRequest(new { message = validationMessage });
 
-            if (idCategoria != request.IdCategoria)
+            if (idTipo != request.IdTipo)
             {
-                return BadRequest(new { message = "El ID de la categoria en la URL no coincide con el del cuerpo de la solicitud." });
+                return BadRequest(new { message = "El ID del tipo de producto en la URL no coincide con el del cuerpo de la solicitud." });
             }
 
             await _auditService.RecordAsync(
                 userContext,
-                "Categorias",
+                "TiposProducto",
                 "UPDATE",
-                $"Intento de actualizar categoria ID: {idCategoria}");
+                $"Intento de actualizar tipo de producto ID: {idTipo}");
 
             try
             {
-                var result = await _catalogoService.ActualizarCategoriaAsync(request);
+                var result = await _catalogoService.ActualizarTipoProductoAsync(request);
 
                 if (result.Codigo == 1)
                 {
                     await _auditService.RecordAsync(
                         userContext,
-                        "Categorias",
+                        "TiposProducto",
                         "SUCCESS",
-                        $"Categoria ID: {idCategoria} actualizada exitosamente.");
+                        $"Tipo de producto ID: {idTipo} actualizado exitosamente.");
 
                     return Ok(result);
                 }
 
                 await _auditService.RecordAsync(
                     userContext,
-                    "Categorias",
+                    "TiposProducto",
                     "FAILED",
-                    $"Error al actualizar categoria ID: {idCategoria}. {result.Mensaje}");
+                    $"Error al actualizar tipo de producto ID: {idTipo}. {result.Mensaje}");
 
                 return BadRequest(result);
             }
@@ -174,50 +174,50 @@ namespace Concre_Innova_API.Controllers
             {
                 await _auditService.RecordAsync(
                     userContext,
-                    "Categorias",
+                    "TiposProducto",
                     "ERROR",
-                    $"Excepcion al actualizar categoria ID: {idCategoria}. {ex.Message}");
+                    $"Excepcion al actualizar tipo de producto ID: {idTipo}. {ex.Message}");
 
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
-                    new { message = "Error al actualizar la categoria.", error = ex.Message });
+                    new { message = "Error al actualizar el tipo de producto.", error = ex.Message });
             }
         }
 
-        [HttpDelete("{idCategoria:int}")]
-        public async Task<ActionResult<CategoriaOperacionResponseDto>> EliminarCategoria(int idCategoria)
+        [HttpDelete("{idTipo:int}")]
+        public async Task<ActionResult<TipoProductoOperacionResponseDto>> EliminarTipoProducto(int idTipo)
         {
             var userContext = _requestUserContextService.GetCurrentUser(HttpContext);
-            var denied = await RequireAdminAsync(userContext, "Categorias", "DELETE");
+            var denied = await RequireAdminAsync(userContext, "TiposProducto", "DELETE");
             if (denied != null)
                 return denied;
 
             await _auditService.RecordAsync(
                 userContext,
-                "Categorias",
+                "TiposProducto",
                 "DELETE",
-                $"Intento de eliminar categoria ID: {idCategoria}");
+                $"Intento de eliminar tipo de producto ID: {idTipo}");
 
             try
             {
-                var result = await _catalogoService.EliminarCategoriaAsync(idCategoria);
+                var result = await _catalogoService.EliminarTipoProductoAsync(idTipo);
 
                 if (result.Codigo == 1)
                 {
                     await _auditService.RecordAsync(
                         userContext,
-                        "Categorias",
+                        "TiposProducto",
                         "SUCCESS",
-                        $"Categoria ID: {idCategoria} desactivada exitosamente.");
+                        $"Tipo de producto ID: {idTipo} desactivado exitosamente.");
 
                     return Ok(result);
                 }
 
                 await _auditService.RecordAsync(
                     userContext,
-                    "Categorias",
+                    "TiposProducto",
                     "FAILED",
-                    $"Error al eliminar categoria ID: {idCategoria}. {result.Mensaje}");
+                    $"Error al eliminar tipo de producto ID: {idTipo}. {result.Mensaje}");
 
                 return BadRequest(result);
             }
@@ -225,13 +225,13 @@ namespace Concre_Innova_API.Controllers
             {
                 await _auditService.RecordAsync(
                     userContext,
-                    "Categorias",
+                    "TiposProducto",
                     "ERROR",
-                    $"Excepcion al eliminar categoria ID: {idCategoria}. {ex.Message}");
+                    $"Excepcion al eliminar tipo de producto ID: {idTipo}. {ex.Message}");
 
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
-                    new { message = "Error al eliminar la categoria.", error = ex.Message });
+                    new { message = "Error al eliminar el tipo de producto.", error = ex.Message });
             }
         }
 
