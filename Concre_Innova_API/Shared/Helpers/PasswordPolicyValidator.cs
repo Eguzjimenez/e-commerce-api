@@ -1,0 +1,35 @@
+namespace Concre_Innova_API.Shared.Helpers
+{
+    public static class PasswordPolicyValidator
+    {
+        private const int MinimumLength = 8;
+
+        public static string? GetValidationMessage(string? password)
+        {
+            if (string.IsNullOrWhiteSpace(password))
+                return "La contrasena es requerida.";
+
+            if (password.Length < MinimumLength)
+                return "La contrasena debe tener al menos 8 caracteres.";
+
+            if (!password.Any(char.IsUpper))
+                return "La contrasena debe incluir al menos una letra mayuscula.";
+
+            if (!password.Any(char.IsLower))
+                return "La contrasena debe incluir al menos una letra minuscula.";
+
+            if (!password.Any(char.IsDigit))
+                return "La contrasena debe incluir al menos un numero.";
+
+            if (!password.Any(IsSpecialCharacter))
+                return "La contrasena debe incluir al menos un caracter especial.";
+
+            return null;
+        }
+
+        private static bool IsSpecialCharacter(char character)
+        {
+            return !char.IsLetterOrDigit(character);
+        }
+    }
+}

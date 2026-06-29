@@ -1,6 +1,7 @@
 using Concre_Innova_API.Application.Interfaces.Services;
 using Concre_Innova_API.Application.Security;
 using Concre_Innova_API.Domain.Constants;
+using System.Security.Claims;
 
 namespace Concre_Innova_API.Infrastructure.Security
 {
@@ -8,24 +9,23 @@ namespace Concre_Innova_API.Infrastructure.Security
     {
         public RequestUserContext GetCurrentUser(HttpContext httpContext)
         {
-            int? userId = ReadHeaderInt(httpContext, "X-User-Id");
-            int? roleId = ReadHeaderInt(httpContext, "X-User-Role");
+            int? userId = ReadClaimInt(httpContext.User, ClaimTypes.NameIdentifier);
+            int? roleId = ReadClaimInt(httpContext.User, "idRol");
 
             return new RequestUserContext
             {
                 UserId = userId,
                 RoleId = roleId,
-                RoleName = AppRoles.GetName(roleId),
+                RoleName = httpContext.User.FindFirstValue("nombreRol") ?? AppRoles.GetName(roleId),
                 IpAddress = httpContext.Connection.RemoteIpAddress?.ToString() ?? string.Empty
             };
         }
 
-        private static int? ReadHeaderInt(HttpContext httpContext, string headerName)
+        private static int? ReadClaimInt(ClaimsPrincipal user, string claimType)
         {
-            if (!httpContext.Request.Headers.TryGetValue(headerName, out var value))
-                return null;
+            var value = user.FindFirstValue(claimType);
 
-            return int.TryParse(value.ToString(), out var result) ? result : null;
+            return int.TryParse(value, out var result) ? result : null;
         }
     }
 }

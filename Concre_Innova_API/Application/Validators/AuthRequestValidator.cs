@@ -32,9 +32,10 @@ namespace Concre_Innova_API.Application.Validators
                 return "Nombre, correo, telefono y contrasena son requeridos.";
             }
 
-            return EmailAddressValidator.IsValid(request.Correo)
-                ? null
-                : "El formato del correo no es valido.";
+            if (!EmailAddressValidator.IsValid(request.Correo))
+                return "El formato del correo no es valido.";
+
+            return PasswordPolicyValidator.GetValidationMessage(request.Contrasena);
         }
 
         public string? ValidateEmail(EmailValidationRequest? request)
@@ -67,11 +68,14 @@ namespace Concre_Innova_API.Application.Validators
 
         public string? ValidatePasswordReset(PasswordResetRequest? request)
         {
-            return request == null ||
+            if (request == null ||
                 string.IsNullOrWhiteSpace(request.RecoveryToken) ||
-                string.IsNullOrEmpty(request.NuevaContrasena)
-                ? "RecoveryToken y NuevaContrasena son requeridos."
-                : null;
+                string.IsNullOrEmpty(request.NuevaContrasena))
+            {
+                return "RecoveryToken y NuevaContrasena son requeridos.";
+            }
+
+            return PasswordPolicyValidator.GetValidationMessage(request.NuevaContrasena);
         }
 
         public string? ValidateRecoveryToken(string? token)

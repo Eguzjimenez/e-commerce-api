@@ -15,15 +15,21 @@ namespace Concre_Innova_API.Controllers
         private readonly IUserService _userService;
         private readonly IEmailService _emailService;
         private readonly IAuthRequestValidator _validator;
+        private readonly ILoginAttemptService _loginAttemptService;
+        private readonly IAuditService _auditService;
 
         public AuthController(
             IUserService userService,
             IEmailService emailService,
-            IAuthRequestValidator validator)
+            IAuthRequestValidator validator,
+            ILoginAttemptService loginAttemptService,
+            IAuditService auditService)
         {
             _userService = userService;
             _emailService = emailService;
             _validator = validator;
+            _loginAttemptService = loginAttemptService;
+            _auditService = auditService;
         }
 
         [HttpPost("login")]
@@ -33,10 +39,48 @@ namespace Concre_Innova_API.Controllers
             if (validationMessage != null)
                 return BadRequest(new { message = validationMessage });
 
+            var correo = request!.Correo!.Trim();
+            var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? string.Empty;
+
+            if (_loginAttemptService.IsBlocked(correo, out var blockedUntil))
+            {
+                await _auditService.RecordLoginAttemptAsync(
+                    null,
+                    correo,
+                    wasSuccessful: false,
+                    ipAddress,
+                    "Intento de inicio de sesion bloqueado por multiples fallos.");
+
+                return StatusCode(StatusCodes.Status429TooManyRequests, new
+                {
+                    message = $"Cuenta temporalmente bloqueada. Intente nuevamente despues de {blockedUntil:O}."
+                });
+            }
+
             UserLogin result = await _userService.LoginAsync(request!.Correo!, request.Contrasena!);
 
             if (result.Codigo != 1)
+            {
+                _loginAttemptService.RecordFailedAttempt(correo);
+
+                await _auditService.RecordLoginAttemptAsync(
+                    result.IdUsuario,
+                    correo,
+                    wasSuccessful: false,
+                    ipAddress,
+                    result.Mensaje ?? "Inicio de sesion fallido.");
+
                 return Unauthorized(result);
+            }
+
+            _loginAttemptService.ResetAttempts(correo);
+
+            await _auditService.RecordLoginAttemptAsync(
+                result.IdUsuario,
+                correo,
+                wasSuccessful: true,
+                ipAddress,
+                result.Mensaje ?? "Inicio de sesion exitoso.");
 
             return Ok(result);
         }

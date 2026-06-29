@@ -52,6 +52,59 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Catalogo
             return await reader.ReadAsync() ? MapCatalogProduct(reader) : null;
         }
 
+        public async Task<IEnumerable<ProductoVarianteResponseDto>> ObtenerProductoVariantesAsync(int idProducto)
+        {
+            var variantes = new List<ProductoVarianteResponseDto>();
+
+            await using var conn = _connectionFactory.CreateConnection();
+            await using var cmd = new SqlCommand(
+                """
+                SELECT
+                    v.IdVariante,
+                    v.IdProducto,
+                    v.NombreVariante,
+                    v.Tamano,
+                    v.Material,
+                    v.Precio,
+                    v.Stock,
+                    ISNULL(v.Imagen, '') AS Imagen,
+                    CAST(CASE WHEN v.Estado = 'Activo' AND v.Stock > 0 THEN 1 ELSE 0 END AS BIT) AS EstaDisponible
+                FROM ProductoVariantes v
+                INNER JOIN Productos p ON p.IdProducto = v.IdProducto
+                WHERE v.IdProducto = @IdProducto
+                    AND v.Estado = 'Activo'
+                    AND p.Estado = 'Activo'
+                ORDER BY v.IdVariante;
+                """,
+                conn)
+            {
+                CommandType = CommandType.Text
+            };
+
+            cmd.Parameters.Add("@IdProducto", SqlDbType.Int).Value = idProducto;
+
+            await conn.OpenAsync();
+            await using var reader = await cmd.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync())
+            {
+                variantes.Add(new ProductoVarianteResponseDto
+                {
+                    IdVariante = GetInt32(reader, "IdVariante"),
+                    IdProducto = GetInt32(reader, "IdProducto"),
+                    NombreVariante = GetString(reader, "NombreVariante"),
+                    Tamano = GetString(reader, "Tamano"),
+                    Material = GetString(reader, "Material"),
+                    Precio = GetDecimal(reader, "Precio"),
+                    Stock = GetInt32(reader, "Stock"),
+                    Imagen = GetString(reader, "Imagen"),
+                    EstaDisponible = reader.GetBoolean(reader.GetOrdinal("EstaDisponible"))
+                });
+            }
+
+            return variantes;
+        }
+
         public async Task<IEnumerable<CatalogoProductoResponseDto>> ObtenerProductosRelacionadosAsync(
             int idProducto,
             int limite)
@@ -780,6 +833,7 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Catalogo
                     AND (@Tipo IS NULL
                         OR p.Nombre COLLATE Latin1_General_CI_AI LIKE @TipoPattern ESCAPE '\'
                         OR CONVERT(NVARCHAR(MAX), p.Descripcion) COLLATE Latin1_General_CI_AI LIKE @TipoPattern ESCAPE '\'
+                        OR t.NombreTipo COLLATE Latin1_General_CI_AI LIKE @TipoPattern ESCAPE '\'
                         OR c.NombreCategoria COLLATE Latin1_General_CI_AI LIKE @TipoPattern ESCAPE '\')
                     AND (@IdProducto IS NULL OR p.IdProducto = @IdProducto)
                 ORDER BY

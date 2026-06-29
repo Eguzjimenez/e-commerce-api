@@ -37,6 +37,16 @@ namespace Concre_Innova_API.Application.Services
             return _repo.ObtenerProductoPorIdAsync(idProducto);
         }
 
+        public Task<IEnumerable<ProductoVarianteResponseDto>> ObtenerProductoVariantesAsync(int idProducto)
+        {
+            if (idProducto <= 0)
+            {
+                return Task.FromResult(Enumerable.Empty<ProductoVarianteResponseDto>());
+            }
+
+            return _repo.ObtenerProductoVariantesAsync(idProducto);
+        }
+
         public Task<IEnumerable<CatalogoProductoResponseDto>> ObtenerProductosRelacionadosAsync(
             int idProducto,
             int limite)

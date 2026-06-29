@@ -16,17 +16,20 @@ namespace Concre_Innova_API.Controllers
         private readonly IRequestUserContextService _requestUserContextService;
         private readonly IAuditService _auditService;
         private readonly IProductoRequestValidator _productoRequestValidator;
+        private readonly IPermissionService _permissionService;
 
         public ProductosController(
             ICatalogoService catalogoService,
             IRequestUserContextService requestUserContextService,
             IAuditService auditService,
-            IProductoRequestValidator productoRequestValidator)
+            IProductoRequestValidator productoRequestValidator,
+            IPermissionService permissionService)
         {
             _catalogoService = catalogoService;
             _requestUserContextService = requestUserContextService;
             _auditService = auditService;
             _productoRequestValidator = productoRequestValidator;
+            _permissionService = permissionService;
         }
 
         [HttpGet]
@@ -109,11 +112,65 @@ namespace Concre_Innova_API.Controllers
             }
         }
 
+        [HttpGet("{idProducto:int}/variantes")]
+        public async Task<ActionResult<IEnumerable<ProductoVarianteResponseDto>>> ObtenerProductoVariantes(
+            int idProducto)
+        {
+            try
+            {
+                var variantes = await _catalogoService.ObtenerProductoVariantesAsync(idProducto);
+                return Ok(variantes);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(
+                    StatusCodes.Status500InternalServerError,
+                    new { message = "Error al obtener las variantes del producto.", error = ex.Message });
+            }
+        }
+
+        [HttpPost("upload-image")]
+        public async Task<IActionResult> UploadProductImage(IFormFile file)
+        {
+            var userContext = _requestUserContextService.GetCurrentUser(HttpContext);
+            var denied = await RequirePermissionAsync(userContext, PermissionCodes.ProductosCrear, "UPLOAD_IMAGE");
+            if (denied != null)
+                return denied;
+
+            if (file == null || file.Length == 0)
+                return BadRequest(new { message = "La imagen del producto es requerida." });
+
+            var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+            var allowedExtensions = new HashSet<string> { ".jpg", ".jpeg", ".png", ".webp", ".gif" };
+
+            if (!allowedExtensions.Contains(extension))
+                return BadRequest(new { message = "Formato de imagen no permitido." });
+
+            var uploadsFolder = Path.Combine(
+                Directory.GetCurrentDirectory(),
+                "wwwroot",
+                "images",
+                "productos");
+
+            Directory.CreateDirectory(uploadsFolder);
+
+            var fileName = $"{Guid.NewGuid():N}{extension}";
+            var physicalPath = Path.Combine(uploadsFolder, fileName);
+
+            await using (var stream = System.IO.File.Create(physicalPath))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            var relativePath = $"images/productos/{fileName}";
+            return Ok(new { ruta = relativePath, imagen = relativePath });
+        }
+
         [HttpPost]
         public async Task<ActionResult<OperacionResponseDto>> InsertarProducto([FromBody] CreateProductoRequest request)
         {
             var userContext = _requestUserContextService.GetCurrentUser(HttpContext);
-            var denied = await RequireAdminAsync(userContext, "Productos", "CREATE");
+            var denied = await RequirePermissionAsync(userContext, PermissionCodes.ProductosCrear, "CREATE");
             if (denied != null)
                 return denied;
 
@@ -170,7 +227,7 @@ namespace Concre_Innova_API.Controllers
             [FromBody] UpdateProductoRequest request)
         {
             var userContext = _requestUserContextService.GetCurrentUser(HttpContext);
-            var denied = await RequireAdminAsync(userContext, "Productos", "UPDATE");
+            var denied = await RequirePermissionAsync(userContext, PermissionCodes.ProductosActualizar, "UPDATE");
             if (denied != null)
                 return denied;
 
@@ -230,7 +287,7 @@ namespace Concre_Innova_API.Controllers
         public async Task<ActionResult<OperacionResponseDto>> EliminarProducto(int idProducto)
         {
             var userContext = _requestUserContextService.GetCurrentUser(HttpContext);
-            var denied = await RequireAdminAsync(userContext, "Productos", "DELETE");
+            var denied = await RequirePermissionAsync(userContext, PermissionCodes.ProductosEliminar, "DELETE");
             if (denied != null)
                 return denied;
 
@@ -277,28 +334,30 @@ namespace Concre_Innova_API.Controllers
             }
         }
 
-        private async Task<ActionResult?> RequireAdminAsync(
+        private async Task<ActionResult?> RequirePermissionAsync(
             RequestUserContext userContext,
-            string module,
+            string permissionCode,
             string operation)
         {
-            if (!userContext.IsAuthenticated)
+            if (!userContext.IsAuthenticated || !userContext.RoleId.HasValue)
                 return Unauthorized(new { message = "Debe iniciar sesion para acceder a este recurso." });
 
-            if (userContext.RoleId != AppRoles.Administrador)
-            {
-                await _auditService.RecordAsync(
-                    userContext,
-                    module,
-                    "DENIED",
-                    $"Intento no autorizado de {operation}.");
+            var hasPermission = await _permissionService.RoleHasPermissionAsync(
+                userContext.RoleId.Value,
+                permissionCode);
 
-                return StatusCode(
-                    StatusCodes.Status403Forbidden,
-                    new { message = "No tiene permisos para realizar esta accion." });
-            }
+            if (hasPermission)
+                return null;
 
-            return null;
+            await _auditService.RecordAsync(
+                userContext,
+                "Productos",
+                "DENIED",
+                $"Intento no autorizado de {operation} con permiso {permissionCode}.");
+
+            return StatusCode(
+                StatusCodes.Status403Forbidden,
+                new { message = "No tiene permisos para realizar esta accion." });
         }
     }
 }

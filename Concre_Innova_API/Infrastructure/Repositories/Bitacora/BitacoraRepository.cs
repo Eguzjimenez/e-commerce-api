@@ -21,9 +21,25 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Bitacora
             var list = new List<BitacoraResponseDto>();
 
             await using var conn = _connectionFactory.CreateConnection();
-            await using var cmd = new SqlCommand("SP_ObtenerBitacora", conn)
+            await using var cmd = new SqlCommand(
+                """
+                SELECT
+                    b.IdBitacora,
+                    b.IdUsuario,
+                    b.TablaAfectada,
+                    b.Operacion,
+                    b.Descripcion,
+                    b.FechaHora,
+                    b.IpUsuario,
+                    ISNULL(u.Correo, '') AS Correo,
+                    LTRIM(RTRIM(CONCAT(ISNULL(u.Nombre, ''), ' ', ISNULL(u.Apellido, '')))) AS NombreUsuario
+                FROM Bitacora b
+                LEFT JOIN Usuarios u ON u.IdUsuario = b.IdUsuario
+                ORDER BY b.FechaHora DESC, b.IdBitacora DESC;
+                """,
+                conn)
             {
-                CommandType = CommandType.StoredProcedure
+                CommandType = CommandType.Text
             };
 
             await conn.OpenAsync();
@@ -34,14 +50,14 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Bitacora
                 list.Add(new BitacoraResponseDto
                 {
                     IdBitacora    = reader.GetInt32(reader.GetOrdinal("IdBitacora")),
-                    IdUsuario     = reader.GetInt32(reader.GetOrdinal("IdUsuario")),
+                    IdUsuario     = reader.IsDBNull(reader.GetOrdinal("IdUsuario")) ? null : reader.GetInt32(reader.GetOrdinal("IdUsuario")),
                     TablaAfectada = reader.IsDBNull(reader.GetOrdinal("TablaAfectada")) ? string.Empty : reader.GetString(reader.GetOrdinal("TablaAfectada")),
                     Operacion     = reader.IsDBNull(reader.GetOrdinal("Operacion"))     ? string.Empty : reader.GetString(reader.GetOrdinal("Operacion")),
                     Descripcion   = reader.IsDBNull(reader.GetOrdinal("Descripcion"))   ? string.Empty : reader.GetString(reader.GetOrdinal("Descripcion")),
                     FechaHora     = reader.GetDateTime(reader.GetOrdinal("FechaHora")),
                     IpUsuario     = reader.IsDBNull(reader.GetOrdinal("IpUsuario"))     ? string.Empty : reader.GetString(reader.GetOrdinal("IpUsuario")),
-                    Correo = reader.IsDBNull(reader.GetOrdinal("correo")) ? string.Empty : reader.GetString(reader.GetOrdinal("correo")),        
-                    NombreUsuario = reader.IsDBNull(reader.GetOrdinal("nombreUsuario")) ? string.Empty : reader.GetString(reader.GetOrdinal("nombreUsuario")),  // ← agregar
+                    Correo = reader.IsDBNull(reader.GetOrdinal("Correo")) ? string.Empty : reader.GetString(reader.GetOrdinal("Correo")),
+                    NombreUsuario = reader.IsDBNull(reader.GetOrdinal("NombreUsuario")) ? string.Empty : reader.GetString(reader.GetOrdinal("NombreUsuario")),
 
                 });
             }

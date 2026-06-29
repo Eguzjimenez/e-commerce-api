@@ -18,24 +18,27 @@ namespace Concre_Innova_API.Controllers
         private readonly IRequestUserContextService _requestUserContextService;
         private readonly IAuditService _auditService;
         private readonly IUserRequestValidator _validator;
+        private readonly IPermissionService _permissionService;
 
         public UsersController(
             IUserService userService,
             IRequestUserContextService requestUserContextService,
             IAuditService auditService,
-            IUserRequestValidator validator)
+            IUserRequestValidator validator,
+            IPermissionService permissionService)
         {
             _userService = userService;
             _requestUserContextService = requestUserContextService;
             _auditService = auditService;
             _validator = validator;
+            _permissionService = permissionService;
         }
 
         [HttpGet("UserList")]
         public async Task<ActionResult<IEnumerable<UserResponseDto>>> UserList()
         {
             var userContext = _requestUserContextService.GetCurrentUser(HttpContext);
-            var denied = await RequireAdminAsync(userContext, "Usuarios", "ACCESS");
+            var denied = await RequirePermissionAsync(userContext, PermissionCodes.UsuariosVer, "ACCESS");
             if (denied != null)
                 return denied;
 
@@ -53,7 +56,7 @@ namespace Concre_Innova_API.Controllers
         public async Task<ActionResult<UserDetailResponseDto>> GetUserDetail(int idUsuario)
         {
             var userContext = _requestUserContextService.GetCurrentUser(HttpContext);
-            var denied = await RequireAdminAsync(userContext, "Usuarios", "ACCESS");
+            var denied = await RequirePermissionAsync(userContext, PermissionCodes.UsuariosVer, "ACCESS");
             if (denied != null)
                 return denied;
 
@@ -74,7 +77,7 @@ namespace Concre_Innova_API.Controllers
         public async Task<ActionResult<User>> NewUser([FromBody] CreateUserRequest request)
         {
             var userContext = _requestUserContextService.GetCurrentUser(HttpContext);
-            var denied = await RequireAdminAsync(userContext, "Usuarios", "CREATE");
+            var denied = await RequirePermissionAsync(userContext, PermissionCodes.UsuariosCrear, "CREATE");
             if (denied != null)
                 return denied;
 
@@ -106,7 +109,7 @@ namespace Concre_Innova_API.Controllers
         public async Task<ActionResult> UpdateUser([FromBody] UpdateUserRequest request)
         {
             var userContext = _requestUserContextService.GetCurrentUser(HttpContext);
-            var denied = await RequireAdminAsync(userContext, "Usuarios", "UPDATE");
+            var denied = await RequirePermissionAsync(userContext, PermissionCodes.UsuariosActualizar, "UPDATE");
             if (denied != null)
                 return denied;
 
@@ -138,7 +141,7 @@ namespace Concre_Innova_API.Controllers
         public async Task<ActionResult> DeactivateUser(int idUsuario)
         {
             var userContext = _requestUserContextService.GetCurrentUser(HttpContext);
-            var denied = await RequireAdminAsync(userContext, "Usuarios", "DELETE");
+            var denied = await RequirePermissionAsync(userContext, PermissionCodes.UsuariosEliminar, "DELETE");
             if (denied != null)
                 return denied;
 
@@ -161,28 +164,30 @@ namespace Concre_Innova_API.Controllers
             return BadRequest(result.Mensaje);
         }
 
-        private async Task<ActionResult?> RequireAdminAsync(
+        private async Task<ActionResult?> RequirePermissionAsync(
             RequestUserContext userContext,
-            string module,
+            string permissionCode,
             string operation)
         {
-            if (!userContext.IsAuthenticated)
+            if (!userContext.IsAuthenticated || !userContext.RoleId.HasValue)
                 return Unauthorized(new { message = "Debe iniciar sesion para acceder a este recurso." });
 
-            if (userContext.RoleId != AppRoles.Administrador)
-            {
-                await _auditService.RecordAsync(
-                    userContext,
-                    module,
-                    "DENIED",
-                    $"Intento no autorizado de {operation}.");
+            var hasPermission = await _permissionService.RoleHasPermissionAsync(
+                userContext.RoleId.Value,
+                permissionCode);
 
-                return StatusCode(
-                    StatusCodes.Status403Forbidden,
-                    new { message = "No tiene permisos para realizar esta accion." });
-            }
+            if (hasPermission)
+                return null;
 
-            return null;
+            await _auditService.RecordAsync(
+                userContext,
+                "Usuarios",
+                "DENIED",
+                $"Intento no autorizado de {operation} con permiso {permissionCode}.");
+
+            return StatusCode(
+                StatusCodes.Status403Forbidden,
+                new { message = "No tiene permisos para realizar esta accion." });
         }
     }
 }

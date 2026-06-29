@@ -1,7 +1,9 @@
 using Concre_Innova_API.Domain.Entities;
+using Concre_Innova_API.Domain.Constants;
 using Concre_Innova_API.Application.DTOs.Responses;
 using Concre_Innova_API.Application.Interfaces.Repositories;
 using Concre_Innova_API.Application.Interfaces.Services;
+using System.Security.Claims;
 
 namespace Concre_Innova_API.Application.Services
 {
@@ -11,22 +13,35 @@ namespace Concre_Innova_API.Application.Services
         private readonly ILoginRepository _loginRepository;
         private readonly IRecoveryRepository _recoveryRepository;
         private readonly IPasswordResetRepository _passwordResetRepository;
+        private readonly ITokenService _tokenService;
 
         public UserService(
             IUserRepository repo,
             ILoginRepository loginRepo,
             IRecoveryRepository recoveryRepo,
-            IPasswordResetRepository passwordResetRepo)
+            IPasswordResetRepository passwordResetRepo,
+            ITokenService tokenService)
         {
             _userRepository = repo;
             _loginRepository = loginRepo;
             _recoveryRepository = recoveryRepo;
             _passwordResetRepository = passwordResetRepo;
+            _tokenService = tokenService;
         }
 
-        public Task<UserLogin> LoginAsync(string correo, string contrasena)
+        public async Task<UserLogin> LoginAsync(string correo, string contrasena)
         {
-            return _loginRepository.LoginAsync(correo, contrasena);
+            var result = await _loginRepository.LoginAsync(correo, contrasena);
+
+            if (result.Codigo == 1 &&
+                result.IdUsuario.HasValue &&
+                result.IdRol.HasValue)
+            {
+                result.NombreRol = AppRoles.GetName(result.IdRol);
+                result.Token = _tokenService.GenerateToken(CreateLoginClaims(result));
+            }
+
+            return result;
         }
 
         public Task<UserLogin> ValidateEmailAsync(string correo)
@@ -98,6 +113,19 @@ namespace Concre_Innova_API.Application.Services
         public Task<User> DeactivateUserAsync(int idUsuario)
         {
             return _userRepository.DeactivateUserAsync(idUsuario);
+        }
+
+        private static IEnumerable<Claim> CreateLoginClaims(UserLogin user)
+        {
+            var roleName = AppRoles.GetName(user.IdRol);
+
+            return new[]
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.IdUsuario!.Value.ToString()),
+                new Claim(ClaimTypes.Role, roleName),
+                new Claim("idRol", user.IdRol!.Value.ToString()),
+                new Claim("nombreRol", roleName)
+            };
         }
     }
 }
