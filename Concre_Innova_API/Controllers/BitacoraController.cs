@@ -29,12 +29,26 @@ namespace Concre_Innova_API.Controllers
 
         // GET api/Bitacora/List
         [HttpGet("List")]
-        public async Task<IActionResult> GetBitacora()
+        public async Task<IActionResult> GetBitacora(
+            [FromQuery] int? pagina = null,
+            [FromQuery] int? tamanoPagina = null,
+            [FromQuery] string? busqueda = null,
+            [FromQuery] string? operacion = null)
         {
             var userContext = _requestUserContextService.GetCurrentUser(HttpContext);
             var denied = await RequirePermissionAsync(userContext, PermissionCodes.BitacoraVer, "READ");
             if (denied != null)
                 return denied;
+
+            var pagination = new PaginationQuery(pagina, tamanoPagina, defaultPageSize: 50);
+            if (pagination.IsRequested)
+            {
+                var pagedList = await _bitacoraService.GetBitacoraPaginadaAsync(
+                    pagination,
+                    busqueda,
+                    operacion);
+                return Ok(pagedList);
+            }
 
             var list = await _bitacoraService.GetBitacoraAsync();
             return Ok(list);

@@ -35,7 +35,11 @@ namespace Concre_Innova_API.Controllers
         }
 
         [HttpGet("UserList")]
-        public async Task<ActionResult<IEnumerable<UserResponseDto>>> UserList()
+        public async Task<ActionResult> UserList(
+            [FromQuery] int? pagina = null,
+            [FromQuery] int? tamanoPagina = null,
+            [FromQuery] string? busqueda = null,
+            [FromQuery] int? idRol = null)
         {
             var userContext = _requestUserContextService.GetCurrentUser(HttpContext);
             var denied = await RequirePermissionAsync(userContext, PermissionCodes.UsuariosVer, "ACCESS");
@@ -47,6 +51,16 @@ namespace Concre_Innova_API.Controllers
                 "Usuarios",
                 "ACCESS",
                 "Acceso al modulo de gestion de usuarios.");
+
+            var pagination = new PaginationQuery(pagina, tamanoPagina, defaultPageSize: 25);
+            if (pagination.IsRequested)
+            {
+                var pagedUsers = await _userService.GetUsersPaginadosAsync(
+                    pagination,
+                    busqueda,
+                    idRol);
+                return Ok(pagedUsers);
+            }
 
             var users = await _userService.GetUsersAsync();
             return Ok(users);

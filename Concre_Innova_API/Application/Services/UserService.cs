@@ -1,5 +1,6 @@
 using Concre_Innova_API.Domain.Entities;
 using Concre_Innova_API.Domain.Constants;
+using Concre_Innova_API.Application.DTOs.Requests;
 using Concre_Innova_API.Application.DTOs.Responses;
 using Concre_Innova_API.Application.Interfaces.Repositories;
 using Concre_Innova_API.Application.Interfaces.Services;
@@ -67,6 +68,14 @@ namespace Concre_Innova_API.Application.Services
         public Task<IEnumerable<UserResponseDto>> GetUsersAsync()
         {
             return _userRepository.GetUsersAsync();
+        }
+
+        public Task<PaginatedResponseDto<UserResponseDto>> GetUsersPaginadosAsync(
+            PaginationQuery pagination,
+            string? busqueda,
+            int? idRol)
+        {
+            return _userRepository.GetUsersPaginadosAsync(pagination, busqueda, idRol);
         }
 
         public Task<UserDetailResponseDto?> GetUserByIdAsync(int idUsuario)

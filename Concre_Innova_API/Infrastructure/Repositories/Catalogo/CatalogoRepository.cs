@@ -39,6 +39,34 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Catalogo
             return productos;
         }
 
+        public async Task<PaginatedResponseDto<CatalogoProductoResponseDto>> BuscarCatalogoProductosPaginadoAsync(
+            CatalogoProductoQuery query,
+            PaginationQuery pagination)
+        {
+            var productos = new List<CatalogoProductoResponseDto>();
+            var totalItems = 0;
+
+            await using var conn = _connectionFactory.CreateConnection();
+            await using var cmd = CreatePaginatedCatalogQueryCommand(conn, query, pagination);
+
+            await conn.OpenAsync();
+
+            await using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                productos.Add(MapCatalogProduct(reader));
+                totalItems = GetInt32(reader, "TotalItems");
+            }
+
+            return new PaginatedResponseDto<CatalogoProductoResponseDto>
+            {
+                Items = productos,
+                TotalItems = totalItems,
+                PageNumber = pagination.PageNumber,
+                PageSize = pagination.PageSize
+            };
+        }
+
         public async Task<CatalogoProductoResponseDto?> ObtenerProductoPorIdAsync(int idProducto)
         {
             await using var conn = _connectionFactory.CreateConnection();
@@ -847,6 +875,77 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Catalogo
             };
 
             AddCatalogQueryParameters(cmd, query);
+            return cmd;
+        }
+
+        private static SqlCommand CreatePaginatedCatalogQueryCommand(
+            SqlConnection conn,
+            CatalogoProductoQuery query,
+            PaginationQuery pagination)
+        {
+            var cmd = new SqlCommand(
+                """
+                SELECT
+                    p.IdProducto,
+                    p.Nombre,
+                    ISNULL(CONVERT(NVARCHAR(MAX), p.Descripcion), '') AS Descripcion,
+                    p.Precio,
+                    ISNULL(p.Imagen, '') AS Imagen,
+                    p.IdCategoria,
+                    c.NombreCategoria,
+                    p.IdTipo,
+                    ISNULL(t.NombreTipo, '') AS NombreTipo,
+                    ISNULL(p.Tamano, '') AS Tamano,
+                    ISNULL(p.Material, '') AS Material,
+                    ISNULL(p.Caracteristicas, '') AS Caracteristicas,
+                    COALESCE(i.CantidadDisponible, p.Stock, 0) AS Stock,
+                    CASE
+                        WHEN COALESCE(i.CantidadDisponible, p.Stock, 0) <= 0 THEN 'Agotado'
+                        ELSE 'Disponible'
+                    END AS Disponibilidad,
+                    COUNT(1) OVER() AS TotalItems
+                FROM Productos p
+                INNER JOIN Categorias c ON c.IdCategoria = p.IdCategoria
+                LEFT JOIN TiposProducto t ON t.IdTipo = p.IdTipo
+                LEFT JOIN Inventario i ON i.IdProducto = p.IdProducto
+                WHERE p.Estado = 'Activo'
+                    AND (@Busqueda IS NULL
+                        OR p.Nombre COLLATE Latin1_General_CI_AI LIKE @BusquedaPattern ESCAPE '\'
+                        OR CONVERT(NVARCHAR(MAX), p.Descripcion) COLLATE Latin1_General_CI_AI LIKE @BusquedaPattern ESCAPE '\'
+                        OR p.Tamano COLLATE Latin1_General_CI_AI LIKE @BusquedaPattern ESCAPE '\'
+                        OR p.Material COLLATE Latin1_General_CI_AI LIKE @BusquedaPattern ESCAPE '\'
+                        OR c.NombreCategoria COLLATE Latin1_General_CI_AI LIKE @BusquedaPattern ESCAPE '\')
+                    AND (@IdCategoria IS NULL OR p.IdCategoria = @IdCategoria)
+                    AND (@IdTipo IS NULL OR p.IdTipo = @IdTipo)
+                    AND (@PrecioMinimo IS NULL OR p.Precio >= @PrecioMinimo)
+                    AND (@PrecioMaximo IS NULL OR p.Precio <= @PrecioMaximo)
+                    AND (@Disponibilidad IS NULL
+                        OR (@Disponibilidad = 'disponible' AND COALESCE(i.CantidadDisponible, p.Stock, 0) > 0)
+                        OR (@Disponibilidad = 'agotado' AND COALESCE(i.CantidadDisponible, p.Stock, 0) <= 0))
+                    AND (@Tamano IS NULL
+                        OR p.Tamano COLLATE Latin1_General_CI_AI = @Tamano)
+                    AND (@Material IS NULL
+                        OR p.Material COLLATE Latin1_General_CI_AI = @Material)
+                    AND (@Tipo IS NULL
+                        OR p.Nombre COLLATE Latin1_General_CI_AI LIKE @TipoPattern ESCAPE '\'
+                        OR CONVERT(NVARCHAR(MAX), p.Descripcion) COLLATE Latin1_General_CI_AI LIKE @TipoPattern ESCAPE '\'
+                        OR t.NombreTipo COLLATE Latin1_General_CI_AI LIKE @TipoPattern ESCAPE '\'
+                        OR c.NombreCategoria COLLATE Latin1_General_CI_AI LIKE @TipoPattern ESCAPE '\')
+                    AND (@IdProducto IS NULL OR p.IdProducto = @IdProducto)
+                ORDER BY
+                    CASE WHEN @OrdenarPor = 'precio' AND @DireccionOrden = 'asc' THEN p.Precio END ASC,
+                    CASE WHEN @OrdenarPor = 'precio' AND @DireccionOrden = 'desc' THEN p.Precio END DESC,
+                    p.IdProducto DESC
+                OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY
+                """,
+                conn)
+            {
+                CommandType = CommandType.Text
+            };
+
+            AddCatalogQueryParameters(cmd, query);
+            cmd.Parameters.Add("@Offset", SqlDbType.Int).Value = pagination.Offset;
+            cmd.Parameters.Add("@PageSize", SqlDbType.Int).Value = pagination.PageSize;
             return cmd;
         }
 

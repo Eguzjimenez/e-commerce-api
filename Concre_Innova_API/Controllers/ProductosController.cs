@@ -33,7 +33,7 @@ namespace Concre_Innova_API.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<CatalogoProductoResponseDto>>> ObtenerCatalogoProductos(
+        public async Task<ActionResult> ObtenerCatalogoProductos(
             [FromQuery] string? busqueda = null,
             [FromQuery] string? ordenarPor = null,
             [FromQuery] string? direccionOrden = null,
@@ -44,7 +44,9 @@ namespace Concre_Innova_API.Controllers
             [FromQuery] string? disponibilidad = null,
             [FromQuery] string? tamano = null,
             [FromQuery] string? material = null,
-            [FromQuery] string? tipo = null)
+            [FromQuery] string? tipo = null,
+            [FromQuery] int? pagina = null,
+            [FromQuery] int? tamanoPagina = null)
         {
             try
             {
@@ -62,6 +64,15 @@ namespace Concre_Innova_API.Controllers
                     Material = material,
                     Tipo = tipo
                 };
+
+                var pagination = new PaginationQuery(pagina, tamanoPagina, defaultPageSize: 12);
+                if (pagination.IsRequested)
+                {
+                    var pagedProducts = await _catalogoService.ObtenerCatalogoProductosPaginadoAsync(
+                        query,
+                        pagination);
+                    return Ok(pagedProducts);
+                }
 
                 var productos = await _catalogoService.ObtenerCatalogoProductosAsync(query);
                 return Ok(productos);
