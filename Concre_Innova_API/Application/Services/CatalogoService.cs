@@ -39,6 +39,11 @@ namespace Concre_Innova_API.Application.Services
             return _repo.BuscarCatalogoProductosPaginadoAsync(query ?? new CatalogoProductoQuery(), pagination);
         }
 
+        public Task<CatalogoFiltrosResponseDto> ObtenerFiltrosCatalogoAsync()
+        {
+            return _repo.ObtenerFiltrosCatalogoAsync();
+        }
+
         public Task<CatalogoProductoResponseDto?> ObtenerProductoPorIdAsync(int idProducto)
         {
             return _repo.ObtenerProductoPorIdAsync(idProducto);

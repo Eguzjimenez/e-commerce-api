@@ -85,6 +85,22 @@ namespace Concre_Innova_API.Controllers
             }
         }
 
+        [HttpGet("filtros")]
+        public async Task<ActionResult<CatalogoFiltrosResponseDto>> ObtenerFiltrosCatalogo()
+        {
+            try
+            {
+                var filtros = await _catalogoService.ObtenerFiltrosCatalogoAsync();
+                return Ok(filtros);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(
+                    StatusCodes.Status500InternalServerError,
+                    new { message = "Error al obtener los filtros del catalogo.", error = ex.Message });
+            }
+        }
+
         [HttpGet("{idProducto:int}")]
         public async Task<ActionResult<CatalogoProductoResponseDto>> ObtenerProductoPorId(int idProducto)
         {

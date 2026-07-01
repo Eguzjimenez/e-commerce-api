@@ -31,6 +31,7 @@ builder.Services
     });
 
 builder.Services.AddAuthorization();
+builder.Services.AddMemoryCache();
 
 // CORS
 builder.Services.AddCors(options =>

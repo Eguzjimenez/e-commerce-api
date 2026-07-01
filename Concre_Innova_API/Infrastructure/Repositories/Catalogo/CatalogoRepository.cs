@@ -67,6 +67,72 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Catalogo
             };
         }
 
+        public async Task<CatalogoFiltrosResponseDto> ObtenerFiltrosCatalogoAsync()
+        {
+            var categorias = new List<CategoriaResponseDto>();
+            var tiposProducto = new List<TipoProductoResponseDto>();
+            decimal precioMinimo = 0;
+            decimal precioMaximo = 0;
+
+            await using var conn = _connectionFactory.CreateConnection();
+            await using var cmd = new SqlCommand(
+                """
+                SELECT
+                    IdCategoria,
+                    NombreCategoria,
+                    ISNULL(Descripcion, '') AS Descripcion,
+                    ISNULL(Estado, 'Activo') AS Estado
+                FROM Categorias
+                WHERE ISNULL(Estado, 'Activo') = 'Activo'
+                ORDER BY NombreCategoria;
+
+                SELECT
+                    IdTipo,
+                    NombreTipo,
+                    ISNULL(Descripcion, '') AS Descripcion,
+                    ISNULL(Estado, 'Activo') AS Estado
+                FROM TiposProducto
+                WHERE ISNULL(Estado, 'Activo') = 'Activo'
+                ORDER BY NombreTipo;
+
+                SELECT
+                    ISNULL(MIN(Precio), 0) AS PrecioMinimo,
+                    ISNULL(MAX(Precio), 0) AS PrecioMaximo
+                FROM Productos
+                WHERE Estado = 'Activo';
+                """,
+                conn)
+            {
+                CommandType = CommandType.Text
+            };
+
+            await conn.OpenAsync();
+
+            await using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+                categorias.Add(MapCategoria(reader));
+
+            if (await reader.NextResultAsync())
+            {
+                while (await reader.ReadAsync())
+                    tiposProducto.Add(MapTipoProducto(reader));
+            }
+
+            if (await reader.NextResultAsync() && await reader.ReadAsync())
+            {
+                precioMinimo = GetDecimal(reader, "PrecioMinimo");
+                precioMaximo = GetDecimal(reader, "PrecioMaximo");
+            }
+
+            return new CatalogoFiltrosResponseDto
+            {
+                Categorias = categorias,
+                TiposProducto = tiposProducto,
+                PrecioMinimo = precioMinimo,
+                PrecioMaximo = precioMaximo
+            };
+        }
+
         public async Task<CatalogoProductoResponseDto?> ObtenerProductoPorIdAsync(int idProducto)
         {
             await using var conn = _connectionFactory.CreateConnection();
@@ -1138,6 +1204,17 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Catalogo
             {
                 IdTipo = GetInt32(reader, "IdTipo"),
                 NombreTipo = GetString(reader, "NombreTipo"),
+                Descripcion = GetString(reader, "Descripcion"),
+                Estado = GetString(reader, "Estado")
+            };
+        }
+
+        private static CategoriaResponseDto MapCategoria(SqlDataReader reader)
+        {
+            return new CategoriaResponseDto
+            {
+                IdCategoria = GetInt32(reader, "IdCategoria"),
+                NombreCategoria = GetString(reader, "NombreCategoria"),
                 Descripcion = GetString(reader, "Descripcion"),
                 Estado = GetString(reader, "Estado")
             };
