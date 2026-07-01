@@ -30,6 +30,28 @@ namespace Concre_Innova_API.Controllers
             return Ok(favorites);
         }
 
+        [HttpGet("count")]
+        public async Task<ActionResult<object>> GetFavoriteCount()
+        {
+            var userId = GetAuthenticatedUserId();
+            if (!userId.HasValue)
+                return Unauthorized(new { message = "Debe iniciar sesion para consultar favoritos." });
+
+            var count = await _favoriteService.GetFavoriteCountAsync(userId.Value);
+            return Ok(new { count });
+        }
+
+        [HttpGet("ids")]
+        public async Task<ActionResult<IEnumerable<int>>> GetFavoriteProductIds()
+        {
+            var userId = GetAuthenticatedUserId();
+            if (!userId.HasValue)
+                return Unauthorized(new { message = "Debe iniciar sesion para consultar favoritos." });
+
+            var favoriteIds = await _favoriteService.GetFavoriteProductIdsAsync(userId.Value);
+            return Ok(favoriteIds);
+        }
+
         [HttpPost("{idProducto:int}")]
         public async Task<ActionResult<OperacionResponseDto>> AddFavorite(int idProducto)
         {

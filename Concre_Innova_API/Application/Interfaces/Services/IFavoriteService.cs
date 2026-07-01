@@ -5,6 +5,8 @@ namespace Concre_Innova_API.Application.Interfaces.Services
     public interface IFavoriteService
     {
         Task<IEnumerable<CatalogoProductoResponseDto>> GetFavoritesAsync(int userId);
+        Task<int> GetFavoriteCountAsync(int userId);
+        Task<IEnumerable<int>> GetFavoriteProductIdsAsync(int userId);
         Task<OperacionResponseDto> AddFavoriteAsync(int userId, int productId);
         Task<OperacionResponseDto> RemoveFavoriteAsync(int userId, int productId);
     }

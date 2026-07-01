@@ -65,6 +65,58 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Favorites
             return favorites;
         }
 
+        public async Task<int> GetFavoriteCountAsync(int userId)
+        {
+            await using var conn = _connectionFactory.CreateConnection();
+            await using var cmd = new SqlCommand(
+                """
+                SELECT COUNT(1)
+                FROM Favoritos f
+                INNER JOIN Productos p ON p.IdProducto = f.IdProducto
+                WHERE f.IdUsuario = @IdUsuario
+                    AND p.Estado = 'Activo';
+                """,
+                conn)
+            {
+                CommandType = CommandType.Text
+            };
+
+            cmd.Parameters.Add("@IdUsuario", SqlDbType.Int).Value = userId;
+
+            await conn.OpenAsync();
+            return Convert.ToInt32(await cmd.ExecuteScalarAsync());
+        }
+
+        public async Task<IEnumerable<int>> GetFavoriteProductIdsAsync(int userId)
+        {
+            var favoriteIds = new List<int>();
+
+            await using var conn = _connectionFactory.CreateConnection();
+            await using var cmd = new SqlCommand(
+                """
+                SELECT f.IdProducto
+                FROM Favoritos f
+                INNER JOIN Productos p ON p.IdProducto = f.IdProducto
+                WHERE f.IdUsuario = @IdUsuario
+                    AND p.Estado = 'Activo'
+                ORDER BY f.FechaRegistro DESC;
+                """,
+                conn)
+            {
+                CommandType = CommandType.Text
+            };
+
+            cmd.Parameters.Add("@IdUsuario", SqlDbType.Int).Value = userId;
+
+            await conn.OpenAsync();
+            await using var reader = await cmd.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync())
+                favoriteIds.Add(reader.GetInt32(reader.GetOrdinal("IdProducto")));
+
+            return favoriteIds;
+        }
+
         public async Task<OperacionResponseDto> AddFavoriteAsync(int userId, int productId)
         {
             await using var conn = _connectionFactory.CreateConnection();

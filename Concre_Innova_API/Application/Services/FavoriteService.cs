@@ -18,6 +18,16 @@ namespace Concre_Innova_API.Application.Services
             return _favoriteRepository.GetFavoritesAsync(userId);
         }
 
+        public Task<int> GetFavoriteCountAsync(int userId)
+        {
+            return _favoriteRepository.GetFavoriteCountAsync(userId);
+        }
+
+        public Task<IEnumerable<int>> GetFavoriteProductIdsAsync(int userId)
+        {
+            return _favoriteRepository.GetFavoriteProductIdsAsync(userId);
+        }
+
         public Task<OperacionResponseDto> AddFavoriteAsync(int userId, int productId)
         {
             return _favoriteRepository.AddFavoriteAsync(userId, productId);
