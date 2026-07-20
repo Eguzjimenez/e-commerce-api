@@ -1,10 +1,37 @@
 using Concre_Innova_API.Configuration;
+using Concre_Innova_API.Configuration.Settings;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+var jwtSettings = builder.Configuration.GetSection("Jwt").Get<JwtSettings>() ?? new JwtSettings();
+var jwtKey = Encoding.UTF8.GetBytes(jwtSettings.Key ?? string.Empty);
+
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(jwtKey),
+            ValidateIssuer = !string.IsNullOrWhiteSpace(jwtSettings.Issuer),
+            ValidIssuer = jwtSettings.Issuer,
+            ValidateAudience = !string.IsNullOrWhiteSpace(jwtSettings.Audience),
+            ValidAudience = jwtSettings.Audience,
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.FromMinutes(1)
+        };
+    });
+
+builder.Services.AddAuthorization();
+builder.Services.AddMemoryCache();
 
 // CORS
 builder.Services.AddCors(options =>
@@ -32,6 +59,7 @@ builder.Services.AddCors(options =>
 // Controllers
 builder.Services.AddControllers();
 builder.Services.AddApplicationServices(builder.Configuration);
+Directory.CreateDirectory(Path.Combine(builder.Environment.ContentRootPath, "wwwroot"));
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -46,6 +74,9 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowReactLocal");
+app.UseStaticFiles();
+app.UseAuthentication();
+app.UseAuthorization();
 app.MapControllers();
 
 app.Run();

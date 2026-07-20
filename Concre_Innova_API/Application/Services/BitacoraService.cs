@@ -1,3 +1,4 @@
+using Concre_Innova_API.Application.DTOs.Requests;
 using Concre_Innova_API.Application.DTOs.Responses;
 using Concre_Innova_API.Domain.Entities;
 using Concre_Innova_API.Application.Interfaces.Repositories;
@@ -22,6 +23,14 @@ namespace Concre_Innova_API.Application.Services
         public Task<IEnumerable<BitacoraResponseDto>> GetBitacoraAsync()
         {
             return _repo.GetBitacoraAsync();
+        }
+
+        public Task<PaginatedResponseDto<BitacoraResponseDto>> GetBitacoraPaginadaAsync(
+            PaginationQuery pagination,
+            string? busqueda,
+            string? operacion)
+        {
+            return _repo.GetBitacoraPaginadaAsync(pagination, busqueda, operacion);
         }
     }
 }

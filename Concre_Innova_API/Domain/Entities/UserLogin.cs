@@ -6,5 +6,7 @@ namespace Concre_Innova_API.Domain.Entities
         public string? Mensaje { get; set; }
         public int? IdUsuario { get; set; }
         public int? IdRol { get; set; }
+        public string? NombreRol { get; set; }
+        public string? Token { get; set; }
     }
 }

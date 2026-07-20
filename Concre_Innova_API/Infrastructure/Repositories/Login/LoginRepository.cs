@@ -54,6 +54,10 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Login
                             result.IdUsuario = null;
                             result.IdRol = null;
                         }
+                        else
+                        {
+                            result.NombreRol = AppRoles.GetName(result.IdRol);
+                        }
                     }
                 }
             }

@@ -1,17 +1,27 @@
 using Concre_Innova_API.Application.Interfaces.Repositories;
+using Concre_Innova_API.Application.DTOs.Responses;
 using Concre_Innova_API.Infrastructure.Data;
 using Concre_Innova_API.Domain.Entities;
 using Microsoft.Data.SqlClient;
 using System.Collections.Concurrent;
 using System.Data;
+using System.Globalization;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace Concre_Innova_API.Infrastructure.Repositories.Login
 {
     public class RecoveryRepository : IRecoveryRepository
     {
+        private const int RecoveryCodeMinutesToLive = 10;
+        private const int ResetTokenMinutesToLive = 15;
+        private const int MaximumCodeValidationAttempts = 5;
+
         private readonly ISqlConnectionFactory _connectionFactory;
 
         private static readonly ConcurrentDictionary<string, RecoveryTokenInfo> RecoveryTokens = new();
+        private static readonly ConcurrentDictionary<string, RecoveryCodeInfo> RecoveryCodesByEmail =
+            new(StringComparer.OrdinalIgnoreCase);
 
         public RecoveryRepository(ISqlConnectionFactory connectionFactory)
         {
@@ -57,29 +67,100 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Login
             return result;
         }
 
-        public Task<UserLogin> GenerateRecoveryTokenAsync(int idUsuario, string correo)
+        public Task<RecoveryCodeGenerationResponseDto> GenerateRecoveryTokenAsync(int idUsuario, string correo)
         {
-            var token = Guid.NewGuid().ToString("N");
-            var expirationDate = DateTime.UtcNow.AddMinutes(15);
+            var normalizedEmail = NormalizeEmail(correo);
+            var code = GenerateRecoveryCode();
+            var expirationDate = DateTime.UtcNow.AddMinutes(RecoveryCodeMinutesToLive);
 
-            RecoveryTokens[token] = new RecoveryTokenInfo
+            RecoveryCodesByEmail[normalizedEmail] = new RecoveryCodeInfo
             {
                 IdUsuario = idUsuario,
-                Correo = correo.Trim(),
-                ExpirationDate = expirationDate
+                Correo = normalizedEmail,
+                CodeHash = HashRecoveryCode(normalizedEmail, code),
+                ExpirationDate = expirationDate,
+                RemainingAttempts = MaximumCodeValidationAttempts
             };
 
-            var result = new UserLogin
+            var result = new RecoveryCodeGenerationResponseDto
             {
                 Codigo = 1,
-                Mensaje = $"Token generado correctamente. Enlace: http://localhost:5222/reset-password?token={token}",
-                IdUsuario = idUsuario
+                Mensaje = "Codigo de recuperacion generado correctamente.",
+                ExpiraEn = expirationDate,
+                Correo = normalizedEmail,
+                CodigoRecuperacion = code
             };
 
             return Task.FromResult(result);
         }
 
+        public Task<RecoveryCodeVerificationResponseDto> ValidateRecoveryCodeAsync(
+            string correo,
+            string codigo)
+        {
+            var normalizedEmail = NormalizeEmail(correo);
+            var normalizedCode = codigo.Trim();
+            var result = new RecoveryCodeVerificationResponseDto();
+
+            if (!RecoveryCodesByEmail.TryGetValue(normalizedEmail, out var codeInfo))
+            {
+                result.Codigo = 0;
+                result.Mensaje = "No hay un codigo activo para este correo.";
+                return Task.FromResult(result);
+            }
+
+            if (codeInfo.ExpirationDate < DateTime.UtcNow)
+            {
+                RecoveryCodesByEmail.TryRemove(normalizedEmail, out _);
+
+                result.Codigo = 0;
+                result.Mensaje = "El codigo de recuperacion ha expirado.";
+                return Task.FromResult(result);
+            }
+
+            if (!string.Equals(
+                    codeInfo.CodeHash,
+                    HashRecoveryCode(normalizedEmail, normalizedCode),
+                    StringComparison.Ordinal))
+            {
+                codeInfo.RemainingAttempts--;
+
+                if (codeInfo.RemainingAttempts <= 0)
+                    RecoveryCodesByEmail.TryRemove(normalizedEmail, out _);
+
+                result.Codigo = 0;
+                result.Mensaje = "El codigo de recuperacion no es valido.";
+                return Task.FromResult(result);
+            }
+
+            RecoveryCodesByEmail.TryRemove(normalizedEmail, out _);
+
+            var resetToken = Guid.NewGuid().ToString("N");
+            RecoveryTokens[resetToken] = new RecoveryTokenInfo
+            {
+                IdUsuario = codeInfo.IdUsuario,
+                Correo = codeInfo.Correo,
+                ExpirationDate = DateTime.UtcNow.AddMinutes(ResetTokenMinutesToLive)
+            };
+
+            result.Codigo = 1;
+            result.Mensaje = "Codigo verificado correctamente.";
+            result.RecoveryToken = resetToken;
+
+            return Task.FromResult(result);
+        }
+
         public Task<UserLogin> ValidateRecoveryTokenAsync(string token)
+        {
+            return Task.FromResult(GetRecoveryTokenValidationResult(token, consumeToken: false));
+        }
+
+        public Task<UserLogin> ConsumeRecoveryTokenAsync(string token)
+        {
+            return Task.FromResult(GetRecoveryTokenValidationResult(token, consumeToken: true));
+        }
+
+        private static UserLogin GetRecoveryTokenValidationResult(string token, bool consumeToken)
         {
             var result = new UserLogin();
 
@@ -87,14 +168,14 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Login
             {
                 result.Codigo = 0;
                 result.Mensaje = "El token de recuperacion es requerido.";
-                return Task.FromResult(result);
+                return result;
             }
 
             if (!RecoveryTokens.TryGetValue(token, out var tokenInfo))
             {
                 result.Codigo = 0;
                 result.Mensaje = "El enlace de recuperacion no es valido.";
-                return Task.FromResult(result);
+                return result;
             }
 
             if (tokenInfo.ExpirationDate < DateTime.UtcNow)
@@ -103,14 +184,44 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Login
 
                 result.Codigo = 0;
                 result.Mensaje = "El enlace de recuperacion ha expirado.";
-                return Task.FromResult(result);
+                return result;
             }
+
+            if (consumeToken)
+                RecoveryTokens.TryRemove(token, out _);
 
             result.Codigo = 1;
             result.Mensaje = "El enlace de recuperacion es valido.";
             result.IdUsuario = tokenInfo.IdUsuario;
 
-            return Task.FromResult(result);
+            return result;
+        }
+
+        private static string NormalizeEmail(string email)
+        {
+            return email.Trim().ToLowerInvariant();
+        }
+
+        private static string GenerateRecoveryCode()
+        {
+            return RandomNumberGenerator
+                .GetInt32(100000, 1000000)
+                .ToString(CultureInfo.InvariantCulture);
+        }
+
+        private static string HashRecoveryCode(string email, string code)
+        {
+            var bytes = SHA256.HashData(Encoding.UTF8.GetBytes($"{email}:{code}"));
+            return Convert.ToHexString(bytes);
+        }
+
+        private class RecoveryCodeInfo
+        {
+            public int IdUsuario { get; set; }
+            public string Correo { get; set; } = string.Empty;
+            public string CodeHash { get; set; } = string.Empty;
+            public DateTime ExpirationDate { get; set; }
+            public int RemainingAttempts { get; set; }
         }
 
         private class RecoveryTokenInfo
