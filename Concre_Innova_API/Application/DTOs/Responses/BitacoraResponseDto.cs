@@ -3,7 +3,7 @@ namespace Concre_Innova_API.Application.DTOs.Responses
     public class BitacoraResponseDto
     {
         public int IdBitacora { get; set; }
-        public int IdUsuario { get; set; }
+        public int? IdUsuario { get; set; }
         public string? Correo { get; set; }        
         public string? NombreUsuario { get; set; }
         public string? TablaAfectada { get; set; }

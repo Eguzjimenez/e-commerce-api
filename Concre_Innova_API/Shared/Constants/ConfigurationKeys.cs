@@ -4,5 +4,6 @@ namespace Concre_Innova_API.Shared.Constants
     {
         public const string DefaultConnection = "DefaultConnection";
         public const string EmailSettings = "EmailSettings";
+        public const string Jwt = "Jwt";
     }
 }

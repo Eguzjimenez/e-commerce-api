@@ -1,3 +1,4 @@
+using Concre_Innova_API.Application.DTOs.Requests;
 using Concre_Innova_API.Application.DTOs.Responses;
 using Concre_Innova_API.Application.Interfaces.Repositories;
 using Concre_Innova_API.Infrastructure.Data;
@@ -128,6 +129,73 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Users
             return list;
         }
 
+        public async Task<PaginatedResponseDto<UserResponseDto>> GetUsersPaginadosAsync(
+            PaginationQuery pagination,
+            string? busqueda,
+            int? idRol)
+        {
+            var list = new List<UserResponseDto>();
+            var totalItems = 0;
+            var normalizedSearch = NormalizeText(busqueda);
+            var normalizedRoleId = idRol.HasValue && idRol.Value > 0 ? idRol.Value : (int?)null;
+
+            await using var conn = _connectionFactory.CreateConnection();
+            await using var cmd = new SqlCommand(
+                """
+                SELECT
+                    u.IdUsuario,
+                    u.Nombre,
+                    u.Apellido,
+                    u.Correo,
+                    u.Telefono,
+                    u.IdRol,
+                    ISNULL(r.NombreRol, '') AS NombreRol,
+                    COUNT(1) OVER() AS TotalItems
+                FROM Usuarios u
+                LEFT JOIN Roles r ON r.IdRol = u.IdRol
+                WHERE (@Busqueda IS NULL
+                        OR u.Nombre COLLATE Latin1_General_CI_AI LIKE @BusquedaPattern ESCAPE '\'
+                        OR u.Apellido COLLATE Latin1_General_CI_AI LIKE @BusquedaPattern ESCAPE '\'
+                        OR u.Correo COLLATE Latin1_General_CI_AI LIKE @BusquedaPattern ESCAPE '\'
+                        OR ISNULL(u.Telefono, '') COLLATE Latin1_General_CI_AI LIKE @BusquedaPattern ESCAPE '\')
+                    AND (@IdRol IS NULL OR u.IdRol = @IdRol)
+                ORDER BY u.IdUsuario DESC
+                OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
+                """,
+                conn)
+            {
+                CommandType = CommandType.Text
+            };
+
+            AddNullableTextParameter(cmd, "@Busqueda", normalizedSearch);
+            AddNullableTextParameter(
+                cmd,
+                "@BusquedaPattern",
+                normalizedSearch is null ? null : $"%{EscapeLikeValue(normalizedSearch)}%",
+                -1);
+            cmd.Parameters.Add("@IdRol", SqlDbType.Int).Value =
+                normalizedRoleId.HasValue ? normalizedRoleId.Value : DBNull.Value;
+            cmd.Parameters.Add("@Offset", SqlDbType.Int).Value = pagination.Offset;
+            cmd.Parameters.Add("@PageSize", SqlDbType.Int).Value = pagination.PageSize;
+
+            await conn.OpenAsync();
+
+            await using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                list.Add(MapUser(reader));
+                totalItems = reader.GetInt32(reader.GetOrdinal("TotalItems"));
+            }
+
+            return new PaginatedResponseDto<UserResponseDto>
+            {
+                Items = list,
+                TotalItems = totalItems,
+                PageNumber = pagination.PageNumber,
+                PageSize = pagination.PageSize
+            };
+        }
+
         public async Task<UserDetailResponseDto?> GetUserByIdAsync(int idUsuario)
         {
             await using var conn = _connectionFactory.CreateConnection();
@@ -204,5 +272,42 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Users
             return result;
         }
 
+        private static UserResponseDto MapUser(SqlDataReader reader)
+        {
+            return new UserResponseDto
+            {
+                IdUsuario = reader.GetInt32(reader.GetOrdinal("IdUsuario")),
+                Nombre = reader.GetString(reader.GetOrdinal("Nombre")),
+                Apellido = reader.GetString(reader.GetOrdinal("Apellido")),
+                Correo = reader.GetString(reader.GetOrdinal("Correo")),
+                Telefono = reader.IsDBNull(reader.GetOrdinal("Telefono")) ? string.Empty : reader.GetString(reader.GetOrdinal("Telefono")),
+                IdRol = reader.GetInt32(reader.GetOrdinal("IdRol")),
+                NombreRol = reader.IsDBNull(reader.GetOrdinal("NombreRol")) ? string.Empty : reader.GetString(reader.GetOrdinal("NombreRol"))
+            };
+        }
+
+        private static void AddNullableTextParameter(
+            SqlCommand cmd,
+            string parameterName,
+            string? value,
+            int size = 255)
+        {
+            cmd.Parameters.Add(parameterName, SqlDbType.NVarChar, size).Value =
+                value is null ? DBNull.Value : value;
+        }
+
+        private static string? NormalizeText(string? value)
+        {
+            return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+        }
+
+        private static string EscapeLikeValue(string value)
+        {
+            return value
+                .Replace(@"\", @"\\")
+                .Replace("%", @"\%")
+                .Replace("_", @"\_")
+                .Replace("[", @"\[");
+        }
     }
 }

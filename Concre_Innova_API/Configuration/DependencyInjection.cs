@@ -9,7 +9,9 @@ using Concre_Innova_API.Infrastructure.Data;
 using Concre_Innova_API.Infrastructure.Email;
 using Concre_Innova_API.Infrastructure.Repositories.Bitacora;
 using Concre_Innova_API.Infrastructure.Repositories.Catalogo;
+using Concre_Innova_API.Infrastructure.Repositories.Favorites;
 using Concre_Innova_API.Infrastructure.Repositories.Login;
+using Concre_Innova_API.Infrastructure.Repositories.Permissions;
 using Concre_Innova_API.Infrastructure.Repositories.Roles;
 using Concre_Innova_API.Infrastructure.Repositories.Users;
 using Concre_Innova_API.Infrastructure.Security;
@@ -26,6 +28,8 @@ namespace Concre_Innova_API.Configuration
             services.Configure<EmailSettings>(
                 configuration.GetSection(ConfigurationKeys.EmailSettings));
 
+            services.AddSingleton(
+                configuration.GetSection(ConfigurationKeys.Jwt).Get<JwtSettings>() ?? new JwtSettings());
             services.AddSingleton<ISqlConnectionFactory, SqlConnectionFactory>();
 
             services.AddScoped<IUserRepository, UserRepository>();
@@ -35,14 +39,20 @@ namespace Concre_Innova_API.Configuration
             services.AddScoped<IRoleRepository, RoleRepository>();
             services.AddScoped<IBitacoraRepository, BitacoraRepository>();
             services.AddScoped<ICatalogoRepository, CatalogoRepository>();
+            services.AddScoped<IPermissionRepository, PermissionRepository>();
+            services.AddScoped<IFavoriteRepository, FavoriteRepository>();
 
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IRoleService, RoleService>();
             services.AddScoped<IBitacoraService, BitacoraService>();
             services.AddScoped<ICatalogoService, CatalogoService>();
+            services.AddScoped<IPermissionService, PermissionService>();
+            services.AddScoped<IFavoriteService, FavoriteService>();
             services.AddScoped<IRequestUserContextService, RequestUserContextService>();
             services.AddScoped<IAuditService, AuditService>();
             services.AddScoped<IEmailService, EmailService>();
+            services.AddScoped<ITokenService, TokenService>();
+            services.AddSingleton<ILoginAttemptService, LoginAttemptService>();
             services.AddScoped<IAuthRequestValidator, AuthRequestValidator>();
             services.AddScoped<IUserRequestValidator, UserRequestValidator>();
             services.AddScoped<IProductoRequestValidator, ProductoRequestValidator>();

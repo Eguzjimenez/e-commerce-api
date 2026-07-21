@@ -21,9 +21,10 @@ namespace Concre_Innova_API.Application.Validators
                 return "Todos los campos son obligatorios.";
             }
 
-            return EmailAddressValidator.IsValid(request.Correo)
-                ? null
-                : "El formato del correo no es valido.";
+            if (!EmailAddressValidator.IsValid(request.Correo))
+                return "El formato del correo no es valido.";
+
+            return PasswordPolicyValidator.GetValidationMessage(request.Contrasena);
         }
 
         public string? ValidateUpdate(UpdateUserRequest? request)
@@ -40,9 +41,12 @@ namespace Concre_Innova_API.Application.Validators
                 return "Nombre, apellido, correo, telefono e IdRol son requeridos.";
             }
 
-            return EmailAddressValidator.IsValid(request.Correo)
+            if (!EmailAddressValidator.IsValid(request.Correo))
+                return "El formato del correo no es valido.";
+
+            return string.IsNullOrWhiteSpace(request.Contrasena)
                 ? null
-                : "El formato del correo no es valido.";
+                : PasswordPolicyValidator.GetValidationMessage(request.Contrasena);
         }
     }
 }

@@ -12,15 +12,18 @@ namespace Concre_Innova_API.Controllers
         private readonly IRoleService _roleService;
         private readonly IRequestUserContextService _requestUserContextService;
         private readonly IAuditService _auditService;
+        private readonly IPermissionService _permissionService;
 
         public RolesController(
             IRoleService roleService,
             IRequestUserContextService requestUserContextService,
-            IAuditService auditService)
+            IAuditService auditService,
+            IPermissionService permissionService)
         {
             _roleService = roleService;
             _requestUserContextService = requestUserContextService;
             _auditService = auditService;
+            _permissionService = permissionService;
         }
 
         [HttpGet]
@@ -28,10 +31,14 @@ namespace Concre_Innova_API.Controllers
         {
             var userContext = _requestUserContextService.GetCurrentUser(HttpContext);
 
-            if (!userContext.IsAuthenticated)
+            if (!userContext.IsAuthenticated || !userContext.RoleId.HasValue)
                 return Unauthorized(new { message = "Debe iniciar sesion para acceder a este recurso." });
 
-            if (userContext.RoleId != AppRoles.Administrador)
+            var hasPermission = await _permissionService.RoleHasPermissionAsync(
+                userContext.RoleId.Value,
+                PermissionCodes.RolesVer);
+
+            if (!hasPermission)
             {
                 await _auditService.RecordAsync(
                     userContext,

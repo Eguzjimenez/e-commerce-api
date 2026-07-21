@@ -9,6 +9,7 @@ namespace Concre_Innova_API.Application.Interfaces.Validators
         string? ValidateClientRegistration(RegisterClientRequest? request);
         string? ValidateEmail(EmailValidationRequest? request);
         string? ValidateRecoveryEmail(EmailValidationRequest? request);
+        string? ValidateRecoveryCode(RecoveryCodeVerificationRequest? request);
         string? ValidatePasswordReset(PasswordResetRequest? request);
         string? ValidateRecoveryToken(string? token);
     }

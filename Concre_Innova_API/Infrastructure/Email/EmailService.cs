@@ -26,6 +26,27 @@ namespace Concre_Innova_API.Infrastructure.Email
                 $"Hola {name}, tu cuenta de cliente en Concre Innova fue creada correctamente.");
         }
 
+        public async Task SendPasswordRecoveryCodeAsync(string toEmail, string code, DateTime expiresAt)
+        {
+            var body =
+                "Hola," +
+                Environment.NewLine +
+                Environment.NewLine +
+                "Recibimos una solicitud para restablecer la contrasena de tu cuenta en Concre Innova." +
+                Environment.NewLine +
+                $"Tu codigo de verificacion es: {code}" +
+                Environment.NewLine +
+                $"Este codigo expira el {expiresAt:yyyy-MM-dd HH:mm:ss} UTC." +
+                Environment.NewLine +
+                Environment.NewLine +
+                "Si no solicitaste este cambio, puedes ignorar este correo.";
+
+            await SendEmailAsync(
+                toEmail,
+                "Codigo de recuperacion de contrasena",
+                body);
+        }
+
         public async Task SendPasswordResetNotificationAsync(string toEmail, DateTime changedAt)
         {
             var body =
