@@ -75,7 +75,7 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Permissions
                     roles.Add(roleId, role);
                 }
 
-                ((List<PermissionResponseDto>)role.Permisos).Add(MapPermission(reader));
+                ((List<PermissionResponseDto>)role.Permisos).Add(MapPermission(reader, roleId));
             }
 
             return roles.Values;
@@ -166,16 +166,20 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Permissions
             return cmd;
         }
 
-        private static PermissionResponseDto MapPermission(SqlDataReader reader)
+        private static PermissionResponseDto MapPermission(SqlDataReader reader, int roleId)
         {
+            var codigo = reader.GetString(reader.GetOrdinal("Codigo"));
+            var assignedInDatabase = reader.GetBoolean(reader.GetOrdinal("Asignado"));
+
             return new PermissionResponseDto
             {
                 IdPermiso = reader.GetInt32(reader.GetOrdinal("IdPermiso")),
-                Codigo = reader.GetString(reader.GetOrdinal("Codigo")),
+                Codigo = codigo,
                 Nombre = reader.GetString(reader.GetOrdinal("Nombre")),
                 Modulo = reader.GetString(reader.GetOrdinal("Modulo")),
                 Descripcion = reader.GetString(reader.GetOrdinal("Descripcion")),
-                Asignado = reader.GetBoolean(reader.GetOrdinal("Asignado"))
+                Asignado = assignedInDatabase &&
+                           PermissionRolePolicy.CanRoleReceivePermission(roleId, codigo)
             };
         }
     }

@@ -1,11 +1,13 @@
 using Concre_Innova_API.Application.DTOs.Responses;
 using Concre_Innova_API.Application.Interfaces.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Concre_Innova_API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class FavoritosController : ControllerBase
     {
         private readonly IFavoriteService _favoriteService;
