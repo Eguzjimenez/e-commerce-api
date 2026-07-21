@@ -6,7 +6,8 @@ namespace Concre_Innova_API.Application.Security
         public int? RoleId { get; set; }
         public string RoleName { get; set; } = "Desconocido";
         public string IpAddress { get; set; } = string.Empty;
+        public bool HasAuthenticatedIdentity { get; set; }
 
-        public bool IsAuthenticated => UserId.HasValue && RoleId.HasValue;
+        public bool IsAuthenticated => HasAuthenticatedIdentity && UserId.HasValue && RoleId.HasValue;
     }
 }

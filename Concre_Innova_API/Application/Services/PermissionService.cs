@@ -2,6 +2,7 @@ using Concre_Innova_API.Application.DTOs.Requests;
 using Concre_Innova_API.Application.DTOs.Responses;
 using Concre_Innova_API.Application.Interfaces.Repositories;
 using Concre_Innova_API.Application.Interfaces.Services;
+using Concre_Innova_API.Domain.Constants;
 using Microsoft.Extensions.Caching.Memory;
 using System.Collections.Concurrent;
 
@@ -34,6 +35,16 @@ namespace Concre_Innova_API.Application.Services
                 return Task.FromResult(false);
             }
 
+            if (PermissionRolePolicy.IsAdministrator(roleId))
+            {
+                return Task.FromResult(true);
+            }
+
+            if (!PermissionRolePolicy.CanRoleReceivePermission(roleId, normalizedPermissionCode))
+            {
+                return Task.FromResult(false);
+            }
+
             var cacheKey = GetRolePermissionCacheKey(roleId, normalizedPermissionCode);
 
             return _cache.GetOrCreateAsync(cacheKey, entry =>
@@ -61,17 +72,42 @@ namespace Concre_Innova_API.Application.Services
         private async Task<OperacionResponseDto> UpdateRolePermissionsAndInvalidateCacheAsync(
             UpdateRolePermissionsRequest request)
         {
-            var result = await _permissionRepository.UpdateRolePermissionsAsync(request);
+            var allowedRequest = await BuildAllowedPermissionUpdateRequestAsync(request);
+            var result = await _permissionRepository.UpdateRolePermissionsAsync(allowedRequest);
 
             if (result.Codigo == 1)
             {
                 RolePermissionCacheVersions.AddOrUpdate(
-                    request.IdRol,
+                    allowedRequest.IdRol,
                     _ => 1,
                     (_, currentVersion) => currentVersion + 1);
             }
 
             return result;
+        }
+
+        private async Task<UpdateRolePermissionsRequest> BuildAllowedPermissionUpdateRequestAsync(
+            UpdateRolePermissionsRequest request)
+        {
+            if (PermissionRolePolicy.IsAdministrator(request.IdRol))
+            {
+                return request;
+            }
+
+            var rolePermissions = await _permissionRepository.GetRolePermissionsAsync(request.IdRol);
+            var allowedPermissionIds = (rolePermissions?.Permisos ?? Enumerable.Empty<PermissionResponseDto>())
+                .Where(permission => PermissionRolePolicy.CanRoleReceivePermission(request.IdRol, permission.Codigo))
+                .Select(permission => permission.IdPermiso)
+                .ToHashSet();
+
+            return new UpdateRolePermissionsRequest
+            {
+                IdRol = request.IdRol,
+                IdPermisos = request.IdPermisos
+                    .Distinct()
+                    .Where(allowedPermissionIds.Contains)
+                    .ToArray()
+            };
         }
 
         private static string GetRolePermissionCacheKey(int roleId, string permissionCode)
