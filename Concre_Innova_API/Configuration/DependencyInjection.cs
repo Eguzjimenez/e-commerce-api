@@ -7,9 +7,11 @@ using Concre_Innova_API.Application.Validators;
 using Concre_Innova_API.Infrastructure.Audit;
 using Concre_Innova_API.Infrastructure.Data;
 using Concre_Innova_API.Infrastructure.Email;
+using Concre_Innova_API.Infrastructure.Files;
 using Concre_Innova_API.Infrastructure.Repositories.Bitacora;
 using Concre_Innova_API.Infrastructure.Repositories.Carrito;
 using Concre_Innova_API.Infrastructure.Repositories.Catalogo;
+using Concre_Innova_API.Infrastructure.Repositories.Cotizaciones;
 using Concre_Innova_API.Infrastructure.Repositories.Favorites;
 using Concre_Innova_API.Infrastructure.Repositories.Login;
 using Concre_Innova_API.Infrastructure.Repositories.Permissions;
@@ -43,6 +45,10 @@ namespace Concre_Innova_API.Configuration
             services.AddScoped<IPermissionRepository, PermissionRepository>();
             services.AddScoped<IFavoriteRepository, FavoriteRepository>();
             services.AddScoped<ICarritoRepository, CarritoRepository>();
+            services.AddScoped<ICotizacionRepository, CotizacionRepository>();
+            services.AddScoped<
+                ICotizacionNotificationRepository,
+                CotizacionNotificationRepository>();
 
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IRoleService, RoleService>();
@@ -51,6 +57,11 @@ namespace Concre_Innova_API.Configuration
             services.AddScoped<IPermissionService, PermissionService>();
             services.AddScoped<IFavoriteService, FavoriteService>();
             services.AddScoped<ICarritoService, CarritoService>();
+            services.AddScoped<ICotizacionService, CotizacionService>();
+            services.AddScoped<
+                ICotizacionNotificationService,
+                CotizacionNotificationService>();
+            services.AddScoped<IAlmacenamientoImagenCotizacion, AlmacenamientoImagenCotizacion>();
             services.AddScoped<IRequestUserContextService, RequestUserContextService>();
             services.AddScoped<IAuditService, AuditService>();
             services.AddScoped<IEmailService, EmailService>();

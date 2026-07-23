@@ -9,6 +9,14 @@ namespace Concre_Innova_API.Infrastructure.Email
 {
     public class EmailService : IEmailService
     {
+        private const int MaximoIntentosPorLimiteSmtp = 3;
+        private static readonly TimeSpan EsperaPorLimiteSmtp =
+            TimeSpan.FromMilliseconds(2100);
+        private static readonly TimeSpan IntervaloMinimoEntreEnvios =
+            TimeSpan.FromSeconds(6);
+        private static readonly SemaphoreSlim SmtpSendGate = new(1, 1);
+        private static DateTime _ultimoEnvioUtc = DateTime.MinValue;
+
         private readonly EmailSettings _settings;
         private readonly ILogger<EmailService> _logger;
 
@@ -61,7 +69,37 @@ namespace Concre_Innova_API.Infrastructure.Email
                 body);
         }
 
-        private async Task SendEmailAsync(string toEmail, string subject, string body)
+        public Task<bool> SendQuotationStatusChangedAsync(
+            string toEmail,
+            string customerName,
+            string trackingNumber,
+            string previousStatus,
+            string newStatus,
+            DateTime changedAt)
+        {
+            var body =
+                $"Hola {customerName}," +
+                Environment.NewLine +
+                Environment.NewLine +
+                $"La cotizacion {trackingNumber} cambio de " +
+                $"{previousStatus} a {newStatus}." +
+                Environment.NewLine +
+                $"Fecha del cambio: {changedAt:yyyy-MM-dd HH:mm:ss}." +
+                Environment.NewLine +
+                Environment.NewLine +
+                "Puedes consultar el detalle y su historial de estados en " +
+                "la seccion Mis Cotizaciones.";
+
+            return SendEmailAsync(
+                toEmail,
+                $"Cotizacion {trackingNumber}: {newStatus}",
+                body);
+        }
+
+        private async Task<bool> SendEmailAsync(
+            string toEmail,
+            string subject,
+            string body)
         {
             if (string.IsNullOrWhiteSpace(_settings.Host) ||
                 string.IsNullOrWhiteSpace(_settings.SenderEmail))
@@ -70,48 +108,102 @@ namespace Concre_Innova_API.Infrastructure.Email
                     "Correo simulado para {Email}. Asunto: {Subject}",
                     toEmail,
                     subject);
-                return;
+                return true;
             }
 
+            for (var attempt = 1; attempt <= MaximoIntentosPorLimiteSmtp; attempt++)
+            {
+                try
+                {
+                    var message = CrearMensaje(toEmail, subject, body);
+                    await EnviarMensajeAsync(message);
+
+                    _logger.LogInformation(
+                        "Correo {Subject} enviado a {Email}.",
+                        subject,
+                        toEmail);
+                    return true;
+                }
+                catch (SmtpCommandException exception)
+                    when (EsLimiteTemporal(exception) &&
+                          attempt < MaximoIntentosPorLimiteSmtp)
+                {
+                    await Task.Delay(EsperaPorLimiteSmtp);
+                }
+                catch (Exception exception)
+                {
+                    _logger.LogWarning(
+                        exception,
+                        "No se pudo enviar el correo {Subject} a {Email}.",
+                        subject,
+                        toEmail);
+                    return false;
+                }
+            }
+
+            return false;
+        }
+
+        private MimeMessage CrearMensaje(
+            string toEmail,
+            string subject,
+            string body)
+        {
             var message = new MimeMessage();
             message.From.Add(new MailboxAddress(
                 _settings.SenderName ?? "Concre Innova",
-                _settings.SenderEmail));
+                _settings.SenderEmail!));
             message.To.Add(MailboxAddress.Parse(toEmail));
             message.Subject = subject;
             message.Body = new TextPart("plain") { Text = body };
+            return message;
+        }
 
+        private async Task EnviarMensajeAsync(MimeMessage message)
+        {
+            await SmtpSendGate.WaitAsync();
             try
             {
+                var elapsed = DateTime.UtcNow - _ultimoEnvioUtc;
+                var remainingDelay = IntervaloMinimoEntreEnvios - elapsed;
+                if (remainingDelay > TimeSpan.Zero)
+                {
+                    await Task.Delay(remainingDelay);
+                }
+
                 using var client = new SmtpClient();
                 var socketOptions = _settings.UseSsl
                     ? SecureSocketOptions.SslOnConnect
                     : SecureSocketOptions.StartTlsWhenAvailable;
 
-                await client.ConnectAsync(_settings.Host, _settings.Port, socketOptions);
+                await client.ConnectAsync(
+                    _settings.Host!,
+                    _settings.Port,
+                    socketOptions);
 
                 if (!string.IsNullOrWhiteSpace(_settings.Username) &&
                     !string.IsNullOrWhiteSpace(_settings.Password))
                 {
-                    await client.AuthenticateAsync(_settings.Username, _settings.Password);
+                    await client.AuthenticateAsync(
+                        _settings.Username,
+                        _settings.Password);
                 }
 
                 await client.SendAsync(message);
                 await client.DisconnectAsync(true);
-
-                _logger.LogInformation(
-                    "Correo {Subject} enviado a {Email}.",
-                    subject,
-                    toEmail);
+                _ultimoEnvioUtc = DateTime.UtcNow;
             }
-            catch (Exception ex)
+            finally
             {
-                _logger.LogWarning(
-                    ex,
-                    "No se pudo enviar el correo {Subject} a {Email}.",
-                    subject,
-                    toEmail);
+                SmtpSendGate.Release();
             }
+        }
+
+        private static bool EsLimiteTemporal(SmtpCommandException exception)
+        {
+            return exception.Message.Contains(
+                "Too many emails per second",
+                StringComparison.OrdinalIgnoreCase);
         }
     }
 }

@@ -5,5 +5,12 @@ namespace Concre_Innova_API.Application.Interfaces.Services
         Task SendWelcomeEmailAsync(string toEmail, string name);
         Task SendPasswordRecoveryCodeAsync(string toEmail, string code, DateTime expiresAt);
         Task SendPasswordResetNotificationAsync(string toEmail, DateTime changedAt);
+        Task<bool> SendQuotationStatusChangedAsync(
+            string toEmail,
+            string customerName,
+            string trackingNumber,
+            string previousStatus,
+            string newStatus,
+            DateTime changedAt);
     }
 }

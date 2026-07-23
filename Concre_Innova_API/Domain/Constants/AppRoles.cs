@@ -12,6 +12,8 @@ namespace Concre_Innova_API.Domain.Constants
         public const string ClienteNombre = "Cliente";
         public const string InactivoNombre = "Inactivo";
         public const string RolesCompra = AdministradorNombre + "," + ClienteNombre;
+        public const string RolesGestionCotizaciones =
+            AdministradorNombre + "," + VendedorNombre;
 
         public static string GetName(int? roleId)
         {

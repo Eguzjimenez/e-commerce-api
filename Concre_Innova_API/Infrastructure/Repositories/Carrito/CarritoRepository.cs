@@ -36,11 +36,14 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Carrito
                 response.Items.Add(new ValidacionStockItemDto
                 {
                     IdProducto = reader.GetInt32(reader.GetOrdinal("IdProducto")),
+                    IdVariante = GetOptionalNullableInt(reader, "IdVariante"),
                     Nombre = reader.IsDBNull(reader.GetOrdinal("Nombre")) 
                         ? null 
                         : reader.GetString(reader.GetOrdinal("Nombre")),
                     CantidadSolicitada = reader.GetInt32(reader.GetOrdinal("CantidadSolicitada")),
                     StockDisponible = reader.GetInt32(reader.GetOrdinal("StockDisponible")),
+                    PrecioUnitario = reader.GetDecimal(reader.GetOrdinal("PrecioUnitario")),
+                    Subtotal = reader.GetDecimal(reader.GetOrdinal("Subtotal")),
                     Estado = reader.GetString(reader.GetOrdinal("Estado"))
                 });
             }
