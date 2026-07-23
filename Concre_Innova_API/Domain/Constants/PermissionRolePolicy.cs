@@ -25,7 +25,11 @@ namespace Concre_Innova_API.Domain.Constants
                     [PermissionCodes.TiposProductoLeer] = AdminOnly(),
                     [PermissionCodes.TiposProductoCrear] = AdminOnly(),
                     [PermissionCodes.TiposProductoActualizar] = AdminOnly(),
-                    [PermissionCodes.TiposProductoEliminar] = AdminOnly()
+                    [PermissionCodes.TiposProductoEliminar] = AdminOnly(),
+                    [PermissionCodes.PedidosVer] = AdminOnly(),
+                    [PermissionCodes.PedidosActualizar] = AdminOnly(),
+                    [PermissionCodes.PedidosCancelar] = AdminOnly(),
+                    [PermissionCodes.EstadisticasVer] = AdminOnly()
                 });
 
         public static bool IsAdministrator(int roleId)
