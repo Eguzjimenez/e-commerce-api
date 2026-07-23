@@ -18,6 +18,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Documentation\" />
+    <Folder Include="Tests_HTTP\" />
     <Folder Include="wwwroot\swagger-ui\" />
   </ItemGroup>
 

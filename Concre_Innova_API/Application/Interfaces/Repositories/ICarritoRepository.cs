@@ -1,0 +1,12 @@
+using Concre_Innova_API.Application.DTOs.Requests;
+using Concre_Innova_API.Application.DTOs.Responses;
+
+namespace Concre_Innova_API.Application.Interfaces.Repositories
+{
+    public interface ICarritoRepository
+    {
+        Task<ValidarStockCarritoResponseDto> ValidarStockCarritoAsync(List<ItemCarritoRequest> items);
+        Task<RegistrarPedidoResponseDto> RegistrarPedidoAsync(RegistrarPedidoRequest request);
+        Task<MisPedidosResponseDto> ObtenerMisPedidosAsync(int idUsuario);
+    }
+}
