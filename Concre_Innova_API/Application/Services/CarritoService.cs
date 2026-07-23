@@ -7,6 +7,19 @@ namespace Concre_Innova_API.Application.Services
 {
     public class CarritoService : ICarritoService
     {
+        private const int LongitudMaximaDireccion = 255;
+        private const int LongitudMaximaMetodoPago = 50;
+        private const int LongitudMaximaNombreVariante = 120;
+        private const int LongitudMaximaAtributo = 80;
+
+        private static readonly Dictionary<string, string> MetodosPagoPermitidos =
+            new(StringComparer.OrdinalIgnoreCase)
+            {
+                ["Tarjeta"] = "Tarjeta",
+                ["SINPE Movil"] = "SINPE Movil",
+                ["Efectivo contra entrega"] = "Efectivo contra entrega"
+            };
+
         private readonly ICarritoRepository _carritoRepository;
 
         public CarritoService(ICarritoRepository carritoRepository)
@@ -14,7 +27,8 @@ namespace Concre_Innova_API.Application.Services
             _carritoRepository = carritoRepository;
         }
 
-        public async Task<ValidarStockCarritoResponseDto> ValidarStockCarritoAsync(ValidarStockCarritoRequest request)
+        public async Task<ValidarStockCarritoResponseDto> ValidarStockCarritoAsync(
+            ValidarStockCarritoRequest request)
         {
             if (request == null || request.Items == null || !request.Items.Any())
             {
@@ -24,39 +38,59 @@ namespace Concre_Innova_API.Application.Services
             return await _carritoRepository.ValidarStockCarritoAsync(request.Items);
         }
 
-        public async Task<RegistrarPedidoResponseDto> RegistrarPedidoAsync(RegistrarPedidoRequest request)
+        public async Task<RegistrarPedidoResponseDto> RegistrarPedidoAsync(
+            RegistrarPedidoRequest request)
         {
             if (request == null || request.Items == null || !request.Items.Any())
             {
-                return new RegistrarPedidoResponseDto
-                {
-                    Exitoso = false,
-                    Mensaje = "El carrito está vacío o la solicitud es inválida."
-                };
+                return CrearError("El carrito está vacío o la solicitud es inválida.");
             }
 
-            if (string.IsNullOrWhiteSpace(request.DireccionEntrega))
+            if (request.IdUsuario <= 0)
             {
-                return new RegistrarPedidoResponseDto
-                {
-                    Exitoso = false,
-                    Mensaje = "La dirección de entrega es requerida."
-                };
+                return CrearError("El ID de usuario no es válido.");
             }
 
-            if (string.IsNullOrWhiteSpace(request.MetodoPago))
+            var direccionEntrega = request.DireccionEntrega?.Trim() ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(direccionEntrega))
             {
-                return new RegistrarPedidoResponseDto
-                {
-                    Exitoso = false,
-                    Mensaje = "El método de pago es requerido."
-                };
+                return CrearError("La dirección de entrega es requerida.");
             }
+
+            if (direccionEntrega.Length > LongitudMaximaDireccion)
+            {
+                return CrearError(
+                    $"La dirección de entrega no puede superar {LongitudMaximaDireccion} caracteres.");
+            }
+
+            var metodoPago = request.MetodoPago?.Trim() ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(metodoPago))
+            {
+                return CrearError("El método de pago es requerido.");
+            }
+
+            if (metodoPago.Length > LongitudMaximaMetodoPago ||
+                !MetodosPagoPermitidos.TryGetValue(metodoPago, out var metodoPagoNormalizado))
+            {
+                return CrearError("El método de pago seleccionado no es válido.");
+            }
+
+            if (request.Items.Any(EsItemPedidoInvalido))
+            {
+                return CrearError(
+                    "Uno o más productos del carrito contienen valores inválidos.");
+            }
+
+            request.DireccionEntrega = direccionEntrega;
+            request.MetodoPago = metodoPagoNormalizado;
 
             return await _carritoRepository.RegistrarPedidoAsync(request);
         }
 
-        public async Task<MisPedidosResponseDto> ObtenerMisPedidosAsync(int idUsuario)
+        public async Task<MisPedidosResponseDto> ObtenerMisPedidosAsync(
+            int idUsuario,
+            DateTime? fechaDesde,
+            DateTime? fechaHasta)
         {
             if (idUsuario <= 0)
             {
@@ -67,7 +101,66 @@ namespace Concre_Innova_API.Application.Services
                 };
             }
 
-            return await _carritoRepository.ObtenerMisPedidosAsync(idUsuario);
+            var fechaInicial = fechaDesde?.Date;
+            var fechaFinal = fechaHasta?.Date;
+
+            if (fechaInicial.HasValue &&
+                fechaFinal.HasValue &&
+                fechaInicial > fechaFinal)
+            {
+                return new MisPedidosResponseDto
+                {
+                    Exitoso = false,
+                    Mensaje = "La fecha inicial no puede ser posterior a la fecha final."
+                };
+            }
+
+            return await _carritoRepository.ObtenerMisPedidosAsync(
+                idUsuario,
+                fechaInicial,
+                fechaFinal);
+        }
+
+        public async Task<RecompraPedidoResponseDto> PrepararRecompraPedidoAsync(
+            int idUsuario,
+            int idPedido)
+        {
+            if (idUsuario <= 0 || idPedido <= 0)
+            {
+                return new RecompraPedidoResponseDto
+                {
+                    Exitoso = false,
+                    Mensaje = "El usuario o el pedido no son válidos."
+                };
+            }
+
+            return await _carritoRepository.PrepararRecompraPedidoAsync(
+                idUsuario,
+                idPedido);
+        }
+
+        private static RegistrarPedidoResponseDto CrearError(string mensaje)
+        {
+            return new RegistrarPedidoResponseDto
+            {
+                Exitoso = false,
+                Mensaje = mensaje
+            };
+        }
+
+        private static bool EsItemPedidoInvalido(ItemCarritoRequest item)
+        {
+            return item.IdProducto <= 0 ||
+                   item.Cantidad <= 0 ||
+                   ExcedeLongitud(item.NombreVariante, LongitudMaximaNombreVariante) ||
+                   ExcedeLongitud(item.Tamano, LongitudMaximaAtributo) ||
+                   ExcedeLongitud(item.Material, LongitudMaximaAtributo) ||
+                   ExcedeLongitud(item.Color, LongitudMaximaAtributo);
+        }
+
+        private static bool ExcedeLongitud(string? valor, int longitudMaxima)
+        {
+            return valor?.Trim().Length > longitudMaxima;
         }
     }
 }

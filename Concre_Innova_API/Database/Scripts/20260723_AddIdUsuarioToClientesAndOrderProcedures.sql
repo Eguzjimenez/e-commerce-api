@@ -1,7 +1,47 @@
--- Script para registrar pedidos.
--- Fecha: 2026-06-26
--- Actualizado: 2026-07-23
--- Descripcion: crea/actualiza SP_RegistrarPedido usando el esquema actual de ConcreInnovaDB.
+-- Script para relacionar Clientes con Usuarios y actualizar pedidos.
+-- Fecha: 2026-07-23
+-- Descripcion: agrega Clientes.IdUsuario, migra datos por correo y actualiza los SP de pedidos.
+
+IF COL_LENGTH('Clientes', 'IdUsuario') IS NULL
+BEGIN
+    ALTER TABLE Clientes ADD IdUsuario INT NULL;
+END
+GO
+
+UPDATE C
+SET C.IdUsuario = U.IdUsuario
+FROM Clientes C
+INNER JOIN Usuarios U
+    ON U.Correo = C.Correo
+WHERE C.IdUsuario IS NULL;
+GO
+
+IF NOT EXISTS
+(
+    SELECT 1
+    FROM sys.foreign_keys
+    WHERE name = 'FK_Clientes_Usuarios_IdUsuario'
+)
+BEGIN
+    ALTER TABLE Clientes
+    ADD CONSTRAINT FK_Clientes_Usuarios_IdUsuario
+        FOREIGN KEY (IdUsuario) REFERENCES Usuarios (IdUsuario);
+END
+GO
+
+IF NOT EXISTS
+(
+    SELECT 1
+    FROM sys.indexes
+    WHERE name = 'IX_Clientes_IdUsuario'
+      AND object_id = OBJECT_ID('Clientes')
+)
+BEGIN
+    CREATE INDEX IX_Clientes_IdUsuario
+        ON Clientes (IdUsuario)
+        WHERE IdUsuario IS NOT NULL;
+END
+GO
 
 CREATE OR ALTER PROCEDURE SP_RegistrarPedido
 (
@@ -39,11 +79,11 @@ BEGIN
         END
 
         SELECT TOP (1)
-            @IdCliente = C.IdCliente
-        FROM Clientes C
-        WHERE C.IdUsuario = @IdUsuario
-          AND ISNULL(C.Estado, 'Activo') = 'Activo'
-        ORDER BY C.IdCliente DESC;
+            @IdCliente = IdCliente
+        FROM Clientes
+        WHERE IdUsuario = @IdUsuario
+          AND ISNULL(Estado, 'Activo') = 'Activo'
+        ORDER BY IdCliente DESC;
 
         IF @IdCliente IS NULL
         BEGIN
@@ -192,5 +232,88 @@ BEGIN
 END;
 GO
 
-PRINT 'SP_RegistrarPedido creado/actualizado exitosamente.';
+CREATE OR ALTER PROCEDURE SP_ObtenerMisPedidos
+(
+    @IdUsuario INT
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @IdCliente INT;
+
+    IF NOT EXISTS
+    (
+        SELECT 1
+        FROM Usuarios
+        WHERE IdUsuario = @IdUsuario
+          AND Estado = 'Activo'
+    )
+    BEGIN
+        SELECT
+            0 AS Exitoso,
+            'USUARIO_NO_EXISTE' AS Mensaje;
+
+        RETURN;
+    END
+
+    SELECT TOP (1)
+        @IdCliente = IdCliente
+    FROM Clientes
+    WHERE IdUsuario = @IdUsuario
+      AND ISNULL(Estado, 'Activo') = 'Activo'
+    ORDER BY IdCliente DESC;
+
+    IF @IdCliente IS NULL
+    BEGIN
+        SELECT
+            CAST(NULL AS INT) AS IdPedido,
+            CAST(NULL AS DATETIME) AS FechaPedido,
+            CAST(NULL AS VARCHAR(50)) AS Estado,
+            CAST(NULL AS VARCHAR(255)) AS DireccionEntrega,
+            CAST(NULL AS VARCHAR(50)) AS MetodoPago,
+            CAST(NULL AS VARCHAR(50)) AS EstadoPago,
+            CAST(NULL AS DECIMAL(10,2)) AS Total,
+            CAST(NULL AS INT) AS IdDetallePedido,
+            CAST(NULL AS INT) AS IdProducto,
+            CAST(NULL AS VARCHAR(150)) AS Nombre,
+            CAST(NULL AS VARCHAR(255)) AS Imagen,
+            CAST(NULL AS INT) AS Cantidad,
+            CAST(NULL AS DECIMAL(10,2)) AS PrecioUnitario,
+            CAST(NULL AS DECIMAL(10,2)) AS Subtotal
+        WHERE 1 = 0;
+
+        RETURN;
+    END
+
+    SELECT
+        P.IdPedido,
+        P.FechaPedido,
+        P.Estado,
+        P.DireccionEntrega,
+        ISNULL(V.MetodoPago, '') AS MetodoPago,
+        ISNULL(V.EstadoPago, '') AS EstadoPago,
+        P.Total,
+        DP.IdDetallePedido,
+        DP.IdProducto,
+        PR.Nombre,
+        PR.Imagen,
+        DP.Cantidad,
+        DP.PrecioUnitario,
+        DP.Subtotal
+    FROM Pedidos P
+    INNER JOIN DetallePedido DP
+        ON P.IdPedido = DP.IdPedido
+    INNER JOIN Productos PR
+        ON DP.IdProducto = PR.IdProducto
+    LEFT JOIN Ventas V
+        ON V.IdPedido = P.IdPedido
+    WHERE P.IdCliente = @IdCliente
+    ORDER BY
+        P.FechaPedido DESC,
+        DP.IdDetallePedido ASC;
+END
+GO
+
+PRINT 'Clientes.IdUsuario y SP de pedidos actualizados.';
 GO

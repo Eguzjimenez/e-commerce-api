@@ -7,6 +7,10 @@ namespace Concre_Innova_API.Application.Interfaces.Repositories
     {
         Task<ValidarStockCarritoResponseDto> ValidarStockCarritoAsync(List<ItemCarritoRequest> items);
         Task<RegistrarPedidoResponseDto> RegistrarPedidoAsync(RegistrarPedidoRequest request);
-        Task<MisPedidosResponseDto> ObtenerMisPedidosAsync(int idUsuario);
+        Task<MisPedidosResponseDto> ObtenerMisPedidosAsync(
+            int idUsuario,
+            DateTime? fechaDesde,
+            DateTime? fechaHasta);
+        Task<RecompraPedidoResponseDto> PrepararRecompraPedidoAsync(int idUsuario, int idPedido);
     }
 }

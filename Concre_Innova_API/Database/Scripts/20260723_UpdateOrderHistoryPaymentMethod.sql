@@ -1,7 +1,6 @@
--- Script para obtener los pedidos de un usuario.
--- Fecha: 2026-06-26
--- Actualizado: 2026-07-23
--- Descripcion: crea/actualiza SP_ObtenerMisPedidos usando el esquema actual de ConcreInnovaDB.
+-- Script para actualizar el historial de pedidos con metodo de pago.
+-- Fecha: 2026-07-23
+-- Descripcion: asegura que SP_ObtenerMisPedidos devuelva MetodoPago y EstadoPago.
 
 CREATE OR ALTER PROCEDURE SP_ObtenerMisPedidos
 (
@@ -86,5 +85,5 @@ BEGIN
 END
 GO
 
-PRINT 'SP_ObtenerMisPedidos creado/actualizado exitosamente.';
+PRINT 'SP_ObtenerMisPedidos actualizado con metodo de pago.';
 GO

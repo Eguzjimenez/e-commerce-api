@@ -13,6 +13,8 @@ namespace Concre_Innova_API.Application.DTOs.Responses
         public DateTime FechaPedido { get; set; }
         public string Estado { get; set; } = string.Empty;
         public string DireccionEntrega { get; set; } = string.Empty;
+        public string MetodoPago { get; set; } = string.Empty;
+        public string EstadoPago { get; set; } = string.Empty;
         public decimal Total { get; set; }
         public List<DetallePedidoUsuarioDto> Detalle { get; set; } = new();
     }
@@ -21,7 +23,12 @@ namespace Concre_Innova_API.Application.DTOs.Responses
     {
         public int IdDetallePedido { get; set; }
         public int IdProducto { get; set; }
+        public int? IdVariante { get; set; }
         public string Nombre { get; set; } = string.Empty;
+        public string NombreVariante { get; set; } = string.Empty;
+        public string Tamano { get; set; } = string.Empty;
+        public string Material { get; set; } = string.Empty;
+        public string Color { get; set; } = string.Empty;
         public string? Imagen { get; set; }
         public int Cantidad { get; set; }
         public decimal PrecioUnitario { get; set; }
