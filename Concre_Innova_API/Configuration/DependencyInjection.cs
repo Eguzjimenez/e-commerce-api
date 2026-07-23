@@ -13,7 +13,9 @@ using Concre_Innova_API.Infrastructure.Repositories.Carrito;
 using Concre_Innova_API.Infrastructure.Repositories.Catalogo;
 using Concre_Innova_API.Infrastructure.Repositories.Cotizaciones;
 using Concre_Innova_API.Infrastructure.Repositories.Favorites;
+using Concre_Innova_API.Infrastructure.Repositories.Estadisticas;
 using Concre_Innova_API.Infrastructure.Repositories.Login;
+using Concre_Innova_API.Infrastructure.Repositories.Pedidos;
 using Concre_Innova_API.Infrastructure.Repositories.Permissions;
 using Concre_Innova_API.Infrastructure.Repositories.Roles;
 using Concre_Innova_API.Infrastructure.Repositories.Users;
@@ -49,6 +51,8 @@ namespace Concre_Innova_API.Configuration
             services.AddScoped<
                 ICotizacionNotificationRepository,
                 CotizacionNotificationRepository>();
+            services.AddScoped<IPedidoAdminRepository, PedidoAdminRepository>();
+            services.AddScoped<IEstadisticasRepository, EstadisticasRepository>();
 
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IRoleService, RoleService>();
@@ -62,6 +66,8 @@ namespace Concre_Innova_API.Configuration
                 ICotizacionNotificationService,
                 CotizacionNotificationService>();
             services.AddScoped<IAlmacenamientoImagenCotizacion, AlmacenamientoImagenCotizacion>();
+            services.AddScoped<IPedidoAdminService, PedidoAdminService>();
+            services.AddScoped<IEstadisticasService, EstadisticasService>();
             services.AddScoped<IRequestUserContextService, RequestUserContextService>();
             services.AddScoped<IAuditService, AuditService>();
             services.AddScoped<IEmailService, EmailService>();
