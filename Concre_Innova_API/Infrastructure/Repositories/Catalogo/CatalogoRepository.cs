@@ -160,9 +160,21 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Catalogo
                     v.Tamano,
                     v.Material,
                     v.Precio,
-                    v.Stock,
+                    CASE
+                        WHEN ISNULL(p.Stock, 0) < v.Stock THEN ISNULL(p.Stock, 0)
+                        ELSE v.Stock
+                    END AS Stock,
                     ISNULL(v.Imagen, '') AS Imagen,
-                    CAST(CASE WHEN v.Estado = 'Activo' AND v.Stock > 0 THEN 1 ELSE 0 END AS BIT) AS EstaDisponible
+                    CAST(
+                        CASE
+                            WHEN v.Estado = 'Activo'
+                                AND ISNULL(p.Stock, 0) > 0
+                                AND v.Stock > 0
+                            THEN 1
+                            ELSE 0
+                        END
+                        AS BIT
+                    ) AS EstaDisponible
                 FROM ProductoVariantes v
                 INNER JOIN Productos p ON p.IdProducto = v.IdProducto
                 WHERE v.IdProducto = @IdProducto
@@ -897,15 +909,14 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Catalogo
                     ISNULL(p.Tamano, '') AS Tamano,
                     ISNULL(p.Material, '') AS Material,
                     ISNULL(p.Caracteristicas, '') AS Caracteristicas,
-                    COALESCE(i.CantidadDisponible, p.Stock, 0) AS Stock,
+                    ISNULL(p.Stock, 0) AS Stock,
                     CASE
-                        WHEN COALESCE(i.CantidadDisponible, p.Stock, 0) <= 0 THEN 'Agotado'
+                        WHEN ISNULL(p.Stock, 0) <= 0 THEN 'Agotado'
                         ELSE 'Disponible'
                     END AS Disponibilidad
                 FROM Productos p
                 INNER JOIN Categorias c ON c.IdCategoria = p.IdCategoria
                 LEFT JOIN TiposProducto t ON t.IdTipo = p.IdTipo
-                LEFT JOIN Inventario i ON i.IdProducto = p.IdProducto
                 WHERE p.Estado = 'Activo'
                     AND (@Busqueda IS NULL
                         OR p.Nombre COLLATE Latin1_General_CI_AI LIKE @BusquedaPattern ESCAPE '\'
@@ -918,8 +929,8 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Catalogo
                     AND (@PrecioMinimo IS NULL OR p.Precio >= @PrecioMinimo)
                     AND (@PrecioMaximo IS NULL OR p.Precio <= @PrecioMaximo)
                     AND (@Disponibilidad IS NULL
-                        OR (@Disponibilidad = 'disponible' AND COALESCE(i.CantidadDisponible, p.Stock, 0) > 0)
-                        OR (@Disponibilidad = 'agotado' AND COALESCE(i.CantidadDisponible, p.Stock, 0) <= 0))
+                        OR (@Disponibilidad = 'disponible' AND ISNULL(p.Stock, 0) > 0)
+                        OR (@Disponibilidad = 'agotado' AND ISNULL(p.Stock, 0) <= 0))
                     AND (@Tamano IS NULL
                         OR p.Tamano COLLATE Latin1_General_CI_AI = @Tamano)
                     AND (@Material IS NULL
@@ -964,16 +975,15 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Catalogo
                     ISNULL(p.Tamano, '') AS Tamano,
                     ISNULL(p.Material, '') AS Material,
                     ISNULL(p.Caracteristicas, '') AS Caracteristicas,
-                    COALESCE(i.CantidadDisponible, p.Stock, 0) AS Stock,
+                    ISNULL(p.Stock, 0) AS Stock,
                     CASE
-                        WHEN COALESCE(i.CantidadDisponible, p.Stock, 0) <= 0 THEN 'Agotado'
+                        WHEN ISNULL(p.Stock, 0) <= 0 THEN 'Agotado'
                         ELSE 'Disponible'
                     END AS Disponibilidad,
                     COUNT(1) OVER() AS TotalItems
                 FROM Productos p
                 INNER JOIN Categorias c ON c.IdCategoria = p.IdCategoria
                 LEFT JOIN TiposProducto t ON t.IdTipo = p.IdTipo
-                LEFT JOIN Inventario i ON i.IdProducto = p.IdProducto
                 WHERE p.Estado = 'Activo'
                     AND (@Busqueda IS NULL
                         OR p.Nombre COLLATE Latin1_General_CI_AI LIKE @BusquedaPattern ESCAPE '\'
@@ -986,8 +996,8 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Catalogo
                     AND (@PrecioMinimo IS NULL OR p.Precio >= @PrecioMinimo)
                     AND (@PrecioMaximo IS NULL OR p.Precio <= @PrecioMaximo)
                     AND (@Disponibilidad IS NULL
-                        OR (@Disponibilidad = 'disponible' AND COALESCE(i.CantidadDisponible, p.Stock, 0) > 0)
-                        OR (@Disponibilidad = 'agotado' AND COALESCE(i.CantidadDisponible, p.Stock, 0) <= 0))
+                        OR (@Disponibilidad = 'disponible' AND ISNULL(p.Stock, 0) > 0)
+                        OR (@Disponibilidad = 'agotado' AND ISNULL(p.Stock, 0) <= 0))
                     AND (@Tamano IS NULL
                         OR p.Tamano COLLATE Latin1_General_CI_AI = @Tamano)
                     AND (@Material IS NULL
@@ -1050,15 +1060,14 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Catalogo
                     ISNULL(p.Tamano, '') AS Tamano,
                     ISNULL(p.Material, '') AS Material,
                     ISNULL(p.Caracteristicas, '') AS Caracteristicas,
-                    COALESCE(i.CantidadDisponible, p.Stock, 0) AS Stock,
+                    ISNULL(p.Stock, 0) AS Stock,
                     CASE
-                        WHEN COALESCE(i.CantidadDisponible, p.Stock, 0) <= 0 THEN 'Agotado'
+                        WHEN ISNULL(p.Stock, 0) <= 0 THEN 'Agotado'
                         ELSE 'Disponible'
                     END AS Disponibilidad
                 FROM Productos p
                 INNER JOIN Categorias c ON c.IdCategoria = p.IdCategoria
                 LEFT JOIN TiposProducto t ON t.IdTipo = p.IdTipo
-                LEFT JOIN Inventario i ON i.IdProducto = p.IdProducto
                 WHERE p.Estado = 'Activo'
                     AND p.IdProducto <> @IdProducto
                     AND @BaseCategoryId IS NOT NULL

@@ -35,16 +35,15 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Favorites
                     ISNULL(p.Tamano, '') AS Tamano,
                     ISNULL(p.Material, '') AS Material,
                     ISNULL(p.Caracteristicas, '') AS Caracteristicas,
-                    COALESCE(i.CantidadDisponible, p.Stock, 0) AS Stock,
+                    ISNULL(p.Stock, 0) AS Stock,
                     CASE
-                        WHEN COALESCE(i.CantidadDisponible, p.Stock, 0) <= 0 THEN 'Agotado'
+                        WHEN ISNULL(p.Stock, 0) <= 0 THEN 'Agotado'
                         ELSE 'Disponible'
                     END AS Disponibilidad
                 FROM Favoritos f
                 INNER JOIN Productos p ON p.IdProducto = f.IdProducto
                 INNER JOIN Categorias c ON c.IdCategoria = p.IdCategoria
                 LEFT JOIN TiposProducto t ON t.IdTipo = p.IdTipo
-                LEFT JOIN Inventario i ON i.IdProducto = p.IdProducto
                 WHERE f.IdUsuario = @IdUsuario
                     AND p.Estado = 'Activo'
                 ORDER BY f.FechaRegistro DESC;
