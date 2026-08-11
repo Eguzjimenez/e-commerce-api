@@ -83,6 +83,11 @@ namespace Concre_Innova_API.Application.Services
             return _userRepository.GetUserByIdAsync(idUsuario);
         }
 
+        public Task<UserInfoResponseDto?> GetUserInfoAsync(int idUsuario)
+        {
+            return _userRepository.GetUserInfoAsync(idUsuario);
+        }
+
         public Task<UserLogin> ResetPasswordAsync(int idUsuario, string nuevaContrasena)
         {
             return _passwordResetRepository.ResetPasswordAsync(idUsuario, nuevaContrasena);
@@ -117,6 +122,11 @@ namespace Concre_Innova_API.Application.Services
         public Task<User> UpdateUserAsync(User user)
         {
             return _userRepository.UpdateUserAsync(user);
+        }
+
+        public Task<UpdateUserInfoResponseDto> UpdateUserInfoAsync(UpdateUserInfoRequest request)
+        {
+            return _userRepository.UpdateUserInfoAsync(request);
         }
 
         public Task<User> DeactivateUserAsync(int idUsuario)

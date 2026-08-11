@@ -87,6 +87,68 @@ namespace Concre_Innova_API.Controllers
             return Ok(user);
         }
 
+        [HttpGet("info/{idUsuario:int}")]
+        public async Task<ActionResult<UserInfoResponseDto>> GetUserInfo(int idUsuario)
+        {
+            var userContext = _requestUserContextService.GetCurrentUser(HttpContext);
+
+            // Si no está autenticado, negar acceso
+            if (!userContext.IsAuthenticated || !userContext.UserId.HasValue)
+                return Unauthorized(new { message = "Debe iniciar sesión para acceder a este recurso." });
+
+            // Permitir que el usuario vea su propia información
+            // O que un admin vea cualquier información
+            bool isOwnProfile = userContext.UserId.Value == idUsuario;
+            bool isAdmin = userContext.RoleId.HasValue && 
+                           await _permissionService.RoleHasPermissionAsync(userContext.RoleId.Value, PermissionCodes.UsuariosVer);
+
+            if (!isOwnProfile && !isAdmin)
+            {
+                await _auditService.RecordAsync(
+                    userContext,
+                    "Usuarios",
+                    "DENIED",
+                    $"Intento no autorizado de acceder a la información del usuario {idUsuario}.");
+
+                return StatusCode(
+                    StatusCodes.Status403Forbidden,
+                    new { message = "No tiene permisos para ver la información de otro usuario." });
+            }
+
+            var userInfo = await _userService.GetUserInfoAsync(idUsuario);
+            if (userInfo == null)
+                return NotFound(new { message = "El usuario no existe." });
+
+            await _auditService.RecordAsync(
+                userContext,
+                "Usuarios",
+                "ACCESS",
+                $"Consulta de información completa del usuario {idUsuario}.");
+
+            return Ok(userInfo);
+        }
+
+        [HttpGet("info/me")]
+        public async Task<ActionResult<UserInfoResponseDto>> GetMyInfo()
+        {
+            var userContext = _requestUserContextService.GetCurrentUser(HttpContext);
+
+            if (!userContext.IsAuthenticated || !userContext.UserId.HasValue)
+                return Unauthorized(new { message = "Debe iniciar sesión para acceder a este recurso." });
+
+            var userInfo = await _userService.GetUserInfoAsync(userContext.UserId.Value);
+            if (userInfo == null)
+                return NotFound(new { message = "El usuario no existe." });
+
+            await _auditService.RecordAsync(
+                userContext,
+                "Usuarios",
+                "ACCESS",
+                "Consulta de información propia del usuario.");
+
+            return Ok(userInfo);
+        }
+
         [HttpPost("NewUser")]
         public async Task<ActionResult<User>> NewUser([FromBody] CreateUserRequest request)
         {
@@ -149,6 +211,56 @@ namespace Concre_Innova_API.Controllers
             }
 
             return BadRequest(result.Mensaje);
+        }
+
+        [HttpPut("UpdateUserInfo")]
+        public async Task<ActionResult<UpdateUserInfoResponseDto>> UpdateUserInfo([FromBody] UpdateUserInfoRequest request)
+        {
+            var userContext = _requestUserContextService.GetCurrentUser(HttpContext);
+
+            // Si no está autenticado, negar acceso
+            if (!userContext.IsAuthenticated || !userContext.UserId.HasValue)
+                return Unauthorized(new { message = "Debe iniciar sesión para acceder a este recurso." });
+
+            if (request == null || request.IdUsuario <= 0)
+                return BadRequest(new { message = "Datos de solicitud inválidos." });
+
+            // Permitir que el usuario actualice su propia información
+            // O que un admin actualice cualquier información
+            bool isOwnProfile = userContext.UserId.Value == request.IdUsuario;
+            bool isAdmin = userContext.RoleId.HasValue && 
+                           await _permissionService.RoleHasPermissionAsync(userContext.RoleId.Value, PermissionCodes.UsuariosActualizar);
+
+            if (!isOwnProfile && !isAdmin)
+            {
+                await _auditService.RecordAsync(
+                    userContext,
+                    "Usuarios",
+                    "DENIED",
+                    $"Intento no autorizado de actualizar la información del usuario {request.IdUsuario}.");
+
+                return StatusCode(
+                    StatusCodes.Status403Forbidden,
+                    new { message = "No tiene permisos para actualizar la información de otro usuario." });
+            }
+
+            var result = await _userService.UpdateUserInfoAsync(request);
+
+            if (result == null)
+                return StatusCode(500, new { message = "Error al actualizar la información del usuario." });
+
+            if (result.Codigo == 1)
+            {
+                await _auditService.RecordAsync(
+                    userContext,
+                    "Usuarios",
+                    "UPDATE",
+                    $"Actualización completa de información del usuario {request.IdUsuario}.");
+
+                return Ok(result);
+            }
+
+            return BadRequest(new { message = result.Mensaje });
         }
 
         [HttpDelete("{idUsuario:int}")]

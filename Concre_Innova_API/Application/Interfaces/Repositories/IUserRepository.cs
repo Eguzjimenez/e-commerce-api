@@ -9,8 +9,10 @@ namespace Concre_Innova_API.Application.Interfaces.Repositories
         Task<IEnumerable<UserResponseDto>> GetUsersAsync();
         Task<PaginatedResponseDto<UserResponseDto>> GetUsersPaginadosAsync(PaginationQuery pagination, string? busqueda, int? idRol);
         Task<UserDetailResponseDto?> GetUserByIdAsync(int idUsuario);
+        Task<UserInfoResponseDto?> GetUserInfoAsync(int idUsuario);
         Task<User> InsertUserAsync(User user);
         Task<User> UpdateUserAsync(User user);
+        Task<UpdateUserInfoResponseDto> UpdateUserInfoAsync(UpdateUserInfoRequest request);
         Task<User> DeactivateUserAsync(int idUsuario);
     }
 }
