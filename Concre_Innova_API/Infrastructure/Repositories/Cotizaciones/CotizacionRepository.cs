@@ -246,6 +246,8 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Cotizaciones
                 (object?)query.NormalizedStatus ?? DBNull.Value;
             command.Parameters.Add("@Busqueda", SqlDbType.VarChar, 100).Value =
                 (object?)query.NormalizedSearchTerm ?? DBNull.Value;
+            command.Parameters.Add("@SoloGestionadas", SqlDbType.Bit).Value =
+                query.SoloGestionadas;
 
             await connection.OpenAsync(cancellationToken);
             await using var reader = await command.ExecuteReaderAsync(cancellationToken);

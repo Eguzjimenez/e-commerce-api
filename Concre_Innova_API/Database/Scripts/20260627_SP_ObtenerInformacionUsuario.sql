@@ -1,7 +1,12 @@
-USE [ConcreInnovaDB_NEW]
+USE [ConcreInnovaDB]
 GO
 
-CREATE OR ALTER PROCEDURE SP_ObtenerInformacionUsuario
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE OR ALTER PROCEDURE dbo.SP_ObtenerInformacionUsuario
 	@IdUsuario INT
 AS
 BEGIN

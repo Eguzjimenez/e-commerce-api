@@ -1,39 +1,30 @@
-using Concre_Innova_API.Application.DTOs.Requests;
 using Concre_Innova_API.Application.Interfaces.Services;
 using Concre_Innova_API.Application.Models;
 
 namespace Concre_Innova_API.Infrastructure.Files
 {
-    public class AlmacenamientoImagenCotizacion : IAlmacenamientoImagenCotizacion
+    public class AlmacenamientoImagenEspacio : IAlmacenamientoImagenEspacio
     {
-        private const string CarpetaModulo = "cotizaciones";
+        private const string CarpetaModulo = "visualizaciones";
 
         private readonly AlmacenamientoImagenesEnDisco _almacenamiento;
 
-        public AlmacenamientoImagenCotizacion(IWebHostEnvironment environment)
+        public AlmacenamientoImagenEspacio(IWebHostEnvironment environment)
         {
             _almacenamiento = new AlmacenamientoImagenesEnDisco(environment, CarpetaModulo);
         }
 
-        public async Task<CotizacionImagenAlmacenada> GuardarAsync(
+        public Task<string> GuardarAsync(
             int idUsuario,
-            CotizacionImagenUploadDto imagen,
+            ImagenEspacioUpload imagen,
             string extension,
             CancellationToken cancellationToken)
         {
-            var rutaArchivo = await _almacenamiento.GuardarAsync(
+            return _almacenamiento.GuardarAsync(
                 idUsuario,
                 imagen.Contenido,
                 extension,
                 cancellationToken);
-
-            return new CotizacionImagenAlmacenada
-            {
-                RutaArchivo = rutaArchivo,
-                NombreOriginal = Path.GetFileName(imagen.NombreOriginal),
-                TipoContenido = imagen.TipoContenido,
-                TamanoBytes = imagen.Contenido.LongLength
-            };
         }
 
         public Task EliminarAsync(

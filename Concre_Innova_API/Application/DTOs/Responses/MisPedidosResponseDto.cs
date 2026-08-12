@@ -29,6 +29,8 @@ namespace Concre_Innova_API.Application.DTOs.Responses
         public string Tamano { get; set; } = string.Empty;
         public string Material { get; set; } = string.Empty;
         public string Color { get; set; } = string.Empty;
+        public string NombreTipo { get; set; } = string.Empty;
+        public string Macetero { get; set; } = string.Empty;
         public string? Imagen { get; set; }
         public int Cantidad { get; set; }
         public decimal PrecioUnitario { get; set; }

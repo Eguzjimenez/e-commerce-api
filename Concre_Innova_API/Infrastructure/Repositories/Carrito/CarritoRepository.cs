@@ -162,6 +162,8 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Carrito
                         Tamano = GetOptionalString(reader, "Tamano"),
                         Material = GetOptionalString(reader, "Material"),
                         Color = GetOptionalString(reader, "Color"),
+                        NombreTipo = GetOptionalString(reader, "NombreTipo"),
+                        Macetero = GetOptionalString(reader, "Macetero"),
                         Imagen = reader.IsDBNull(reader.GetOrdinal("Imagen"))
                             ? null
                             : reader.GetString(reader.GetOrdinal("Imagen")),

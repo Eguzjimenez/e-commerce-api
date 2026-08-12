@@ -8,9 +8,11 @@ using Concre_Innova_API.Infrastructure.Audit;
 using Concre_Innova_API.Infrastructure.Data;
 using Concre_Innova_API.Infrastructure.Email;
 using Concre_Innova_API.Infrastructure.Files;
+using Concre_Innova_API.Infrastructure.Repositories.Asesor;
 using Concre_Innova_API.Infrastructure.Repositories.Bitacora;
 using Concre_Innova_API.Infrastructure.Repositories.Carrito;
 using Concre_Innova_API.Infrastructure.Repositories.Catalogo;
+using Concre_Innova_API.Infrastructure.Repositories.Chat;
 using Concre_Innova_API.Infrastructure.Repositories.Cotizaciones;
 using Concre_Innova_API.Infrastructure.Repositories.Favorites;
 using Concre_Innova_API.Infrastructure.Repositories.Estadisticas;
@@ -19,6 +21,7 @@ using Concre_Innova_API.Infrastructure.Repositories.Pedidos;
 using Concre_Innova_API.Infrastructure.Repositories.Permissions;
 using Concre_Innova_API.Infrastructure.Repositories.Roles;
 using Concre_Innova_API.Infrastructure.Repositories.Users;
+using Concre_Innova_API.Infrastructure.Repositories.Visualizaciones;
 using Concre_Innova_API.Infrastructure.Security;
 using Concre_Innova_API.Shared.Constants;
 
@@ -35,6 +38,9 @@ namespace Concre_Innova_API.Configuration
 
             services.AddSingleton(
                 configuration.GetSection(ConfigurationKeys.Jwt).Get<JwtSettings>() ?? new JwtSettings());
+            services.AddSingleton(
+                configuration.GetSection(ConfigurationKeys.SoporteHumano).Get<SoporteHumanoSettings>()
+                    ?? new SoporteHumanoSettings());
             services.AddSingleton<ISqlConnectionFactory, SqlConnectionFactory>();
 
             services.AddScoped<IUserRepository, UserRepository>();
@@ -53,6 +59,10 @@ namespace Concre_Innova_API.Configuration
                 CotizacionNotificationRepository>();
             services.AddScoped<IPedidoAdminRepository, PedidoAdminRepository>();
             services.AddScoped<IEstadisticasRepository, EstadisticasRepository>();
+            services.AddScoped<IAsesorRepository, AsesorRepository>();
+            services.AddScoped<IChatRepository, ChatRepository>();
+            services.AddScoped<IChatBotRepository, ChatBotRepository>();
+            services.AddScoped<IVisualizacionRepository, VisualizacionRepository>();
 
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IRoleService, RoleService>();
@@ -66,8 +76,14 @@ namespace Concre_Innova_API.Configuration
                 ICotizacionNotificationService,
                 CotizacionNotificationService>();
             services.AddScoped<IAlmacenamientoImagenCotizacion, AlmacenamientoImagenCotizacion>();
+            services.AddScoped<IAlmacenamientoImagenEspacio, AlmacenamientoImagenEspacio>();
+            services.AddScoped<IVisualizacionService, VisualizacionService>();
             services.AddScoped<IPedidoAdminService, PedidoAdminService>();
             services.AddScoped<IEstadisticasService, EstadisticasService>();
+            services.AddScoped<IAsesorService, AsesorService>();
+            services.AddScoped<IChatBotService, ChatBotService>();
+            services.AddScoped<IChatService, ChatService>();
+            services.AddScoped<IChatAdminService, ChatAdminService>();
             services.AddScoped<IRequestUserContextService, RequestUserContextService>();
             services.AddScoped<IAuditService, AuditService>();
             services.AddScoped<IEmailService, EmailService>();
@@ -78,6 +94,9 @@ namespace Concre_Innova_API.Configuration
             services.AddScoped<IProductoRequestValidator, ProductoRequestValidator>();
             services.AddScoped<ICategoriaRequestValidator, CategoriaRequestValidator>();
             services.AddScoped<ITipoProductoRequestValidator, TipoProductoRequestValidator>();
+            services.AddScoped<IAsesorRequestValidator, AsesorRequestValidator>();
+            services.AddScoped<IChatRequestValidator, ChatRequestValidator>();
+            services.AddScoped<IVisualizacionRequestValidator, VisualizacionRequestValidator>();
 
             return services;
         }

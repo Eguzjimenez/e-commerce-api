@@ -1,4 +1,9 @@
-USE [ConcreInnovaDB_NEW]
+USE [ConcreInnovaDB]
+GO
+
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
 GO
 
 CREATE OR ALTER PROCEDURE [dbo].[SP_ActualizarInformacionUsuario]
