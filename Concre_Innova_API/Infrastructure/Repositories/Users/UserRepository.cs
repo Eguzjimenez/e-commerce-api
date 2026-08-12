@@ -60,6 +60,52 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Users
             return result;
         }
 
+        public async Task<UpdateUserInfoResponseDto> UpdateUserInfoAsync(UpdateUserInfoRequest request)
+        {
+            var result = new UpdateUserInfoResponseDto();
+
+            await using var conn = _connectionFactory.CreateConnection();
+            await using var cmd = new SqlCommand("SP_ActualizarInformacionUsuario", conn)
+            {
+                CommandType = CommandType.StoredProcedure
+            };
+
+            cmd.Parameters.AddWithValue("@IdUsuario", request.IdUsuario);
+            cmd.Parameters.AddWithValue("@Nombre", request.Nombre ?? string.Empty);
+            cmd.Parameters.AddWithValue("@Apellido", request.Apellido ?? string.Empty);
+            cmd.Parameters.AddWithValue("@Correo", request.Correo ?? string.Empty);
+            cmd.Parameters.AddWithValue("@Telefono", request.Telefono ?? string.Empty);
+            cmd.Parameters.AddWithValue("@Direccion", request.Direccion ?? string.Empty);
+
+            // Si Contrasena es null o vacío, se pasa DBNull para mantener la contraseña actual
+            if (string.IsNullOrEmpty(request.Contrasena))
+                cmd.Parameters.AddWithValue("@Contrasena", DBNull.Value);
+            else
+                cmd.Parameters.AddWithValue("@Contrasena", request.Contrasena);
+
+            await conn.OpenAsync();
+
+            try
+            {
+                await using var reader = await cmd.ExecuteReaderAsync();
+                if (await reader.ReadAsync())
+                {
+                    result.Codigo = reader.GetInt32(reader.GetOrdinal("Codigo"));
+                    result.Mensaje = reader.GetString(reader.GetOrdinal("Mensaje"));
+
+                    if (result.Codigo == 1 && !reader.IsDBNull(reader.GetOrdinal("IdUsuario")))
+                        result.IdUsuario = reader.GetInt32(reader.GetOrdinal("IdUsuario"));
+                }
+            }
+            catch (Exception ex)
+            {
+                result.Codigo = -1;
+                result.Mensaje = ex.Message;
+            }
+
+            return result;
+        }
+
         public async Task<User> InsertUserAsync(User user)
         {
             var result = new User();
@@ -236,6 +282,40 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Users
                 FechaRegistro = reader.IsDBNull(reader.GetOrdinal("FechaRegistro")) ? null : reader.GetDateTime(reader.GetOrdinal("FechaRegistro")),
                 IdRol = reader.GetInt32(reader.GetOrdinal("IdRol")),
                 NombreRol = reader.GetString(reader.GetOrdinal("NombreRol"))
+            };
+        }
+
+        public async Task<UserInfoResponseDto?> GetUserInfoAsync(int idUsuario)
+        {
+            await using var conn = _connectionFactory.CreateConnection();
+            await using var cmd = new SqlCommand("SP_ObtenerInformacionUsuario", conn)
+            {
+                CommandType = CommandType.StoredProcedure
+            };
+
+            cmd.Parameters.AddWithValue("@IdUsuario", idUsuario);
+
+            await conn.OpenAsync();
+
+            await using var reader = await cmd.ExecuteReaderAsync();
+            if (!await reader.ReadAsync())
+                return null;
+
+            return new UserInfoResponseDto
+            {
+                IdUsuario = reader.GetInt32(reader.GetOrdinal("IdUsuario")),
+                Nombre = reader.GetString(reader.GetOrdinal("Nombre")),
+                Apellido = reader.GetString(reader.GetOrdinal("Apellido")),
+                Correo = reader.GetString(reader.GetOrdinal("Correo")),
+                Telefono = reader.IsDBNull(reader.GetOrdinal("Telefono")) ? null : reader.GetString(reader.GetOrdinal("Telefono")),
+                Estado = reader.IsDBNull(reader.GetOrdinal("Estado")) ? null : reader.GetString(reader.GetOrdinal("Estado")),
+                FechaRegistro = reader.IsDBNull(reader.GetOrdinal("FechaRegistro")) ? null : reader.GetDateTime(reader.GetOrdinal("FechaRegistro")),
+                IdRol = reader.GetInt32(reader.GetOrdinal("IdRol")),
+                NombreRol = reader.IsDBNull(reader.GetOrdinal("NombreRol")) ? null : reader.GetString(reader.GetOrdinal("NombreRol")),
+                IdCliente = reader.IsDBNull(reader.GetOrdinal("IdCliente")) ? null : reader.GetInt32(reader.GetOrdinal("IdCliente")),
+                Direccion = reader.IsDBNull(reader.GetOrdinal("Direccion")) ? null : reader.GetString(reader.GetOrdinal("Direccion")),
+                EstadoCliente = reader.IsDBNull(reader.GetOrdinal("EstadoCliente")) ? null : reader.GetString(reader.GetOrdinal("EstadoCliente")),
+                FechaRegistroCliente = reader.IsDBNull(reader.GetOrdinal("FechaRegistroCliente")) ? null : reader.GetDateTime(reader.GetOrdinal("FechaRegistroCliente"))
             };
         }
 
