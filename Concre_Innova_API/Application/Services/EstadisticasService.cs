@@ -21,6 +21,11 @@ namespace Concre_Innova_API.Application.Services
             return await _estadisticasRepository.ObtenerResumenAsync();
         }
 
+        public async Task<EstadisticasDashboardResponseDto> ObtenerDashboardAsync()
+        {
+            return await _estadisticasRepository.ObtenerDashboardAsync();
+        }
+
         public async Task<IEnumerable<ClienteFrecuenteResponseDto>> ObtenerClientesFrecuentesAsync(int top)
         {
             var topValido = top > 0 ? top : TopClientesFrecuentesPorDefecto;

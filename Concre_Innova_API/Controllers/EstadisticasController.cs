@@ -47,6 +47,27 @@ namespace Concre_Innova_API.Controllers
             }
         }
 
+        [HttpGet("dashboard")]
+        public async Task<ActionResult> ObtenerDashboard()
+        {
+            var userContext = _requestUserContextService.GetCurrentUser(HttpContext);
+            var denied = await RequirePermissionAsync(userContext, "ACCESS");
+            if (denied != null)
+                return denied;
+
+            try
+            {
+                var dashboard = await _estadisticasService.ObtenerDashboardAsync();
+                return Ok(dashboard);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(
+                    StatusCodes.Status500InternalServerError,
+                    new { message = "Error al obtener los indicadores del panel.", error = ex.Message });
+            }
+        }
+
         [HttpGet("clientes-frecuentes")]
         public async Task<ActionResult> ObtenerClientesFrecuentes([FromQuery] int top = 10)
         {
