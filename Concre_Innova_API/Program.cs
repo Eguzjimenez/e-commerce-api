@@ -34,6 +34,10 @@ builder.Services.AddAuthorization();
 builder.Services.AddMemoryCache();
 
 // CORS
+var allowedOrigins = builder.Configuration
+    .GetSection("AllowedOrigins")
+    .Get<string[]>() ?? [];
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactLocal", policy =>
@@ -43,8 +47,11 @@ builder.Services.AddCors(options =>
                 if (!Uri.TryCreate(origin, UriKind.Absolute, out var uri))
                     return false;
 
+                if (allowedOrigins.Contains(origin, StringComparer.OrdinalIgnoreCase))
+                    return true;
+
                 if (!builder.Environment.IsDevelopment())
-                    return origin == "http://localhost:3000";
+                    return false;
 
                 return uri.Host == "localhost" ||
                        uri.Host == "127.0.0.1" ||
