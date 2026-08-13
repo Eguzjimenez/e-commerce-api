@@ -69,6 +69,42 @@ namespace Concre_Innova_API.Infrastructure.Email
                 body);
         }
 
+        public async Task<bool> SendContactReplyAsync(
+            string toEmail,
+            string customerName,
+            string subject,
+            string reply)
+        {
+            var body =
+                $"Hola {customerName}," +
+                Environment.NewLine +
+                Environment.NewLine +
+                "Recibimos tu consulta y esta es nuestra respuesta:" +
+                Environment.NewLine +
+                Environment.NewLine +
+                reply +
+                Environment.NewLine +
+                Environment.NewLine +
+                "Gracias por escribirnos." +
+                Environment.NewLine +
+                "Equipo de Concre Innova";
+
+            try
+            {
+                await SendEmailAsync(toEmail, $"Respuesta a tu consulta: {subject}", body);
+                return true;
+            }
+            catch (Exception exception)
+            {
+                _logger.LogWarning(
+                    exception,
+                    "No fue posible enviar la respuesta de la consulta a {Destinatario}.",
+                    toEmail);
+
+                return false;
+            }
+        }
+
         public Task<bool> SendQuotationStatusChangedAsync(
             string toEmail,
             string customerName,

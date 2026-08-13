@@ -1,6 +1,7 @@
 using Concre_Innova_API.Application.DTOs.Requests;
 using Concre_Innova_API.Application.DTOs.Responses;
 using Concre_Innova_API.Application.Interfaces.Repositories;
+using Concre_Innova_API.Application.Models;
 using Concre_Innova_API.Infrastructure.Data;
 using Microsoft.Data.SqlClient;
 using System.Data;
@@ -126,7 +127,11 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Empresa
                     Asunto = reader.GetString(reader.GetOrdinal("Asunto")),
                     Mensaje = reader.GetString(reader.GetOrdinal("Mensaje")),
                     Estado = reader.GetString(reader.GetOrdinal("Estado")),
-                    FechaEnvio = reader.GetDateTime(reader.GetOrdinal("FechaEnvio"))
+                    FechaEnvio = reader.GetDateTime(reader.GetOrdinal("FechaEnvio")),
+                    Respuesta = reader.GetString(reader.GetOrdinal("Respuesta")),
+                    FechaRespuesta = reader.IsDBNull(reader.GetOrdinal("FechaRespuesta"))
+                        ? null
+                        : reader.GetDateTime(reader.GetOrdinal("FechaRespuesta"))
                 });
 
                 totalItems = reader.GetInt32(reader.GetOrdinal("TotalItems"));
@@ -139,6 +144,52 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Empresa
                 PageNumber = pagination.PageNumber,
                 PageSize = pagination.PageSize
             };
+        }
+
+        public async Task<ConsultaRespondida> ResponderMensajeAsync(
+            int idMensaje,
+            string respuesta,
+            int idUsuario)
+        {
+            await using var conn = _connectionFactory.CreateConnection();
+            await using var cmd = new SqlCommand("SP_ResponderMensajeContacto", conn)
+            {
+                CommandType = CommandType.StoredProcedure
+            };
+
+            cmd.Parameters.Add("@IdMensaje", SqlDbType.Int).Value = idMensaje;
+            cmd.Parameters.Add("@Respuesta", SqlDbType.VarChar, 2000).Value = respuesta;
+            cmd.Parameters.Add("@IdUsuario", SqlDbType.Int).Value = idUsuario;
+
+            await conn.OpenAsync();
+
+            await using var reader = await cmd.ExecuteReaderAsync();
+
+            if (!await reader.ReadAsync())
+            {
+                return new ConsultaRespondida
+                {
+                    Exitoso = false,
+                    Mensaje = "No fue posible registrar la respuesta."
+                };
+            }
+
+            var codigo = reader.GetInt32(reader.GetOrdinal("Codigo"));
+
+            return new ConsultaRespondida
+            {
+                Exitoso = codigo == 1,
+                Mensaje = reader.GetString(reader.GetOrdinal("Mensaje")),
+                CorreoCliente = LeerTextoOpcional(reader, "Correo"),
+                NombreCliente = LeerTextoOpcional(reader, "Nombre"),
+                Asunto = LeerTextoOpcional(reader, "Asunto")
+            };
+        }
+
+        private static string LeerTextoOpcional(SqlDataReader reader, string columna)
+        {
+            var ordinal = reader.GetOrdinal(columna);
+            return reader.IsDBNull(ordinal) ? string.Empty : reader.GetString(ordinal);
         }
 
         private static async Task<OperacionResponseDto> EjecutarOperacionAsync(

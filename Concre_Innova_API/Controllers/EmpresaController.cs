@@ -39,11 +39,11 @@ namespace Concre_Innova_API.Controllers
 
                 return Ok(informacion);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
-                    new { message = "Error al obtener la informacion de la empresa.", error = ex.Message });
+                    new { message = "Error al obtener la informacion de la empresa." });
             }
         }
 
@@ -75,11 +75,11 @@ namespace Concre_Innova_API.Controllers
 
                 return BadRequest(resultado);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
-                    new { message = "Error al actualizar la informacion de la empresa.", error = ex.Message });
+                    new { message = "Error al actualizar la informacion de la empresa." });
             }
         }
 
@@ -99,11 +99,11 @@ namespace Concre_Innova_API.Controllers
 
                 return BadRequest(resultado);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
-                    new { message = "Error al enviar el mensaje de contacto.", error = ex.Message });
+                    new { message = "Error al enviar el mensaje de contacto." });
             }
         }
 
@@ -125,11 +125,11 @@ namespace Concre_Innova_API.Controllers
 
                 return Ok(mensajes);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
-                    new { message = "Error al obtener los mensajes de contacto.", error = ex.Message });
+                    new { message = "Error al obtener los mensajes de contacto." });
             }
         }
 

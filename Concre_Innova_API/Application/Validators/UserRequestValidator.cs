@@ -24,6 +24,9 @@ namespace Concre_Innova_API.Application.Validators
             if (!EmailAddressValidator.IsValid(request.Correo))
                 return "El formato del correo no es valido.";
 
+            if (!PhoneNumberValidator.IsValid(request.Telefono))
+                return "El telefono debe contener entre 8 y 15 digitos.";
+
             return PasswordPolicyValidator.GetValidationMessage(request.Contrasena);
         }
 
@@ -43,6 +46,9 @@ namespace Concre_Innova_API.Application.Validators
 
             if (!EmailAddressValidator.IsValid(request.Correo))
                 return "El formato del correo no es valido.";
+
+            if (!PhoneNumberValidator.IsValid(request.Telefono))
+                return "El telefono debe contener entre 8 y 15 digitos.";
 
             return string.IsNullOrWhiteSpace(request.Contrasena)
                 ? null

@@ -2,6 +2,7 @@ using Concre_Innova_API.Application.DTOs.Requests;
 using Concre_Innova_API.Application.DTOs.Responses;
 using Concre_Innova_API.Application.Interfaces.Repositories;
 using Concre_Innova_API.Application.Interfaces.Services;
+using Concre_Innova_API.Shared.Helpers;
 
 namespace Concre_Innova_API.Application.Services
 {
@@ -79,6 +80,12 @@ namespace Concre_Innova_API.Application.Services
                 return CrearError("El mensaje es requerido y no puede superar 2000 caracteres.");
             }
 
+            // El telefono es opcional, pero si se envia debe ser utilizable para responder.
+            if (!PhoneNumberValidator.IsValidOrEmpty(request.Telefono))
+            {
+                return CrearError("El telefono debe contener entre 8 y 15 digitos.");
+            }
+
             return await _empresaRepository.RegistrarMensajeAsync(request, idUsuario);
         }
 
@@ -89,18 +96,10 @@ namespace Concre_Innova_API.Application.Services
             return await _empresaRepository.ObtenerMensajesAsync(estado, pagination);
         }
 
-        private static bool EsCorreoValido(string correo)
+        // Se reutiliza el validador compartido para no mantener dos reglas de correo.
+        private static bool EsCorreoValido(string? correo)
         {
-            if (string.IsNullOrWhiteSpace(correo))
-            {
-                return false;
-            }
-
-            var partes = correo.Trim().Split('@');
-            return partes.Length == 2 &&
-                   partes[0].Length > 0 &&
-                   partes[1].Contains('.') &&
-                   partes[1].Length >= 3;
+            return EmailAddressValidator.IsValid(correo);
         }
 
         private static OperacionResponseDto CrearError(string mensaje)

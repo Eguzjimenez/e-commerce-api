@@ -39,11 +39,11 @@ namespace Concre_Innova_API.Controllers
                 var resumen = await _estadisticasService.ObtenerResumenAsync();
                 return Ok(resumen);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
-                    new { message = "Error al obtener el resumen de estadisticas.", error = ex.Message });
+                    new { message = "Error al obtener el resumen de estadisticas." });
             }
         }
 
@@ -60,11 +60,11 @@ namespace Concre_Innova_API.Controllers
                 var dashboard = await _estadisticasService.ObtenerDashboardAsync();
                 return Ok(dashboard);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
-                    new { message = "Error al obtener los indicadores del panel.", error = ex.Message });
+                    new { message = "Error al obtener los indicadores del panel." });
             }
         }
 
@@ -81,11 +81,11 @@ namespace Concre_Innova_API.Controllers
                 var clientes = await _estadisticasService.ObtenerClientesFrecuentesAsync(top);
                 return Ok(clientes);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
-                    new { message = "Error al obtener los clientes frecuentes.", error = ex.Message });
+                    new { message = "Error al obtener los clientes frecuentes." });
             }
         }
 
@@ -102,11 +102,11 @@ namespace Concre_Innova_API.Controllers
                 var categorias = await _estadisticasService.ObtenerPorCategoriaAsync();
                 return Ok(categorias);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
-                    new { message = "Error al obtener las estadisticas por categoria.", error = ex.Message });
+                    new { message = "Error al obtener las estadisticas por categoria." });
             }
         }
 
@@ -123,11 +123,11 @@ namespace Concre_Innova_API.Controllers
                 var productos = await _estadisticasService.ObtenerProductosDestacadosAsync(top);
                 return Ok(productos);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
-                    new { message = "Error al obtener los productos destacados.", error = ex.Message });
+                    new { message = "Error al obtener los productos destacados." });
             }
         }
 

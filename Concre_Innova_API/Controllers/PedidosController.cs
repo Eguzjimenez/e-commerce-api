@@ -62,11 +62,11 @@ namespace Concre_Innova_API.Controllers
 
                 return Ok(pedidos);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
-                    new { message = "Error al obtener los pedidos.", error = ex.Message });
+                    new { message = "Error al obtener los pedidos." });
             }
         }
 
@@ -93,11 +93,11 @@ namespace Concre_Innova_API.Controllers
 
                 return Ok(detalle);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
-                    new { message = "Error al obtener el detalle del pedido.", error = ex.Message });
+                    new { message = "Error al obtener el detalle del pedido." });
             }
         }
 
@@ -156,7 +156,7 @@ namespace Concre_Innova_API.Controllers
 
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
-                    new { message = "Error al actualizar el pedido.", error = ex.Message });
+                    new { message = "Error al actualizar el pedido." });
             }
         }
 
@@ -207,7 +207,7 @@ namespace Concre_Innova_API.Controllers
 
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
-                    new { message = "Error al cancelar el pedido.", error = ex.Message });
+                    new { message = "Error al cancelar el pedido." });
             }
         }
 

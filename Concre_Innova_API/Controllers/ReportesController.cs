@@ -57,11 +57,11 @@ namespace Concre_Innova_API.Controllers
 
                 return Ok(reporte);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
-                    new { message = "Error al generar el reporte de ventas.", error = ex.Message });
+                    new { message = "Error al generar el reporte de ventas." });
             }
         }
 
@@ -90,11 +90,11 @@ namespace Concre_Innova_API.Controllers
                 var comparativo = await _reporteService.ObtenerComparativoAsync(query);
                 return Ok(comparativo);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
-                    new { message = "Error al generar el comparativo de periodos.", error = ex.Message });
+                    new { message = "Error al generar el comparativo de periodos." });
             }
         }
 
@@ -118,11 +118,11 @@ namespace Concre_Innova_API.Controllers
 
                 return Ok(productos);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
-                    new { message = "Error al obtener los productos mas vendidos.", error = ex.Message });
+                    new { message = "Error al obtener los productos mas vendidos." });
             }
         }
 
