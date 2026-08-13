@@ -29,7 +29,9 @@ namespace Concre_Innova_API.Domain.Constants
                     [PermissionCodes.PedidosVer] = AdminOnly(),
                     [PermissionCodes.PedidosActualizar] = AdminOnly(),
                     [PermissionCodes.PedidosCancelar] = AdminOnly(),
-                    [PermissionCodes.EstadisticasVer] = AdminOnly()
+                    [PermissionCodes.EstadisticasVer] = AdminOnly(),
+                    [PermissionCodes.ReportesVer] = AdminAndVendedor(),
+                    [PermissionCodes.EmpresaGestionar] = AdminOnly()
                 });
 
         public static bool IsAdministrator(int roleId)
@@ -50,6 +52,11 @@ namespace Concre_Innova_API.Domain.Constants
         private static IReadOnlySet<int> AdminOnly()
         {
             return new HashSet<int> { AppRoles.Administrador };
+        }
+
+        private static IReadOnlySet<int> AdminAndVendedor()
+        {
+            return new HashSet<int> { AppRoles.Administrador, AppRoles.Vendedor };
         }
 
         private static string NormalizePermissionCode(string permissionCode)

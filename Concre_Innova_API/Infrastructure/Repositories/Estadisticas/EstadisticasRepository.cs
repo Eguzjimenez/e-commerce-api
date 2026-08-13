@@ -40,6 +40,45 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Estadisticas
             return new EstadisticasResumenResponseDto();
         }
 
+        public async Task<EstadisticasDashboardResponseDto> ObtenerDashboardAsync()
+        {
+            var dashboard = new EstadisticasDashboardResponseDto();
+
+            await using var conn = _connectionFactory.CreateConnection();
+            await using var cmd = new SqlCommand("SP_EstadisticasDashboard", conn)
+            {
+                CommandType = CommandType.StoredProcedure
+            };
+
+            await conn.OpenAsync();
+
+            await using var reader = await cmd.ExecuteReaderAsync();
+            if (await reader.ReadAsync())
+            {
+                dashboard.VentasMes = reader.GetDecimal(reader.GetOrdinal("VentasMes"));
+                dashboard.PedidosPendientes = reader.GetInt32(reader.GetOrdinal("PedidosPendientes"));
+                dashboard.CotizacionesPendientes = reader.GetInt32(reader.GetOrdinal("CotizacionesPendientes"));
+                dashboard.ProductosBajoStock = reader.GetInt32(reader.GetOrdinal("ProductosBajoStock"));
+                dashboard.ProductosActivos = reader.GetInt32(reader.GetOrdinal("ProductosActivos"));
+            }
+
+            if (await reader.NextResultAsync())
+            {
+                while (await reader.ReadAsync())
+                {
+                    dashboard.VentasMensuales.Add(new VentaMensualDto
+                    {
+                        Periodo = reader.GetString(reader.GetOrdinal("Periodo")),
+                        Ingresos = reader.GetDecimal(reader.GetOrdinal("Ingresos"))
+                    });
+                }
+            }
+
+            dashboard.VentasMensuales.Reverse();
+
+            return dashboard;
+        }
+
         public async Task<IEnumerable<ClienteFrecuenteResponseDto>> ObtenerClientesFrecuentesAsync(int top)
         {
             var clientes = new List<ClienteFrecuenteResponseDto>();
