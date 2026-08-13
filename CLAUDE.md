@@ -273,7 +273,9 @@ Repositories also contain parameterized inline SQL for features such as category
 
 ### Local data snapshot
 
-As observed on 2026-08-12, the local development database contains 36 tables. Representative row counts are: 32 products, 26 product variants, 4 categories, 3 product types, 9 users, 4 roles, 22 permissions, 3 orders, 2 quotations, 2 sales, and 249 audit entries. Chat, generic notification, favorites, and payment tables are currently empty. This is mutable developer data, not seed truth; query the database again when exact counts matter.
+As observed on 2026-08-14, the catalog holds the real product line: 9 active planters (`Macetero Elder`, `Psila Jumbo`, `Rombo`, `Vertical`, `Cónico`, `Macetero redondo`, `Paila`, `Novas`, `Gota`) covering 16 purchasable sizes through 10 `ProductoVariantes` rows. Earlier demo products remain as `Inactivo` because four of them carry order, quotation or favorite history. Prices are in colones and every product is `Concreto`. This is mutable developer data, not seed truth; query the database again when exact counts matter.
+
+Product photography lives in `wwwroot/images/productos` and is versioned with the API. `Productos.Imagen` and `ProductoVariantes.Imagen` store the relative path (`images/productos/<archivo>.jpg`), which the web client resolves against `REACT_APP_API_URL` without extra configuration. Each product design has one photograph; a variant only carries its own file when the photo really shows that same design in another size.
 
 Do not document names, emails, password hashes, tokens, image contents, or other personal/sensitive row values.
 
