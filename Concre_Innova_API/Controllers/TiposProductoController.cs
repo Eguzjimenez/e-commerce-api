@@ -40,11 +40,11 @@ namespace Concre_Innova_API.Controllers
                 var tipos = await _catalogoService.ObtenerTiposProductoAsync();
                 return Ok(tipos);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
-                    new { message = "Error al obtener los tipos de producto.", error = ex.Message });
+                    new { message = "Error al obtener los tipos de producto." });
             }
         }
 
@@ -61,11 +61,11 @@ namespace Concre_Innova_API.Controllers
                 var tipos = await _catalogoService.ObtenerTiposProductoAdministracionAsync();
                 return Ok(tipos);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
-                    new { message = "Error al obtener los tipos de producto.", error = ex.Message });
+                    new { message = "Error al obtener los tipos de producto." });
             }
         }
 
@@ -121,7 +121,7 @@ namespace Concre_Innova_API.Controllers
 
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
-                    new { message = "Error al insertar el tipo de producto.", error = ex.Message });
+                    new { message = "Error al insertar el tipo de producto." });
             }
         }
 
@@ -183,7 +183,7 @@ namespace Concre_Innova_API.Controllers
 
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
-                    new { message = "Error al actualizar el tipo de producto.", error = ex.Message });
+                    new { message = "Error al actualizar el tipo de producto." });
             }
         }
 
@@ -234,7 +234,7 @@ namespace Concre_Innova_API.Controllers
 
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
-                    new { message = "Error al eliminar el tipo de producto.", error = ex.Message });
+                    new { message = "Error al eliminar el tipo de producto." });
             }
         }
 

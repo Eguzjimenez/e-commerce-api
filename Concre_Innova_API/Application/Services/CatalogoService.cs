@@ -128,20 +128,10 @@ namespace Concre_Innova_API.Application.Services
 
         public async Task<OperacionResponseDto> InsertarProductoAsync(CreateProductoRequest request)
         {
-            if (request.IdTipo.HasValue)
+            var relacionInvalida = await ValidarRelacionesAsync(request.IdCategoria, request.IdTipo);
+            if (relacionInvalida is not null)
             {
-                var esCombinacionValida = await _repo.EsCombinacionTipoCategoriaValidaAsync(
-                    request.IdCategoria,
-                    request.IdTipo.Value);
-
-                if (!esCombinacionValida)
-                {
-                    return new OperacionResponseDto
-                    {
-                        Codigo = 0,
-                        Mensaje = "La combinacion de categoria y tipo de producto seleccionada no es valida."
-                    };
-                }
+                return relacionInvalida;
             }
 
             return await _repo.InsertarProductoAsync(request);
@@ -149,23 +139,55 @@ namespace Concre_Innova_API.Application.Services
 
         public async Task<OperacionResponseDto> ActualizarProductoAsync(UpdateProductoRequest request)
         {
-            if (request.IdTipo.HasValue)
+            var relacionInvalida = await ValidarRelacionesAsync(request.IdCategoria, request.IdTipo);
+            if (relacionInvalida is not null)
             {
-                var esCombinacionValida = await _repo.EsCombinacionTipoCategoriaValidaAsync(
-                    request.IdCategoria,
-                    request.IdTipo.Value);
-
-                if (!esCombinacionValida)
-                {
-                    return new OperacionResponseDto
-                    {
-                        Codigo = 0,
-                        Mensaje = "La combinacion de categoria y tipo de producto seleccionada no es valida."
-                    };
-                }
+                return relacionInvalida;
             }
 
             return await _repo.ActualizarProductoAsync(request);
+        }
+
+        /// <summary>
+        /// Comprueba que la categoria exista y que la combinacion con el tipo sea
+        /// valida, para que un identificador manipulado no llegue a la base de datos.
+        /// </summary>
+        private async Task<OperacionResponseDto?> ValidarRelacionesAsync(int idCategoria, int? idTipo)
+        {
+            if (!await _repo.ExisteCategoriaAsync(idCategoria))
+            {
+                return new OperacionResponseDto
+                {
+                    Codigo = 0,
+                    Mensaje = "La categoria seleccionada no existe."
+                };
+            }
+
+            if (!idTipo.HasValue)
+            {
+                return null;
+            }
+
+            if (!await _repo.ExisteTipoProductoAsync(idTipo.Value))
+            {
+                return new OperacionResponseDto
+                {
+                    Codigo = 0,
+                    Mensaje = "El tipo de producto seleccionado no existe."
+                };
+            }
+
+            var esCombinacionValida = await _repo.EsCombinacionTipoCategoriaValidaAsync(
+                idCategoria,
+                idTipo.Value);
+
+            return esCombinacionValida
+                ? null
+                : new OperacionResponseDto
+                {
+                    Codigo = 0,
+                    Mensaje = "La combinacion de categoria y tipo de producto seleccionada no es valida."
+                };
         }
 
         public Task<OperacionResponseDto> EliminarProductoAsync(int idProducto)

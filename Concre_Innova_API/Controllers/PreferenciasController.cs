@@ -34,11 +34,11 @@ namespace Concre_Innova_API.Controllers
                 var preferencias = await _preferenciasService.ObtenerAsync(userContext.UserId.Value);
                 return Ok(preferencias);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
-                    new { message = "Error al obtener las preferencias.", error = ex.Message });
+                    new { message = "Error al obtener las preferencias." });
             }
         }
 
@@ -62,11 +62,11 @@ namespace Concre_Innova_API.Controllers
 
                 return BadRequest(resultado);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
-                    new { message = "Error al actualizar las preferencias.", error = ex.Message });
+                    new { message = "Error al actualizar las preferencias." });
             }
         }
     }

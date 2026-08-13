@@ -6,6 +6,9 @@ namespace Concre_Innova_API.Application.Validators
 {
     public class ProductoRequestValidator : IProductoRequestValidator
     {
+        // Limite de la columna Productos.Precio, declarada como DECIMAL(10,2).
+        private const decimal PrecioMaximo = 99999999.99m;
+
         private static readonly HashSet<string> EstadosValidos = new(StringComparer.OrdinalIgnoreCase)
         {
             ProductoEstados.Activo,
@@ -72,6 +75,9 @@ namespace Concre_Innova_API.Application.Validators
 
             if (precio <= 0)
                 return "El precio del producto debe ser un valor numerico mayor a cero.";
+
+            if (precio > PrecioMaximo)
+                return "El precio del producto supera el maximo permitido.";
 
             if (idCategoria <= 0)
                 return "La categoria del producto es requerida.";

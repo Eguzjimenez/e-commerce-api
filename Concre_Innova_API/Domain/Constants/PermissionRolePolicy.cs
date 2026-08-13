@@ -15,14 +15,14 @@ namespace Concre_Innova_API.Domain.Constants
                     [PermissionCodes.RolesVer] = AdminOnly(),
                     [PermissionCodes.PermisosGestionar] = AdminOnly(),
                     [PermissionCodes.BitacoraVer] = AdminOnly(),
-                    [PermissionCodes.ProductosCrear] = AdminOnly(),
-                    [PermissionCodes.ProductosActualizar] = AdminOnly(),
-                    [PermissionCodes.ProductosEliminar] = AdminOnly(),
+                    [PermissionCodes.ProductosCrear] = AdminAndVendedor(),
+                    [PermissionCodes.ProductosActualizar] = AdminAndVendedor(),
+                    [PermissionCodes.ProductosEliminar] = AdminAndVendedor(),
                     [PermissionCodes.ProductosDuplicar] = AdminAndVendedor(),
-                    [PermissionCodes.CategoriasLeer] = AdminOnly(),
-                    [PermissionCodes.CategoriasCrear] = AdminOnly(),
-                    [PermissionCodes.CategoriasActualizar] = AdminOnly(),
-                    [PermissionCodes.CategoriasEliminar] = AdminOnly(),
+                    [PermissionCodes.CategoriasLeer] = AdminAndVendedor(),
+                    [PermissionCodes.CategoriasCrear] = AdminAndVendedor(),
+                    [PermissionCodes.CategoriasActualizar] = AdminAndVendedor(),
+                    [PermissionCodes.CategoriasEliminar] = AdminAndVendedor(),
                     [PermissionCodes.TiposProductoLeer] = AdminOnly(),
                     [PermissionCodes.TiposProductoCrear] = AdminOnly(),
                     [PermissionCodes.TiposProductoActualizar] = AdminOnly(),
@@ -31,8 +31,10 @@ namespace Concre_Innova_API.Domain.Constants
                     [PermissionCodes.PedidosActualizar] = AdminOnly(),
                     [PermissionCodes.PedidosCancelar] = AdminOnly(),
                     [PermissionCodes.EstadisticasVer] = AdminOnly(),
-                    [PermissionCodes.ReportesVer] = AdminAndVendedor(),
-                    [PermissionCodes.EmpresaGestionar] = AdminOnly()
+                    [PermissionCodes.ReportesVer] = AdminOnly(),
+                    [PermissionCodes.EmpresaGestionar] = AdminOnly(),
+                    [PermissionCodes.ConsultasVer] = AdminAndVendedor(),
+                    [PermissionCodes.ConsultasResponder] = AdminAndVendedor()
                 });
 
         public static bool IsAdministrator(int roleId)

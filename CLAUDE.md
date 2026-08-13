@@ -80,6 +80,14 @@ The frontend API base URL comes from `REACT_APP_API_URL` and defaults to `http:/
 
 Never place real connection strings, passwords, SMTP credentials, JWT keys, card data, or personal customer data in this file or in commits. Use .NET User Secrets or environment variables for sensitive local values.
 
+`Jwt:Key` and `EmailSettings:Username` / `EmailSettings:Password` are deliberately empty in the versioned configuration and must be supplied per environment. The application refuses to start when `Jwt:Key` is missing, shorter than 32 characters, or equal to a known sample value:
+
+```powershell
+dotnet user-secrets set "Jwt:Key" "<clave-aleatoria-de-32-o-mas-caracteres>"
+dotnet user-secrets set "EmailSettings:Username" "<usuario-smtp>"
+dotnet user-secrets set "EmailSettings:Password" "<contrasena-smtp>"
+```
+
 ## System Architecture
 
 ```text
@@ -157,7 +165,7 @@ Keep HTTP calls in services. Components may perform UX validation, but the API m
 Canonical roles currently stored in the database:
 
 - `Administrador`: administrative functionality.
-- `Vendedor`: only explicitly permitted staff functionality — the quotation workflow, the chat attention console, and duplicating products plus adjusting the resulting drafts. Creating, deleting, and publishing catalog products stay with `Administrador`.
+- `Vendedor`: staff functionality explicitly granted by the approved permission matrix — full product and category management (`productos.*`, `categorias.*`), the quotation workflow, the chat attention console, and the customer enquiry inbox (`consultas.*`). Users, roles, permissions, orders, product types, company information, statistics, reports, and the audit log stay with `Administrador`.
 - `Cliente`: catalog, favorites, cart, checkout, orders, and quotations.
 - `Inactivo`: no protected access.
 
@@ -282,7 +290,13 @@ Avoid unbounded list queries and N+1 access. Use pagination and projections, and
 
 ## API and Frontend Contract
 
-Controller route groups currently include `api/Auth`, `api/Users`, `api/Roles`, `api/Permisos`, `api/Productos`, `api/Categorias`, `api/TiposProducto`, `api/Favoritos`, `api/Carrito`, `api/Cotizaciones`, `api/Pedidos`, `api/Estadisticas`, `api/Bitacora`, `api/Asesor`, `api/Chat`, `api/Preferencias`, and `api/Notificaciones`.
+Controller route groups currently include `api/Auth`, `api/Users`, `api/Roles`, `api/Permisos`, `api/Productos`, `api/Categorias`, `api/TiposProducto`, `api/Favoritos`, `api/Carrito`, `api/Cotizaciones`, `api/Pedidos`, `api/Estadisticas`, `api/Reportes`, `api/Empresa`, `api/Consultas`, `api/Bitacora`, `api/Asesor`, `api/Chat`, `api/Preferencias`, and `api/Notificaciones`.
+
+`api/Consultas` is the enquiry inbox built on `MensajesContacto`: `GET api/Consultas` requires `consultas.ver` and `POST api/Consultas/{id}/respuesta` requires `consultas.responder`, both granted to `Administrador` and `Vendedor`. Answering stores the reply, its date and its author, marks the enquiry as `Respondido`, records the change in `Bitacora`, and emails the customer as a best-effort step that never fails the operation. `api/Empresa/mensajes` remains available to `empresa.gestionar` for the company-information screen.
+
+`POST api/Bitacora/acceso-denegado` lets the web application record a route rejected by its guards; it only accepts the authenticated caller's own attempt.
+
+Unhandled exceptions are converted by `ManejoErroresMiddleware` into a generic message. Controllers must never return `ex.Message`, SQL text, or internal paths in a response.
 
 `api/Notificaciones` requires any authenticated role and every stored procedure filters by user, so a notification can only be read or marked by its owner. It exposes the paginated inbox, a lightweight `resumen` endpoint used by the navigation bar indicator, and the read-state endpoints. Notifications are never created through HTTP: `INotificacionEventoService` emits them from the order, quotation, and chat services, and failures there are logged without interrupting the originating operation.
 
@@ -308,8 +322,11 @@ Run backend commands from `C:\Users\valve\source\repos\e-commerce-api`:
 ```powershell
 dotnet restore .\Concre_Innova_API.slnx
 dotnet build .\Concre_Innova_API.slnx
+dotnet test .\Concre_Innova_API.slnx
 dotnet run --project .\Concre_Innova_API\Concre_Innova_API.csproj
 ```
+
+`Concre_Innova_API.Tests` (xUnit) covers the role/permission policy and the request validators. Add a case there whenever the permission matrix or a validation rule changes.
 
 Run frontend commands from `C:\Users\valve\source\repos\e-commerce\concre_innova_website`:
 

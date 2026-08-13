@@ -892,6 +892,38 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Catalogo
             };
         }
 
+        public Task<bool> ExisteCategoriaAsync(int idCategoria)
+        {
+            return ExisteRegistroAsync(
+                "SELECT TOP (1) 1 FROM Categorias WHERE IdCategoria = @Id;",
+                idCategoria);
+        }
+
+        public Task<bool> ExisteTipoProductoAsync(int idTipo)
+        {
+            return ExisteRegistroAsync(
+                "SELECT TOP (1) 1 FROM TiposProducto WHERE IdTipo = @Id;",
+                idTipo);
+        }
+
+        private async Task<bool> ExisteRegistroAsync(string sql, int id)
+        {
+            if (id <= 0)
+            {
+                return false;
+            }
+
+            await using var conn = _connectionFactory.CreateConnection();
+            await using var cmd = new SqlCommand(sql, conn) { CommandType = CommandType.Text };
+
+            cmd.Parameters.Add("@Id", SqlDbType.Int).Value = id;
+
+            await conn.OpenAsync();
+            var resultado = await cmd.ExecuteScalarAsync();
+
+            return resultado is not null && resultado != DBNull.Value;
+        }
+
         public async Task<OperacionResponseDto> DuplicarProductoAsync(int idProducto, int? idUsuario)
         {
             await using var conn = _connectionFactory.CreateConnection();

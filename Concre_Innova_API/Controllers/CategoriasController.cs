@@ -40,11 +40,11 @@ namespace Concre_Innova_API.Controllers
                 var categorias = await _catalogoService.ObtenerCategoriasAsync();
                 return Ok(categorias);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
-                    new { message = "Error al obtener las categorias.", error = ex.Message });
+                    new { message = "Error al obtener las categorias." });
             }
         }
 
@@ -61,11 +61,11 @@ namespace Concre_Innova_API.Controllers
                 var categorias = await _catalogoService.ObtenerCategoriasAdministracionAsync();
                 return Ok(categorias);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
-                    new { message = "Error al obtener las categorias.", error = ex.Message });
+                    new { message = "Error al obtener las categorias." });
             }
         }
 
@@ -121,7 +121,7 @@ namespace Concre_Innova_API.Controllers
 
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
-                    new { message = "Error al insertar la categoria.", error = ex.Message });
+                    new { message = "Error al insertar la categoria." });
             }
         }
 
@@ -183,7 +183,7 @@ namespace Concre_Innova_API.Controllers
 
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
-                    new { message = "Error al actualizar la categoria.", error = ex.Message });
+                    new { message = "Error al actualizar la categoria." });
             }
         }
 
@@ -234,7 +234,7 @@ namespace Concre_Innova_API.Controllers
 
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
-                    new { message = "Error al eliminar la categoria.", error = ex.Message });
+                    new { message = "Error al eliminar la categoria." });
             }
         }
 

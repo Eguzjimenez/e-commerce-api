@@ -10,8 +10,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-var jwtSettings = builder.Configuration.GetSection("Jwt").Get<JwtSettings>() ?? new JwtSettings();
-var jwtKey = Encoding.UTF8.GetBytes(jwtSettings.Key ?? string.Empty);
+// Falla el arranque si la clave de firma no esta configurada por entorno.
+var jwtSettings = builder.Configuration.ObtenerJwtSettingsValidados();
+var jwtKey = Encoding.UTF8.GetBytes(jwtSettings.Key!);
 
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -80,6 +81,7 @@ if (!app.Environment.IsDevelopment())
     app.UseHttpsRedirection();
 }
 
+app.UseManejoDeErrores();
 app.UseCors("AllowReactLocal");
 app.UseStaticFiles();
 app.UseAuthentication();

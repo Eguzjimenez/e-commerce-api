@@ -27,5 +27,7 @@ namespace Concre_Innova_API.Domain.Constants
         public const string EstadisticasVer = "estadisticas.ver";
         public const string ReportesVer = "reportes.ver";
         public const string EmpresaGestionar = "empresa.gestionar";
+        public const string ConsultasVer = "consultas.ver";
+        public const string ConsultasResponder = "consultas.responder";
     }
 }

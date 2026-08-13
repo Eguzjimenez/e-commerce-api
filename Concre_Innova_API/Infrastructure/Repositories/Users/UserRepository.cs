@@ -168,7 +168,10 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Users
                     Apellido = reader.GetString(reader.GetOrdinal("Apellido")),
                     Correo = reader.GetString(reader.GetOrdinal("Correo")),
                     Telefono = reader.IsDBNull(reader.GetOrdinal("Telefono")) ? string.Empty : reader.GetString(reader.GetOrdinal("Telefono")),
-                    IdRol = reader.GetInt32(reader.GetOrdinal("IdRol"))
+                    IdRol = reader.GetInt32(reader.GetOrdinal("IdRol")),
+                    NombreRol = reader.IsDBNull(reader.GetOrdinal("NombreRol"))
+                        ? null
+                        : reader.GetString(reader.GetOrdinal("NombreRol"))
                 });
             }
 

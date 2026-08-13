@@ -54,6 +54,32 @@ namespace Concre_Innova_API.Controllers
             return Ok(list);
         }
 
+        // POST api/Bitacora/acceso-denegado
+        // Registra el intento de acceso a una ruta protegida rechazado por la
+        // aplicacion web. Solo deja constancia del propio usuario autenticado.
+        [HttpPost("acceso-denegado")]
+        public async Task<IActionResult> RegistrarAccesoDenegado(
+            [FromBody] RegistrarAccesoDenegadoRequest request)
+        {
+            var userContext = _requestUserContextService.GetCurrentUser(HttpContext);
+
+            if (!userContext.IsAuthenticated)
+                return Unauthorized(new { message = "Debe iniciar sesion para acceder a este recurso." });
+
+            var ruta = request?.Ruta?.Trim();
+
+            if (string.IsNullOrWhiteSpace(ruta) || ruta.Length > 255)
+                return BadRequest(new { message = "La ruta reportada no es valida." });
+
+            await _auditService.RecordAsync(
+                userContext,
+                "Seguridad",
+                "DENIED",
+                $"Acceso denegado a la ruta protegida {ruta}.");
+
+            return Ok(new { message = "Intento registrado." });
+        }
+
         // POST api/Bitacora/Register
         [HttpPost("Register")]
         public async Task<IActionResult> Register([FromBody] CreateBitacoraRequest request)

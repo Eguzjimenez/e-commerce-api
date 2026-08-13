@@ -1,5 +1,6 @@
 using Concre_Innova_API.Application.DTOs.Requests;
 using Concre_Innova_API.Application.DTOs.Responses;
+using Concre_Innova_API.Application.Models;
 
 namespace Concre_Innova_API.Application.Interfaces.Repositories
 {
@@ -18,5 +19,10 @@ namespace Concre_Innova_API.Application.Interfaces.Repositories
         Task<PaginatedResponseDto<MensajeContactoResponseDto>> ObtenerMensajesAsync(
             string? estado,
             PaginationQuery pagination);
+
+        Task<ConsultaRespondida> ResponderMensajeAsync(
+            int idMensaje,
+            string respuesta,
+            int idUsuario);
     }
 }

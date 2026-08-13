@@ -90,6 +90,7 @@ namespace Concre_Innova_API.Configuration
             services.AddScoped<IEstadisticasService, EstadisticasService>();
             services.AddScoped<IReporteService, ReporteService>();
             services.AddScoped<IEmpresaService, EmpresaService>();
+            services.AddScoped<IConsultaService, ConsultaService>();
             services.AddScoped<IPreferenciasService, PreferenciasService>();
             services.AddScoped<INotificacionService, NotificacionService>();
             services.AddScoped<INotificacionEventoService, NotificacionEventoService>();

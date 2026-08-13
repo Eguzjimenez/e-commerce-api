@@ -82,11 +82,11 @@ namespace Concre_Innova_API.Controllers
                 var productos = await _catalogoService.ObtenerCatalogoProductosAsync(query);
                 return Ok(productos);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
-                    new { message = "Error al obtener el catalogo de productos.", error = ex.Message });
+                    new { message = "Error al obtener el catalogo de productos." });
             }
         }
 
@@ -98,11 +98,11 @@ namespace Concre_Innova_API.Controllers
                 var filtros = await _catalogoService.ObtenerFiltrosCatalogoAsync();
                 return Ok(filtros);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
-                    new { message = "Error al obtener los filtros del catalogo.", error = ex.Message });
+                    new { message = "Error al obtener los filtros del catalogo." });
             }
         }
 
@@ -118,11 +118,11 @@ namespace Concre_Innova_API.Controllers
 
                 return Ok(producto);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
-                    new { message = "Error al obtener el detalle del producto.", error = ex.Message });
+                    new { message = "Error al obtener el detalle del producto." });
             }
         }
 
@@ -136,11 +136,11 @@ namespace Concre_Innova_API.Controllers
                 var productos = await _catalogoService.ObtenerProductosRelacionadosAsync(idProducto, limite);
                 return Ok(productos);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
-                    new { message = "Error al obtener los productos relacionados.", error = ex.Message });
+                    new { message = "Error al obtener los productos relacionados." });
             }
         }
 
@@ -153,11 +153,11 @@ namespace Concre_Innova_API.Controllers
                 var variantes = await _catalogoService.ObtenerProductoVariantesAsync(idProducto);
                 return Ok(variantes);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
-                    new { message = "Error al obtener las variantes del producto.", error = ex.Message });
+                    new { message = "Error al obtener las variantes del producto." });
             }
         }
 
@@ -249,7 +249,7 @@ namespace Concre_Innova_API.Controllers
 
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
-                    new { message = "Error al insertar el producto.", error = ex.Message });
+                    new { message = "Error al insertar el producto." });
             }
         }
 
@@ -300,7 +300,7 @@ namespace Concre_Innova_API.Controllers
 
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
-                    new { message = "Error al duplicar el producto.", error = ex.Message });
+                    new { message = "Error al duplicar el producto." });
             }
         }
 
@@ -362,7 +362,7 @@ namespace Concre_Innova_API.Controllers
 
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
-                    new { message = "Error al actualizar el producto.", error = ex.Message });
+                    new { message = "Error al actualizar el producto." });
             }
         }
 
@@ -413,7 +413,7 @@ namespace Concre_Innova_API.Controllers
 
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
-                    new { message = "Error al eliminar el producto.", error = ex.Message });
+                    new { message = "Error al eliminar el producto." });
             }
         }
 

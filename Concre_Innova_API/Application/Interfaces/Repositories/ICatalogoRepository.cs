@@ -23,6 +23,8 @@ namespace Concre_Innova_API.Application.Interfaces.Repositories
         Task<TipoProductoOperacionResponseDto> ActualizarTipoProductoAsync(UpdateTipoProductoRequest request);
         Task<TipoProductoOperacionResponseDto> EliminarTipoProductoAsync(int idTipo);
         Task<bool> EsCombinacionTipoCategoriaValidaAsync(int idCategoria, int idTipo);
+        Task<bool> ExisteCategoriaAsync(int idCategoria);
+        Task<bool> ExisteTipoProductoAsync(int idTipo);
         Task<OperacionResponseDto> InsertarProductoAsync(CreateProductoRequest request);
         Task<OperacionResponseDto> ActualizarProductoAsync(UpdateProductoRequest request);
         Task<OperacionResponseDto> EliminarProductoAsync(int idProducto);
