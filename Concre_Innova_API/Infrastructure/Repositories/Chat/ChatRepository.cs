@@ -178,11 +178,36 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Chat
                     IdUsuarioSoporte = GetNullableInt32(reader, "IdUsuarioSoporte"),
                     UltimoMensaje = GetString(reader, "UltimoMensaje"),
                     FechaUltimoMensaje = GetNullableDateTime(reader, "FechaUltimoMensaje"),
-                    TotalMensajes = GetInt32(reader, "TotalMensajes")
+                    TotalMensajes = GetInt32(reader, "TotalMensajes"),
+                    MensajesSinLeer = GetInt32(reader, "MensajesSinLeer")
                 });
             }
 
             return conversaciones;
+        }
+
+        public async Task<ChatAdminResumenResponseDto> ObtenerResumenAdminAsync(
+            CancellationToken cancellationToken)
+        {
+            await using var conn = _connectionFactory.CreateConnection();
+            await using var cmd = new SqlCommand("SP_ObtenerResumenChatsAdmin", conn)
+            {
+                CommandType = CommandType.StoredProcedure
+            };
+
+            await conn.OpenAsync(cancellationToken);
+            await using var reader = await cmd.ExecuteReaderAsync(cancellationToken);
+
+            if (!await reader.ReadAsync(cancellationToken))
+                return new ChatAdminResumenResponseDto();
+
+            return new ChatAdminResumenResponseDto
+            {
+                Activas = GetInt32(reader, "Activas"),
+                Escaladas = GetInt32(reader, "Escaladas"),
+                Finalizadas = GetInt32(reader, "Finalizadas"),
+                Pendientes = GetInt32(reader, "Pendientes")
+            };
         }
 
         public async Task<IReadOnlyList<ChatMensajeResponseDto>> ObtenerMensajesAsync(

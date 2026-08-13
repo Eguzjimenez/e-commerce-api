@@ -168,7 +168,7 @@ namespace Concre_Innova_API.Controllers
             }
         }
 
-        [Authorize(Roles = AppRoles.AdministradorNombre)]
+        [Authorize(Roles = AppRoles.RolesAtencionChat)]
         [HttpGet("admin")]
         public async Task<ActionResult<IEnumerable<ChatAdminResponseDto>>> ObtenerConversaciones(
             [FromQuery] string? estado,
@@ -194,7 +194,29 @@ namespace Concre_Innova_API.Controllers
             }
         }
 
-        [Authorize(Roles = AppRoles.AdministradorNombre)]
+        [Authorize(Roles = AppRoles.RolesAtencionChat)]
+        [HttpGet("admin/resumen")]
+        public async Task<ActionResult<ChatAdminResumenResponseDto>> ObtenerResumenConversaciones(
+            CancellationToken cancellationToken)
+        {
+            try
+            {
+                var resumen = await _chatAdminService.ObtenerResumenAsync(cancellationToken);
+                return Ok(resumen);
+            }
+            catch (OperationCanceledException)
+            {
+                return StatusCode(499);
+            }
+            catch (Exception)
+            {
+                return StatusCode(
+                    StatusCodes.Status500InternalServerError,
+                    new { message = "No fue posible cargar el resumen de conversaciones." });
+            }
+        }
+
+        [Authorize(Roles = AppRoles.RolesAtencionChat)]
         [HttpGet("admin/{idChat:int}/mensajes")]
         public async Task<ActionResult<IEnumerable<ChatMensajeResponseDto>>> ObtenerMensajes(
             int idChat,
@@ -220,7 +242,7 @@ namespace Concre_Innova_API.Controllers
             }
         }
 
-        [Authorize(Roles = AppRoles.AdministradorNombre)]
+        [Authorize(Roles = AppRoles.RolesAtencionChat)]
         [HttpPost("admin/{idChat:int}/mensajes")]
         public async Task<ActionResult<ChatMensajeResponseDto>> Responder(
             int idChat,
@@ -261,6 +283,43 @@ namespace Concre_Innova_API.Controllers
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
                     new { message = "No fue posible enviar la respuesta." });
+            }
+        }
+
+        [Authorize(Roles = AppRoles.RolesAtencionChat)]
+        [HttpPost("admin/{idChat:int}/cierre")]
+        public async Task<ActionResult<ChatOperacionResponseDto>> CerrarConversacion(
+            int idChat,
+            CancellationToken cancellationToken)
+        {
+            var userContext = _requestUserContextService.GetCurrentUser(HttpContext);
+
+            try
+            {
+                var resultado = await _chatAdminService.CerrarConversacionAsync(
+                    idChat,
+                    cancellationToken);
+
+                if (!resultado.Exitoso)
+                    return BadRequest(resultado);
+
+                await _auditService.RecordAsync(
+                    userContext,
+                    "Chats",
+                    "UPDATE",
+                    $"Conversacion #{idChat} cerrada por el personal de atencion.");
+
+                return Ok(resultado);
+            }
+            catch (OperationCanceledException)
+            {
+                return StatusCode(499);
+            }
+            catch (Exception)
+            {
+                return StatusCode(
+                    StatusCodes.Status500InternalServerError,
+                    new { message = "No fue posible cerrar la conversacion." });
             }
         }
     }

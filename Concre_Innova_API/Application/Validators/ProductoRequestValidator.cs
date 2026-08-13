@@ -1,10 +1,18 @@
 using Concre_Innova_API.Application.DTOs.Requests;
 using Concre_Innova_API.Application.Interfaces.Validators;
+using Concre_Innova_API.Domain.Constants;
 
 namespace Concre_Innova_API.Application.Validators
 {
     public class ProductoRequestValidator : IProductoRequestValidator
     {
+        private static readonly HashSet<string> EstadosValidos = new(StringComparer.OrdinalIgnoreCase)
+        {
+            ProductoEstados.Activo,
+            ProductoEstados.Inactivo,
+            ProductoEstados.Borrador
+        };
+
         public string? ValidateCreate(CreateProductoRequest? request)
         {
             if (request is null)
@@ -32,6 +40,9 @@ namespace Concre_Innova_API.Application.Validators
 
             if (string.IsNullOrWhiteSpace(request.Estado))
                 return "El estado del producto es requerido.";
+
+            if (!EstadosValidos.Contains(request.Estado.Trim()))
+                return "El estado del producto no es valido.";
 
             return ValidateProductFields(
                 request.Nombre,

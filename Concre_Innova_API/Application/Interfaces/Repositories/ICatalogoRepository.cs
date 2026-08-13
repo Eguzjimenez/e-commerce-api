@@ -26,5 +26,7 @@ namespace Concre_Innova_API.Application.Interfaces.Repositories
         Task<OperacionResponseDto> InsertarProductoAsync(CreateProductoRequest request);
         Task<OperacionResponseDto> ActualizarProductoAsync(UpdateProductoRequest request);
         Task<OperacionResponseDto> EliminarProductoAsync(int idProducto);
+        Task<OperacionResponseDto> DuplicarProductoAsync(int idProducto, int? idUsuario);
+        Task<string?> ObtenerEstadoProductoAsync(int idProducto);
     }
 }

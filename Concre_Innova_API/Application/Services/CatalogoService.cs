@@ -2,6 +2,7 @@ using Concre_Innova_API.Application.DTOs.Requests;
 using Concre_Innova_API.Application.DTOs.Responses;
 using Concre_Innova_API.Application.Interfaces.Repositories;
 using Concre_Innova_API.Application.Interfaces.Services;
+using Concre_Innova_API.Domain.Constants;
 
 namespace Concre_Innova_API.Application.Services
 {
@@ -170,6 +171,31 @@ namespace Concre_Innova_API.Application.Services
         public Task<OperacionResponseDto> EliminarProductoAsync(int idProducto)
         {
             return _repo.EliminarProductoAsync(idProducto);
+        }
+
+        public Task<OperacionResponseDto> DuplicarProductoAsync(int idProducto, int? idUsuario)
+        {
+            if (idProducto <= 0)
+            {
+                return Task.FromResult(new OperacionResponseDto
+                {
+                    Codigo = 0,
+                    Mensaje = "El producto indicado no es valido."
+                });
+            }
+
+            return _repo.DuplicarProductoAsync(idProducto, idUsuario);
+        }
+
+        public async Task<bool> EsProductoBorradorAsync(int idProducto)
+        {
+            if (idProducto <= 0)
+            {
+                return false;
+            }
+
+            var estado = await _repo.ObtenerEstadoProductoAsync(idProducto);
+            return ProductoEstados.EsBorrador(estado);
         }
     }
 }

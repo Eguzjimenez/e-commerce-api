@@ -17,16 +17,19 @@ namespace Concre_Innova_API.Application.Services
 
         private readonly ICotizacionRepository _cotizacionRepository;
         private readonly IAlmacenamientoImagenCotizacion _almacenamientoImagenes;
-        private readonly ICotizacionNotificationService _notificationService;
+        private readonly ICotizacionNotificationService _notificacionCorreoService;
+        private readonly INotificacionEventoService _notificacionEventoService;
 
         public CotizacionService(
             ICotizacionRepository cotizacionRepository,
             IAlmacenamientoImagenCotizacion almacenamientoImagenes,
-            ICotizacionNotificationService notificationService)
+            ICotizacionNotificationService notificacionCorreoService,
+            INotificacionEventoService notificacionEventoService)
         {
             _cotizacionRepository = cotizacionRepository;
             _almacenamientoImagenes = almacenamientoImagenes;
-            _notificationService = notificationService;
+            _notificacionCorreoService = notificacionCorreoService;
+            _notificacionEventoService = notificacionEventoService;
         }
 
         public async Task<CrearCotizacionResponseDto> CrearAsync(
@@ -144,6 +147,7 @@ namespace Concre_Innova_API.Application.Services
                 cancellationToken);
 
             await NotificarCambioAsync(result, cancellationToken);
+            await NotificarClienteAsync(result, cancellationToken);
             return result;
         }
 
@@ -202,20 +206,33 @@ namespace Concre_Innova_API.Application.Services
                 cancellationToken);
 
             await NotificarCambioAsync(result, cancellationToken);
+            await NotificarClienteAsync(result, cancellationToken);
             return result;
         }
 
-        public Task<ActualizarCotizacionResponseDto> ConvertirEnPedidoAsync(
+        public async Task<ActualizarCotizacionResponseDto> ConvertirEnPedidoAsync(
             int idCotizacion,
             CancellationToken cancellationToken)
         {
-            return idCotizacion > 0
-                ? _cotizacionRepository.ConvertirEnPedidoAsync(
-                    idCotizacion,
-                    cancellationToken)
-                : Task.FromResult(
-                    CrearErrorActualizacion(
-                        "La cotizacion solicitada no es valida."));
+            if (idCotizacion <= 0)
+            {
+                return CrearErrorActualizacion(
+                    "La cotizacion solicitada no es valida.");
+            }
+
+            var result = await _cotizacionRepository.ConvertirEnPedidoAsync(
+                idCotizacion,
+                cancellationToken);
+
+            if (result.Exitoso && result.IdPedido.HasValue)
+            {
+                await _notificacionEventoService.NotificarPedidoRegistradoAsync(
+                    result.IdPedido.Value,
+                    result.Total,
+                    cancellationToken);
+            }
+
+            return result;
         }
 
         private Task NotificarCambioAsync(
@@ -223,8 +240,24 @@ namespace Concre_Innova_API.Application.Services
             CancellationToken cancellationToken)
         {
             return result.Exitoso && result.IdCotizacion.HasValue
-                ? _notificationService.EnviarPendientesAsync(
+                ? _notificacionCorreoService.EnviarPendientesAsync(
                     result.IdCotizacion.Value,
+                    cancellationToken)
+                : Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Deja el aviso en la bandeja del cliente cuando la cotizacion avanza
+        /// por una gestion del personal, no por la decision del propio cliente.
+        /// </summary>
+        private Task NotificarClienteAsync(
+            ActualizarCotizacionResponseDto result,
+            CancellationToken cancellationToken)
+        {
+            return result.Exitoso && result.IdCotizacion.HasValue
+                ? _notificacionEventoService.NotificarCotizacionActualizadaAsync(
+                    result.IdCotizacion.Value,
+                    result.Estado,
                     cancellationToken)
                 : Task.CompletedTask;
         }

@@ -21,10 +21,14 @@ namespace Concre_Innova_API.Application.Services
             };
 
         private readonly ICarritoRepository _carritoRepository;
+        private readonly INotificacionEventoService _notificacionEventoService;
 
-        public CarritoService(ICarritoRepository carritoRepository)
+        public CarritoService(
+            ICarritoRepository carritoRepository,
+            INotificacionEventoService notificacionEventoService)
         {
             _carritoRepository = carritoRepository;
+            _notificacionEventoService = notificacionEventoService;
         }
 
         public async Task<ValidarStockCarritoResponseDto> ValidarStockCarritoAsync(
@@ -84,7 +88,17 @@ namespace Concre_Innova_API.Application.Services
             request.DireccionEntrega = direccionEntrega;
             request.MetodoPago = metodoPagoNormalizado;
 
-            return await _carritoRepository.RegistrarPedidoAsync(request);
+            var resultado = await _carritoRepository.RegistrarPedidoAsync(request);
+
+            if (resultado.Exitoso && resultado.IdPedido.HasValue)
+            {
+                await _notificacionEventoService.NotificarPedidoRegistradoAsync(
+                    resultado.IdPedido.Value,
+                    resultado.Total ?? decimal.Zero,
+                    CancellationToken.None);
+            }
+
+            return resultado;
         }
 
         public async Task<MisPedidosResponseDto> ObtenerMisPedidosAsync(

@@ -32,5 +32,8 @@ namespace Concre_Innova_API.Application.Interfaces.Repositories
         Task<IReadOnlyList<ChatMensajeResponseDto>> ObtenerMensajesAsync(
             int idChat,
             CancellationToken cancellationToken);
+
+        Task<ChatAdminResumenResponseDto> ObtenerResumenAdminAsync(
+            CancellationToken cancellationToken);
     }
 }

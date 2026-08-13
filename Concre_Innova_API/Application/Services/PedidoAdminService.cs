@@ -15,11 +15,17 @@ namespace Concre_Innova_API.Application.Services
             "Entregado"
         };
 
-        private readonly IPedidoAdminRepository _pedidoAdminRepository;
+        private const string EstadoCancelado = "Cancelado";
 
-        public PedidoAdminService(IPedidoAdminRepository pedidoAdminRepository)
+        private readonly IPedidoAdminRepository _pedidoAdminRepository;
+        private readonly INotificacionEventoService _notificacionEventoService;
+
+        public PedidoAdminService(
+            IPedidoAdminRepository pedidoAdminRepository,
+            INotificacionEventoService notificacionEventoService)
         {
             _pedidoAdminRepository = pedidoAdminRepository;
+            _notificacionEventoService = notificacionEventoService;
         }
 
         public async Task<PaginatedResponseDto<PedidoAdminResponseDto>> ObtenerPedidosAsync(
@@ -56,10 +62,13 @@ namespace Concre_Innova_API.Application.Services
                 return CrearError("El estado indicado no es valido.");
             }
 
-            return await _pedidoAdminRepository.ActualizarEstadoAsync(
+            var resultado = await _pedidoAdminRepository.ActualizarEstadoAsync(
                 idPedido,
                 estadoNormalizado,
                 idUsuario);
+
+            await NotificarCambioDeEstadoAsync(resultado, idPedido, estadoNormalizado);
+            return resultado;
         }
 
         public async Task<OperacionPedidoResultDto> CancelarAsync(int idPedido, int idUsuario)
@@ -69,7 +78,23 @@ namespace Concre_Innova_API.Application.Services
                 return CrearError("El pedido no es valido.");
             }
 
-            return await _pedidoAdminRepository.CancelarAsync(idPedido, idUsuario);
+            var resultado = await _pedidoAdminRepository.CancelarAsync(idPedido, idUsuario);
+
+            await NotificarCambioDeEstadoAsync(resultado, idPedido, EstadoCancelado);
+            return resultado;
+        }
+
+        private Task NotificarCambioDeEstadoAsync(
+            OperacionPedidoResultDto resultado,
+            int idPedido,
+            string estado)
+        {
+            return resultado.Exitoso
+                ? _notificacionEventoService.NotificarEstadoPedidoAsync(
+                    idPedido,
+                    estado,
+                    CancellationToken.None)
+                : Task.CompletedTask;
         }
 
         private static OperacionPedidoResultDto CrearError(string mensaje)

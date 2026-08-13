@@ -123,7 +123,7 @@ Dependency direction should remain: Controller -> Application interface/service 
 
 ### Frontend structure
 
-- `src/pages/`: route-level screens for public, customer, seller, and administrator workflows, including the public `SmartAdvisor` screen at `/asesor-inteligente`.
+- `src/pages/`: route-level screens for public, customer, seller, and administrator workflows, including the public `SmartAdvisor` screen at `/asesor-inteligente` and the authenticated `Notifications` screen at `/notificaciones`.
 - `src/components/`: reusable UI such as navbar, admin layout, product modal, pagination, and protected routes.
 - `src/services/`: all API requests and service-specific client logic.
 - `src/routes/`: route constants and route composition.
@@ -138,7 +138,7 @@ Keep HTTP calls in services. Components may perform UX validation, but the API m
 
 - Authentication: login, registration, token validation, password recovery, login-attempt control.
 - Users and access: users, roles, permissions, role-permission assignment, inactive accounts.
-- Catalog: products, categories, product types, variants, filters, related products, and images.
+- Catalog: products, categories, product types, variants, filters, related products, images, and product duplication. A duplicated product is created in `Borrador` state with its inventory and variants copied; drafts stay out of the public catalog until they are published.
 - Inventory: product and variant stock, minimum quantities, and stock updates.
 - Favorites: per-user saved products.
 - Cart and checkout: stock validation, order registration, customer order history, and reorder preparation.
@@ -148,8 +148,8 @@ Keep HTTP calls in services. Components may perform UX validation, but the API m
 - Order administration: lists, detail, status transitions, and cancellation.
 - Reporting: summary metrics, frequent customers, category performance, and featured products.
 - Audit: operational records in `Bitacora`.
-- Chat and virtual assistant: keyword-driven bot answers, catalog-based product recommendations, persisted conversations, escalation to human support, conversation closing, and a staff console for escalated chats.
-- Generic notifications: `Notificaciones` is written when a chat is escalated; there is still no dedicated notification API for end users.
+- Chat and virtual assistant: keyword-driven bot answers, catalog-based product recommendations, persisted conversations, escalation to human support, conversation closing by the customer, and a staff console where `Administrador` and `Vendedor` list conversations with their last message, unread counter and inbox totals, reply to customers, and close resolved conversations into the finalized history.
+- Notifications: per-user inbox backed by `Notificaciones`. The API creates records when an order is registered, when an order changes state or is cancelled, when staff answer or resolve a quotation, and when support replies in a chat; escalated chats still notify the assigned administrator. Users list, filter, and mark notifications as read, and the `NotificacionesActivas` preference decides whether new records are created for that account.
 - Payments: `Ventas` and `Pagos` tables exist, but there is no complete external card-gateway integration in the current code. Never collect or store raw card numbers, CVV, or magnetic-stripe data; use a hosted checkout or tokenized provider and persist only gateway references and status.
 
 ## Security and Roles
@@ -157,7 +157,7 @@ Keep HTTP calls in services. Components may perform UX validation, but the API m
 Canonical roles currently stored in the database:
 
 - `Administrador`: administrative functionality.
-- `Vendedor`: only explicitly permitted quotation/staff functionality.
+- `Vendedor`: only explicitly permitted staff functionality — the quotation workflow, the chat attention console, and duplicating products plus adjusting the resulting drafts. Creating, deleting, and publishing catalog products stay with `Administrador`.
 - `Cliente`: catalog, favorites, cart, checkout, orders, and quotations.
 - `Inactivo`: no protected access.
 
@@ -189,7 +189,7 @@ The database is relational and uses integer primary keys for most entities. Brid
 - `Categorias`: product categories and active/inactive state.
 - `TiposProducto`: product classification such as Interior, Exterior, and Decorativo.
 - `CategoriaTipo`: allowed many-to-many category/type combinations.
-- `Productos`: product identity, description, price, stock summary, image, category, type, size, material, characteristics, and state.
+- `Productos`: product identity, description, price, stock summary, image, category, type, size, material, characteristics, and state (`Activo`, `Inactivo`, or `Borrador`).
 - `ProductoVariantes`: purchasable variants with their own name, dimensions/material, price, stock, image, and state.
 - `Inventario`: available/minimum stock and last update for a product.
 - `Favoritos`: unique saved product per user.
@@ -223,7 +223,8 @@ Typical flow: validate stock -> create `Pedido` and `DetallePedido` -> reserve/d
 ### Audit, notifications, and chat
 
 - `Bitacora`: user, affected table, operation, description, timestamp, and IP address.
-- `Notificaciones`: generic per-user notifications and read state.
+- `Notificaciones`: per-user notifications with `Tipo` (`Pedido`, `Cotizacion`, `Chat`, `General`), `Titulo`, `Mensaje`, optional `Enlace` and `Referencia` to the originating record, read state, and `FechaLectura`.
+- `PreferenciasUsuario`: per-user preferences for in-app notifications, email notifications, and theme.
 - `Chats`: conversation header for a customer. `IdUsuario` is the assigned support agent and stays NULL until the conversation is escalated. `Estado` is `Abierto`, `Escalado`, or `Finalizado`.
 - `MensajesChat`: messages belonging to a chat. `Remitente` is `Cliente`, `Bot`, or `Soporte`, and `Mensaje` is NVARCHAR because bot answers contain emojis.
 - `BotIntenciones`: configured assistant answers, whether they suggest products and whether they warrant escalation.
@@ -251,11 +252,12 @@ Typical flow: validate stock -> create `Pedido` and `DetallePedido` -> reserve/d
 The installed local database currently contains procedures for:
 
 - Authentication/users: `SP_Login`, `SP_InsertarUsuario`, `SP_ActualizarUsuario`, `SP_DesactivarUsuario`, `SP_ObtenerUsuarios`, `SP_ObtenerRoles`, `SP_ValidarCorreoRecuperacion`, `SP_RestablecerContrasena`.
-- Catalog: `SP_ObtenerCatalogoProductos`, `SP_ObtenerCategorias`, `SP_InsertarProducto`, `SP_ActualizarProducto`, `SP_EliminarProducto`.
+- Catalog: `SP_ObtenerCatalogoProductos`, `SP_ObtenerCategorias`, `SP_InsertarProducto`, `SP_ActualizarProducto`, `SP_EliminarProducto`, `SP_DuplicarProducto`.
 - Cart/orders: `SP_ValidarStockCarrito`, `SP_RegistrarPedido`, `SP_ObtenerMisPedidos`, `SP_PrepararRecompraPedido`, `SP_ObtenerPedidosAdmin`, `SP_ObtenerPedidoAdminDetalle`, `SP_ActualizarEstadoPedido`, `SP_CancelarPedido`.
 - Quotations: `SP_CrearCotizacionConImagenes`, `SP_ObtenerMisCotizaciones`, `SP_ObtenerCotizacionesAdmin`, `SP_ResponderCotizacion`, `SP_DecidirCotizacion`, `SP_ResolverCotizacionVendedor`, `SP_ConvertirCotizacionEnPedido`.
 - Smart advisor: `SP_ObtenerCuestionarioAsesor`, `SP_GenerarRecomendacionesAsesor`, `SP_GuardarRespuestasAsesor`, `SP_LimpiarRespuestasAsesor`.
-- Chat and assistant: `SP_ObtenerIntencionesBot`, `SP_ObtenerOCrearChatCliente`, `SP_RegistrarMensajeChat`, `SP_ObtenerConversacionCliente`, `SP_EscalarChatASoporte`, `SP_FinalizarChat`, `SP_ObtenerChatsAdmin`, `SP_ObtenerMensajesChat`.
+- Chat and assistant: `SP_ObtenerIntencionesBot`, `SP_ObtenerOCrearChatCliente`, `SP_RegistrarMensajeChat`, `SP_ObtenerConversacionCliente`, `SP_EscalarChatASoporte`, `SP_FinalizarChat`, `SP_ObtenerChatsAdmin`, `SP_ObtenerMensajesChat`, `SP_ObtenerResumenChatsAdmin`.
+- Notifications: `SP_RegistrarNotificacion`, `SP_ObtenerNotificacionesUsuario`, `SP_ObtenerResumenNotificaciones`, `SP_MarcarNotificacionLeida`, `SP_MarcarNotificacionesLeidas`.
 - Space visualization: `SP_GuardarVisualizacion`, `SP_ObtenerVisualizacionesUsuario`, `SP_EliminarVisualizacion`.
 - Reporting/audit: `SP_InsertarBitacora`, `SP_ObtenerBitacora`, `SP_EstadisticasResumenNegocio`, `SP_EstadisticasClientesFrecuentes`, `SP_EstadisticasPorCategoria`, `SP_EstadisticasProductosDestacados`.
 
@@ -280,13 +282,17 @@ Avoid unbounded list queries and N+1 access. Use pagination and projections, and
 
 ## API and Frontend Contract
 
-Controller route groups currently include `api/Auth`, `api/Users`, `api/Roles`, `api/Permisos`, `api/Productos`, `api/Categorias`, `api/TiposProducto`, `api/Favoritos`, `api/Carrito`, `api/Cotizaciones`, `api/Pedidos`, `api/Estadisticas`, `api/Bitacora`, `api/Asesor`, and `api/Chat`.
+Controller route groups currently include `api/Auth`, `api/Users`, `api/Roles`, `api/Permisos`, `api/Productos`, `api/Categorias`, `api/TiposProducto`, `api/Favoritos`, `api/Carrito`, `api/Cotizaciones`, `api/Pedidos`, `api/Estadisticas`, `api/Bitacora`, `api/Asesor`, `api/Chat`, `api/Preferencias`, and `api/Notificaciones`.
+
+`api/Notificaciones` requires any authenticated role and every stored procedure filters by user, so a notification can only be read or marked by its owner. It exposes the paginated inbox, a lightweight `resumen` endpoint used by the navigation bar indicator, and the read-state endpoints. Notifications are never created through HTTP: `INotificacionEventoService` emits them from the order, quotation, and chat services, and failures there are logged without interrupting the originating operation.
 
 `api/Asesor` is public for reading the questionnaire and generating recommendations; answers are only persisted when the caller presents a valid token, and `DELETE api/Asesor/respuestas` requires an authenticated purchase role.
 
 `api/Visualizaciones` requires an authenticated purchase role for every operation, and each stored procedure filters by user so a visualization can only be read or deleted by its owner. Uploaded space images live under `wwwroot/images/visualizaciones/{idUsuario}`.
 
-`api/Chat` accepts messages from anonymous visitors (bot answer only, nothing persisted). Conversation history, escalation, and closing require an authenticated purchase role, and the `api/Chat/admin` endpoints require `Administrador`. Whether escalation to a human is offered comes from the `SoporteHumano` configuration section.
+`api/Chat` accepts messages from anonymous visitors (bot answer only, nothing persisted). Conversation history, escalation, and closing require an authenticated purchase role, and the `api/Chat/admin` endpoints require `Administrador` or `Vendedor` (`AppRoles.RolesAtencionChat`). Whether escalation to a human is offered comes from the `SoporteHumano` configuration section.
+
+Product duplication lives at `POST api/Productos/{id}/duplicado` and requires the `productos.duplicar` permission, granted to `Administrador` and `Vendedor`. `GET api/Productos` accepts `incluirBorradores=true`, which only takes effect for callers holding that permission, so the public catalog never exposes drafts. Updating a product requires `productos.actualizar`; holders of only `productos.duplicar` may update a product while both the stored product and the request keep the `Borrador` state, which lets a seller adjust a copy without publishing it.
 
 Before changing a route, DTO, status code, role requirement, field name, or enum-like state string:
 

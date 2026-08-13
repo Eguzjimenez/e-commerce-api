@@ -16,5 +16,6 @@ namespace Concre_Innova_API.Application.DTOs.Responses
         public string Caracteristicas { get; set; } = string.Empty;
         public int Stock { get; set; }
         public string Disponibilidad { get; set; } = string.Empty;
+        public string Estado { get; set; } = string.Empty;
     }
 }

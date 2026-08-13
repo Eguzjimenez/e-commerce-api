@@ -15,6 +15,7 @@ using Concre_Innova_API.Infrastructure.Repositories.Catalogo;
 using Concre_Innova_API.Infrastructure.Repositories.Chat;
 using Concre_Innova_API.Infrastructure.Repositories.Cotizaciones;
 using Concre_Innova_API.Infrastructure.Repositories.Empresa;
+using Concre_Innova_API.Infrastructure.Repositories.Notificaciones;
 using Concre_Innova_API.Infrastructure.Repositories.Preferencias;
 using Concre_Innova_API.Infrastructure.Repositories.Reportes;
 using Concre_Innova_API.Infrastructure.Repositories.Favorites;
@@ -65,6 +66,7 @@ namespace Concre_Innova_API.Configuration
             services.AddScoped<IReporteRepository, ReporteRepository>();
             services.AddScoped<IEmpresaRepository, EmpresaRepository>();
             services.AddScoped<IPreferenciasRepository, PreferenciasRepository>();
+            services.AddScoped<INotificacionRepository, NotificacionRepository>();
             services.AddScoped<IAsesorRepository, AsesorRepository>();
             services.AddScoped<IChatRepository, ChatRepository>();
             services.AddScoped<IChatBotRepository, ChatBotRepository>();
@@ -89,6 +91,8 @@ namespace Concre_Innova_API.Configuration
             services.AddScoped<IReporteService, ReporteService>();
             services.AddScoped<IEmpresaService, EmpresaService>();
             services.AddScoped<IPreferenciasService, PreferenciasService>();
+            services.AddScoped<INotificacionService, NotificacionService>();
+            services.AddScoped<INotificacionEventoService, NotificacionEventoService>();
             services.AddScoped<IAsesorService, AsesorService>();
             services.AddScoped<IChatBotService, ChatBotService>();
             services.AddScoped<IChatService, ChatService>();

@@ -12,6 +12,7 @@ namespace Concre_Innova_API.Domain.Constants
         public const string ProductosCrear = "productos.crear";
         public const string ProductosActualizar = "productos.actualizar";
         public const string ProductosEliminar = "productos.eliminar";
+        public const string ProductosDuplicar = "productos.duplicar";
         public const string CategoriasLeer = "categorias.leer";
         public const string CategoriasCrear = "categorias.crear";
         public const string CategoriasActualizar = "categorias.actualizar";

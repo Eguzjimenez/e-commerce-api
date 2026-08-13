@@ -20,5 +20,12 @@ namespace Concre_Innova_API.Application.Interfaces.Services
             int idChat,
             EnviarMensajeChatRequest request,
             CancellationToken cancellationToken);
+
+        Task<ChatOperacionResponseDto> CerrarConversacionAsync(
+            int idChat,
+            CancellationToken cancellationToken);
+
+        Task<ChatAdminResumenResponseDto> ObtenerResumenAsync(
+            CancellationToken cancellationToken);
     }
 }

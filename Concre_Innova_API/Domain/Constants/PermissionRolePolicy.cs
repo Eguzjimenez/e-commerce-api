@@ -18,6 +18,7 @@ namespace Concre_Innova_API.Domain.Constants
                     [PermissionCodes.ProductosCrear] = AdminOnly(),
                     [PermissionCodes.ProductosActualizar] = AdminOnly(),
                     [PermissionCodes.ProductosEliminar] = AdminOnly(),
+                    [PermissionCodes.ProductosDuplicar] = AdminAndVendedor(),
                     [PermissionCodes.CategoriasLeer] = AdminOnly(),
                     [PermissionCodes.CategoriasCrear] = AdminOnly(),
                     [PermissionCodes.CategoriasActualizar] = AdminOnly(),

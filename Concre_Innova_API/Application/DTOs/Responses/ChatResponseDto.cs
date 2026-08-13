@@ -58,5 +58,22 @@ namespace Concre_Innova_API.Application.DTOs.Responses
         public string UltimoMensaje { get; set; } = string.Empty;
         public DateTime? FechaUltimoMensaje { get; set; }
         public int TotalMensajes { get; set; }
+
+        /// <summary>
+        /// Mensajes del cliente recibidos despues de la ultima respuesta de soporte.
+        /// Es el indicador de conversaciones pendientes de atencion.
+        /// </summary>
+        public int MensajesSinLeer { get; set; }
+    }
+
+    /// <summary>
+    /// Contadores de la bandeja de atencion mostrados al personal de ventas.
+    /// </summary>
+    public class ChatAdminResumenResponseDto
+    {
+        public int Activas { get; set; }
+        public int Escaladas { get; set; }
+        public int Finalizadas { get; set; }
+        public int Pendientes { get; set; }
     }
 }

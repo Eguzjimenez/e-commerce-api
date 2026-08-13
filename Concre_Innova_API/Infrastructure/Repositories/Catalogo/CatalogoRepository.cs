@@ -892,60 +892,119 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Catalogo
             };
         }
 
+        public async Task<OperacionResponseDto> DuplicarProductoAsync(int idProducto, int? idUsuario)
+        {
+            await using var conn = _connectionFactory.CreateConnection();
+            await using var cmd = new SqlCommand("SP_DuplicarProducto", conn)
+            {
+                CommandType = CommandType.StoredProcedure
+            };
+
+            cmd.Parameters.Add("@IdProducto", SqlDbType.Int).Value = idProducto;
+            cmd.Parameters.Add("@IdUsuario", SqlDbType.Int).Value =
+                idUsuario.HasValue ? idUsuario.Value : DBNull.Value;
+
+            await conn.OpenAsync();
+
+            await using var reader = await cmd.ExecuteReaderAsync();
+
+            if (!await reader.ReadAsync())
+            {
+                return new OperacionResponseDto
+                {
+                    Codigo = 0,
+                    Mensaje = "No fue posible duplicar el producto."
+                };
+            }
+
+            return new OperacionResponseDto
+            {
+                Codigo = GetInt32(reader, "Codigo"),
+                Mensaje = GetString(reader, "Mensaje"),
+                IdProducto = GetNullableInt32(reader, "IdProducto")
+            };
+        }
+
+        public async Task<string?> ObtenerEstadoProductoAsync(int idProducto)
+        {
+            await using var conn = _connectionFactory.CreateConnection();
+            await using var cmd = new SqlCommand(
+                "SELECT Estado FROM Productos WHERE IdProducto = @IdProducto;",
+                conn)
+            {
+                CommandType = CommandType.Text
+            };
+
+            cmd.Parameters.Add("@IdProducto", SqlDbType.Int).Value = idProducto;
+
+            await conn.OpenAsync();
+            var estado = await cmd.ExecuteScalarAsync();
+
+            return estado is null || estado == DBNull.Value ? null : Convert.ToString(estado);
+        }
+
+        private const string CatalogColumns =
+            """
+                p.IdProducto,
+                p.Nombre,
+                ISNULL(CONVERT(NVARCHAR(MAX), p.Descripcion), '') AS Descripcion,
+                p.Precio,
+                ISNULL(p.Imagen, '') AS Imagen,
+                p.IdCategoria,
+                c.NombreCategoria,
+                p.IdTipo,
+                ISNULL(t.NombreTipo, '') AS NombreTipo,
+                ISNULL(p.Tamano, '') AS Tamano,
+                ISNULL(p.Material, '') AS Material,
+                ISNULL(p.Caracteristicas, '') AS Caracteristicas,
+                ISNULL(p.Stock, 0) AS Stock,
+                ISNULL(p.Estado, 'Activo') AS Estado,
+                CASE
+                    WHEN ISNULL(p.Stock, 0) <= 0 THEN 'Agotado'
+                    ELSE 'Disponible'
+                END AS Disponibilidad
+            """;
+
+        private const string CatalogSourceAndFilters =
+            """
+            FROM Productos p
+            INNER JOIN Categorias c ON c.IdCategoria = p.IdCategoria
+            LEFT JOIN TiposProducto t ON t.IdTipo = p.IdTipo
+            WHERE (p.Estado = 'Activo'
+                    OR (@IncluirBorradores = 1 AND p.Estado = 'Borrador'))
+                AND (@Busqueda IS NULL
+                    OR p.Nombre COLLATE Latin1_General_CI_AI LIKE @BusquedaPattern ESCAPE '\'
+                    OR CONVERT(NVARCHAR(MAX), p.Descripcion) COLLATE Latin1_General_CI_AI LIKE @BusquedaPattern ESCAPE '\'
+                    OR p.Tamano COLLATE Latin1_General_CI_AI LIKE @BusquedaPattern ESCAPE '\'
+                    OR p.Material COLLATE Latin1_General_CI_AI LIKE @BusquedaPattern ESCAPE '\'
+                    OR c.NombreCategoria COLLATE Latin1_General_CI_AI LIKE @BusquedaPattern ESCAPE '\')
+                AND (@IdCategoria IS NULL OR p.IdCategoria = @IdCategoria)
+                AND (@IdTipo IS NULL OR p.IdTipo = @IdTipo)
+                AND (@PrecioMinimo IS NULL OR p.Precio >= @PrecioMinimo)
+                AND (@PrecioMaximo IS NULL OR p.Precio <= @PrecioMaximo)
+                AND (@Disponibilidad IS NULL
+                    OR (@Disponibilidad = 'disponible' AND ISNULL(p.Stock, 0) > 0)
+                    OR (@Disponibilidad = 'agotado' AND ISNULL(p.Stock, 0) <= 0))
+                AND (@Tamano IS NULL
+                    OR p.Tamano COLLATE Latin1_General_CI_AI = @Tamano)
+                AND (@Material IS NULL
+                    OR p.Material COLLATE Latin1_General_CI_AI = @Material)
+                AND (@Tipo IS NULL
+                    OR p.Nombre COLLATE Latin1_General_CI_AI LIKE @TipoPattern ESCAPE '\'
+                    OR CONVERT(NVARCHAR(MAX), p.Descripcion) COLLATE Latin1_General_CI_AI LIKE @TipoPattern ESCAPE '\'
+                    OR t.NombreTipo COLLATE Latin1_General_CI_AI LIKE @TipoPattern ESCAPE '\'
+                    OR c.NombreCategoria COLLATE Latin1_General_CI_AI LIKE @TipoPattern ESCAPE '\')
+                AND (@IdProducto IS NULL OR p.IdProducto = @IdProducto)
+            ORDER BY
+                CASE WHEN @OrdenarPor = 'precio' AND @DireccionOrden = 'asc' THEN p.Precio END ASC,
+                CASE WHEN @OrdenarPor = 'precio' AND @DireccionOrden = 'desc' THEN p.Precio END DESC,
+                p.IdProducto DESC
+            """;
+
         private static SqlCommand CreateCatalogQueryCommand(SqlConnection conn, CatalogoProductoQuery query)
         {
             var cmd = new SqlCommand(
-                """
-                SELECT
-                    p.IdProducto,
-                    p.Nombre,
-                    ISNULL(CONVERT(NVARCHAR(MAX), p.Descripcion), '') AS Descripcion,
-                    p.Precio,
-                    ISNULL(p.Imagen, '') AS Imagen,
-                    p.IdCategoria,
-                    c.NombreCategoria,
-                    p.IdTipo,
-                    ISNULL(t.NombreTipo, '') AS NombreTipo,
-                    ISNULL(p.Tamano, '') AS Tamano,
-                    ISNULL(p.Material, '') AS Material,
-                    ISNULL(p.Caracteristicas, '') AS Caracteristicas,
-                    ISNULL(p.Stock, 0) AS Stock,
-                    CASE
-                        WHEN ISNULL(p.Stock, 0) <= 0 THEN 'Agotado'
-                        ELSE 'Disponible'
-                    END AS Disponibilidad
-                FROM Productos p
-                INNER JOIN Categorias c ON c.IdCategoria = p.IdCategoria
-                LEFT JOIN TiposProducto t ON t.IdTipo = p.IdTipo
-                WHERE p.Estado = 'Activo'
-                    AND (@Busqueda IS NULL
-                        OR p.Nombre COLLATE Latin1_General_CI_AI LIKE @BusquedaPattern ESCAPE '\'
-                        OR CONVERT(NVARCHAR(MAX), p.Descripcion) COLLATE Latin1_General_CI_AI LIKE @BusquedaPattern ESCAPE '\'
-                        OR p.Tamano COLLATE Latin1_General_CI_AI LIKE @BusquedaPattern ESCAPE '\'
-                        OR p.Material COLLATE Latin1_General_CI_AI LIKE @BusquedaPattern ESCAPE '\'
-                        OR c.NombreCategoria COLLATE Latin1_General_CI_AI LIKE @BusquedaPattern ESCAPE '\')
-                    AND (@IdCategoria IS NULL OR p.IdCategoria = @IdCategoria)
-                    AND (@IdTipo IS NULL OR p.IdTipo = @IdTipo)
-                    AND (@PrecioMinimo IS NULL OR p.Precio >= @PrecioMinimo)
-                    AND (@PrecioMaximo IS NULL OR p.Precio <= @PrecioMaximo)
-                    AND (@Disponibilidad IS NULL
-                        OR (@Disponibilidad = 'disponible' AND ISNULL(p.Stock, 0) > 0)
-                        OR (@Disponibilidad = 'agotado' AND ISNULL(p.Stock, 0) <= 0))
-                    AND (@Tamano IS NULL
-                        OR p.Tamano COLLATE Latin1_General_CI_AI = @Tamano)
-                    AND (@Material IS NULL
-                        OR p.Material COLLATE Latin1_General_CI_AI = @Material)
-                    AND (@Tipo IS NULL
-                        OR p.Nombre COLLATE Latin1_General_CI_AI LIKE @TipoPattern ESCAPE '\'
-                        OR CONVERT(NVARCHAR(MAX), p.Descripcion) COLLATE Latin1_General_CI_AI LIKE @TipoPattern ESCAPE '\'
-                        OR t.NombreTipo COLLATE Latin1_General_CI_AI LIKE @TipoPattern ESCAPE '\'
-                        OR c.NombreCategoria COLLATE Latin1_General_CI_AI LIKE @TipoPattern ESCAPE '\')
-                    AND (@IdProducto IS NULL OR p.IdProducto = @IdProducto)
-                ORDER BY
-                    CASE WHEN @OrdenarPor = 'precio' AND @DireccionOrden = 'asc' THEN p.Precio END ASC,
-                    CASE WHEN @OrdenarPor = 'precio' AND @DireccionOrden = 'desc' THEN p.Precio END DESC,
-                    p.IdProducto DESC
-                """,
+                $"SELECT{Environment.NewLine}{CatalogColumns}{Environment.NewLine}{CatalogSourceAndFilters}",
                 conn)
             {
                 CommandType = CommandType.Text
@@ -961,59 +1020,10 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Catalogo
             PaginationQuery pagination)
         {
             var cmd = new SqlCommand(
-                """
-                SELECT
-                    p.IdProducto,
-                    p.Nombre,
-                    ISNULL(CONVERT(NVARCHAR(MAX), p.Descripcion), '') AS Descripcion,
-                    p.Precio,
-                    ISNULL(p.Imagen, '') AS Imagen,
-                    p.IdCategoria,
-                    c.NombreCategoria,
-                    p.IdTipo,
-                    ISNULL(t.NombreTipo, '') AS NombreTipo,
-                    ISNULL(p.Tamano, '') AS Tamano,
-                    ISNULL(p.Material, '') AS Material,
-                    ISNULL(p.Caracteristicas, '') AS Caracteristicas,
-                    ISNULL(p.Stock, 0) AS Stock,
-                    CASE
-                        WHEN ISNULL(p.Stock, 0) <= 0 THEN 'Agotado'
-                        ELSE 'Disponible'
-                    END AS Disponibilidad,
-                    COUNT(1) OVER() AS TotalItems
-                FROM Productos p
-                INNER JOIN Categorias c ON c.IdCategoria = p.IdCategoria
-                LEFT JOIN TiposProducto t ON t.IdTipo = p.IdTipo
-                WHERE p.Estado = 'Activo'
-                    AND (@Busqueda IS NULL
-                        OR p.Nombre COLLATE Latin1_General_CI_AI LIKE @BusquedaPattern ESCAPE '\'
-                        OR CONVERT(NVARCHAR(MAX), p.Descripcion) COLLATE Latin1_General_CI_AI LIKE @BusquedaPattern ESCAPE '\'
-                        OR p.Tamano COLLATE Latin1_General_CI_AI LIKE @BusquedaPattern ESCAPE '\'
-                        OR p.Material COLLATE Latin1_General_CI_AI LIKE @BusquedaPattern ESCAPE '\'
-                        OR c.NombreCategoria COLLATE Latin1_General_CI_AI LIKE @BusquedaPattern ESCAPE '\')
-                    AND (@IdCategoria IS NULL OR p.IdCategoria = @IdCategoria)
-                    AND (@IdTipo IS NULL OR p.IdTipo = @IdTipo)
-                    AND (@PrecioMinimo IS NULL OR p.Precio >= @PrecioMinimo)
-                    AND (@PrecioMaximo IS NULL OR p.Precio <= @PrecioMaximo)
-                    AND (@Disponibilidad IS NULL
-                        OR (@Disponibilidad = 'disponible' AND ISNULL(p.Stock, 0) > 0)
-                        OR (@Disponibilidad = 'agotado' AND ISNULL(p.Stock, 0) <= 0))
-                    AND (@Tamano IS NULL
-                        OR p.Tamano COLLATE Latin1_General_CI_AI = @Tamano)
-                    AND (@Material IS NULL
-                        OR p.Material COLLATE Latin1_General_CI_AI = @Material)
-                    AND (@Tipo IS NULL
-                        OR p.Nombre COLLATE Latin1_General_CI_AI LIKE @TipoPattern ESCAPE '\'
-                        OR CONVERT(NVARCHAR(MAX), p.Descripcion) COLLATE Latin1_General_CI_AI LIKE @TipoPattern ESCAPE '\'
-                        OR t.NombreTipo COLLATE Latin1_General_CI_AI LIKE @TipoPattern ESCAPE '\'
-                        OR c.NombreCategoria COLLATE Latin1_General_CI_AI LIKE @TipoPattern ESCAPE '\')
-                    AND (@IdProducto IS NULL OR p.IdProducto = @IdProducto)
-                ORDER BY
-                    CASE WHEN @OrdenarPor = 'precio' AND @DireccionOrden = 'asc' THEN p.Precio END ASC,
-                    CASE WHEN @OrdenarPor = 'precio' AND @DireccionOrden = 'desc' THEN p.Precio END DESC,
-                    p.IdProducto DESC
-                OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY
-                """,
+                $"SELECT{Environment.NewLine}{CatalogColumns},{Environment.NewLine}" +
+                $"    COUNT(1) OVER() AS TotalItems{Environment.NewLine}" +
+                $"{CatalogSourceAndFilters}{Environment.NewLine}" +
+                "OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY",
                 conn)
             {
                 CommandType = CommandType.Text
@@ -1061,6 +1071,7 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Catalogo
                     ISNULL(p.Material, '') AS Material,
                     ISNULL(p.Caracteristicas, '') AS Caracteristicas,
                     ISNULL(p.Stock, 0) AS Stock,
+                    ISNULL(p.Estado, 'Activo') AS Estado,
                     CASE
                         WHEN ISNULL(p.Stock, 0) <= 0 THEN 'Agotado'
                         ELSE 'Disponible'
@@ -1117,6 +1128,7 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Catalogo
             AddNullableTextParameter(cmd, "@Material", query.NormalizedMaterial, 80);
             AddTextFilterParameters(cmd, "@Tipo", "@TipoPattern", query.NormalizedType);
             cmd.Parameters.Add("@IdProducto", SqlDbType.Int).Value = DBNull.Value;
+            cmd.Parameters.Add("@IncluirBorradores", SqlDbType.Bit).Value = query.IncluirBorradores;
             AddNullableTextParameter(cmd, "@OrdenarPor", query.NormalizedSortField, 20);
             AddNullableTextParameter(cmd, "@DireccionOrden", query.NormalizedSortDirection, 10);
         }
@@ -1246,7 +1258,8 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Catalogo
                 Material = GetString(reader, "Material"),
                 Caracteristicas = GetString(reader, "Caracteristicas"),
                 Stock = GetInt32(reader, "Stock"),
-                Disponibilidad = GetString(reader, "Disponibilidad")
+                Disponibilidad = GetString(reader, "Disponibilidad"),
+                Estado = GetString(reader, "Estado")
             };
         }
 

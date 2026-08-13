@@ -18,6 +18,12 @@ namespace Concre_Innova_API.Application.DTOs.Requests
         public string? Material { get; set; }
         public string? Tipo { get; set; }
 
+        /// <summary>
+        /// Incluye los productos en estado Borrador. Solo lo activa la
+        /// administracion del catalogo; el catalogo publico nunca los muestra.
+        /// </summary>
+        public bool IncluirBorradores { get; set; }
+
         public string? NormalizedSearchTerm =>
             NormalizeText(Busqueda);
 
@@ -56,6 +62,7 @@ namespace Concre_Innova_API.Application.DTOs.Requests
         public string? NormalizedType => NormalizeText(Tipo);
 
         public bool HasCriteria =>
+            IncluirBorradores ||
             NormalizedSearchTerm is not null ||
             NormalizedSortField is not null ||
             HasCategoryFilter ||

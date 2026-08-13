@@ -46,12 +46,17 @@ namespace Concre_Innova_API.Controllers
             [FromQuery] string? material = null,
             [FromQuery] string? tipo = null,
             [FromQuery] int? pagina = null,
-            [FromQuery] int? tamanoPagina = null)
+            [FromQuery] int? tamanoPagina = null,
+            [FromQuery] bool incluirBorradores = false)
         {
+            var mostrarBorradores = incluirBorradores &&
+                await TienePermisoAsync(PermissionCodes.ProductosDuplicar);
+
             try
             {
                 var query = new CatalogoProductoQuery
                 {
+                    IncluirBorradores = mostrarBorradores,
                     Busqueda = busqueda,
                     OrdenarPor = ordenarPor,
                     DireccionOrden = direccionOrden,
@@ -248,13 +253,64 @@ namespace Concre_Innova_API.Controllers
             }
         }
 
+        [HttpPost("{idProducto:int}/duplicado")]
+        public async Task<ActionResult<OperacionResponseDto>> DuplicarProducto(int idProducto)
+        {
+            var userContext = _requestUserContextService.GetCurrentUser(HttpContext);
+            var denied = await RequirePermissionAsync(
+                userContext,
+                PermissionCodes.ProductosDuplicar,
+                "DUPLICATE");
+
+            if (denied != null)
+                return denied;
+
+            try
+            {
+                var result = await _catalogoService.DuplicarProductoAsync(
+                    idProducto,
+                    userContext.UserId);
+
+                if (result.Codigo != 1)
+                {
+                    await _auditService.RecordAsync(
+                        userContext,
+                        "Productos",
+                        "FAILED",
+                        $"Error al duplicar producto ID: {idProducto}. {result.Mensaje}");
+
+                    return BadRequest(result);
+                }
+
+                await _auditService.RecordAsync(
+                    userContext,
+                    "Productos",
+                    "SUCCESS",
+                    $"Producto ID: {idProducto} duplicado como borrador ID: {result.IdProducto}.");
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                await _auditService.RecordAsync(
+                    userContext,
+                    "Productos",
+                    "ERROR",
+                    $"Excepcion al duplicar producto ID: {idProducto}. {ex.Message}");
+
+                return StatusCode(
+                    StatusCodes.Status500InternalServerError,
+                    new { message = "Error al duplicar el producto.", error = ex.Message });
+            }
+        }
+
         [HttpPut("{idProducto:int}")]
         public async Task<ActionResult<OperacionResponseDto>> ActualizarProducto(
             int idProducto,
             [FromBody] UpdateProductoRequest request)
         {
             var userContext = _requestUserContextService.GetCurrentUser(HttpContext);
-            var denied = await RequirePermissionAsync(userContext, PermissionCodes.ProductosActualizar, "UPDATE");
+            var denied = await RequireProductUpdatePermissionAsync(userContext, idProducto, request);
             if (denied != null)
                 return denied;
 
@@ -359,6 +415,61 @@ namespace Concre_Innova_API.Controllers
                     StatusCodes.Status500InternalServerError,
                     new { message = "Error al eliminar el producto.", error = ex.Message });
             }
+        }
+
+        /// <summary>
+        /// Autoriza la actualizacion de un producto. Quien administra el catalogo
+        /// puede editar cualquier producto; quien solo tiene permiso de duplicacion
+        /// puede ajustar la copia mientras siga siendo un borrador, pero no publicarla.
+        /// </summary>
+        private async Task<ActionResult?> RequireProductUpdatePermissionAsync(
+            RequestUserContext userContext,
+            int idProducto,
+            UpdateProductoRequest request)
+        {
+            if (!userContext.IsAuthenticated || !userContext.RoleId.HasValue)
+                return Unauthorized(new { message = "Debe iniciar sesion para acceder a este recurso." });
+
+            if (await TienePermisoAsync(PermissionCodes.ProductosActualizar))
+                return null;
+
+            if (await PuedeAjustarBorradorAsync(idProducto, request))
+                return null;
+
+            await _auditService.RecordAsync(
+                userContext,
+                "Productos",
+                "DENIED",
+                $"Intento no autorizado de UPDATE con permiso {PermissionCodes.ProductosActualizar}.");
+
+            return StatusCode(
+                StatusCodes.Status403Forbidden,
+                new { message = "No tiene permisos para realizar esta accion." });
+        }
+
+        private async Task<bool> PuedeAjustarBorradorAsync(
+            int idProducto,
+            UpdateProductoRequest request)
+        {
+            if (!await TienePermisoAsync(PermissionCodes.ProductosDuplicar))
+                return false;
+
+            if (!ProductoEstados.EsBorrador(request?.Estado))
+                return false;
+
+            return await _catalogoService.EsProductoBorradorAsync(idProducto);
+        }
+
+        private async Task<bool> TienePermisoAsync(string permissionCode)
+        {
+            var userContext = _requestUserContextService.GetCurrentUser(HttpContext);
+
+            if (!userContext.IsAuthenticated || !userContext.RoleId.HasValue)
+                return false;
+
+            return await _permissionService.RoleHasPermissionAsync(
+                userContext.RoleId.Value,
+                permissionCode);
         }
 
         private async Task<ActionResult?> RequirePermissionAsync(
