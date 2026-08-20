@@ -9,7 +9,7 @@ namespace Concre_Innova_API.Application.DTOs.Requests
 
         [RegularExpression(
             "^(?i:Pendiente|Respondida|Aceptada|Aprobada|Rechazada)$",
-            ErrorMessage = "El estado de cotizacion no es valido.")]
+            ErrorMessage = "El estado de cotización no es válido.")]
         public string? Estado { get; set; }
 
         /// <summary>

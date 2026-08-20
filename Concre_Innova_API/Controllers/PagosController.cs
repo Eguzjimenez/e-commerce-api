@@ -39,7 +39,7 @@ namespace Concre_Innova_API.Controllers
             var userContext = _requestUserContextService.GetCurrentUser(HttpContext);
 
             if (!userContext.IsAuthenticated || !userContext.UserId.HasValue)
-                return Unauthorized(new { message = "Debe iniciar sesion para registrar el comprobante." });
+                return Unauthorized(new { message = "Debe iniciar sesión para registrar el comprobante." });
 
             var resultado = await _pagoService.RegistrarComprobanteAsync(
                 userContext.UserId.Value,

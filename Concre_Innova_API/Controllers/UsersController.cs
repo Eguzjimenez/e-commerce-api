@@ -50,7 +50,7 @@ namespace Concre_Innova_API.Controllers
                 userContext,
                 "Usuarios",
                 "ACCESS",
-                "Acceso al modulo de gestion de usuarios.");
+                "Acceso al modulo de gestión de usuarios.");
 
             var pagination = new PaginationQuery(pagina, tamanoPagina, defaultPageSize: 25);
             if (pagination.IsRequested)
@@ -205,7 +205,7 @@ namespace Concre_Innova_API.Controllers
                     userContext,
                     "Usuarios",
                     "UPDATE",
-                    $"Actualizacion del usuario {request.IdUsuario}.");
+                    $"Actualización del usuario {request.IdUsuario}.");
 
                 return Ok(result.Mensaje);
             }
@@ -296,7 +296,7 @@ namespace Concre_Innova_API.Controllers
             string operation)
         {
             if (!userContext.IsAuthenticated || !userContext.RoleId.HasValue)
-                return Unauthorized(new { message = "Debe iniciar sesion para acceder a este recurso." });
+                return Unauthorized(new { message = "Debe iniciar sesión para acceder a este recurso." });
 
             var hasPermission = await _permissionService.RoleHasPermissionAsync(
                 userContext.RoleId.Value,
@@ -313,7 +313,7 @@ namespace Concre_Innova_API.Controllers
 
             return StatusCode(
                 StatusCodes.Status403Forbidden,
-                new { message = "No tiene permisos para realizar esta accion." });
+                new { message = "No tiene permisos para realizar esta acción." });
         }
     }
 }

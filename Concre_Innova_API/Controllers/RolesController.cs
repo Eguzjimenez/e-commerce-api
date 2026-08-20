@@ -32,7 +32,7 @@ namespace Concre_Innova_API.Controllers
             var userContext = _requestUserContextService.GetCurrentUser(HttpContext);
 
             if (!userContext.IsAuthenticated || !userContext.RoleId.HasValue)
-                return Unauthorized(new { message = "Debe iniciar sesion para acceder a este recurso." });
+                return Unauthorized(new { message = "Debe iniciar sesión para acceder a este recurso." });
 
             var hasPermission = await _permissionService.RoleHasPermissionAsync(
                 userContext.RoleId.Value,

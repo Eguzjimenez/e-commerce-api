@@ -331,7 +331,7 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Catalogo
                 return new CategoriaOperacionResponseDto
                 {
                     Codigo = 0,
-                    Mensaje = "Ya existe una categoria con ese nombre."
+                    Mensaje = "Ya existe una categoría con ese nombre."
                 };
             }
 
@@ -355,7 +355,7 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Catalogo
             return new CategoriaOperacionResponseDto
             {
                 Codigo = 1,
-                Mensaje = "Categoria creada exitosamente.",
+                Mensaje = "Categoría creada exitosamente.",
                 IdCategoria = categoryId
             };
         }
@@ -386,7 +386,7 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Catalogo
                 return new CategoriaOperacionResponseDto
                 {
                     Codigo = 0,
-                    Mensaje = "Ya existe una categoria con ese nombre."
+                    Mensaje = "Ya existe una categoría con ese nombre."
                 };
             }
 
@@ -416,14 +416,14 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Catalogo
                 return new CategoriaOperacionResponseDto
                 {
                     Codigo = 0,
-                    Mensaje = "Categoria no encontrada."
+                    Mensaje = "Categoría no encontrada."
                 };
             }
 
             return new CategoriaOperacionResponseDto
             {
                 Codigo = 1,
-                Mensaje = "Categoria actualizada exitosamente.",
+                Mensaje = "Categoría actualizada exitosamente.",
                 IdCategoria = request.IdCategoria
             };
         }
@@ -452,14 +452,14 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Catalogo
                 return new CategoriaOperacionResponseDto
                 {
                     Codigo = 0,
-                    Mensaje = "Categoria no encontrada."
+                    Mensaje = "Categoría no encontrada."
                 };
             }
 
             return new CategoriaOperacionResponseDto
             {
                 Codigo = 1,
-                Mensaje = "Categoria eliminada exitosamente.",
+                Mensaje = "Categoría eliminada exitosamente.",
                 IdCategoria = idCategoria
             };
         }

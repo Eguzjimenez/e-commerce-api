@@ -63,10 +63,10 @@ namespace Concre_Innova_API.Application.Services
         private static string? Validar(ActualizarEstadoFacturaRequest request)
         {
             if (request.IdVenta <= 0)
-                return "La factura indicada no es valida.";
+                return "La factura indicada no es válida.";
 
             if (!FacturaRules.EsEstadoPagoValido(request.EstadoPago))
-                return "El estado de cobro indicado no es valido.";
+                return "El estado de cobro indicado no es válido.";
 
             if ((request.Observaciones?.Trim().Length ?? 0) >
                 FacturaRules.MaximoCaracteresObservaciones)
@@ -79,9 +79,9 @@ namespace Concre_Innova_API.Application.Services
 
         private static string Traducir(string? codigo) => codigo switch
         {
-            "FACTURA_ACTUALIZADA" => "El estado de la factura se actualizo correctamente.",
+            "FACTURA_ACTUALIZADA" => "El estado de la factura se actualizó correctamente.",
             "FACTURA_NO_ENCONTRADA" => "La factura indicada no existe.",
-            "ESTADO_INVALIDO" => "El estado de cobro indicado no es valido.",
+            "ESTADO_INVALIDO" => "El estado de cobro indicado no es válido.",
             _ => "No fue posible actualizar la factura."
         };
     }

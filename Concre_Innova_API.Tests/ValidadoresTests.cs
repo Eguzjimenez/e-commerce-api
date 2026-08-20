@@ -85,7 +85,7 @@ public class ProductoRequestValidatorTests
         var mensaje = _validator.ValidateCreate(producto);
 
         Assert.NotNull(mensaje);
-        Assert.Contains("maximo", mensaje, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("máximo", mensaje, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -186,7 +186,7 @@ public class UserRequestValidatorTests
         var mensaje = _validator.ValidateCreate(solicitud);
 
         Assert.NotNull(mensaje);
-        Assert.Contains("telefono", mensaje, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("teléfono", mensaje, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -247,7 +247,7 @@ public class AuthRequestValidatorTests
         var mensaje = _validator.ValidateClientRegistration(solicitud);
 
         Assert.NotNull(mensaje);
-        Assert.Contains("direccion", mensaje, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("dirección", mensaje, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -271,7 +271,7 @@ public class AuthRequestValidatorTests
         var mensaje = _validator.ValidateClientRegistration(solicitud);
 
         Assert.NotNull(mensaje);
-        Assert.Contains("telefono", mensaje, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("teléfono", mensaje, StringComparison.OrdinalIgnoreCase);
     }
 }
 

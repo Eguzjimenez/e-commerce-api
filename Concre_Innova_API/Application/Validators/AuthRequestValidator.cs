@@ -13,7 +13,7 @@ namespace Concre_Innova_API.Application.Validators
                 string.IsNullOrWhiteSpace(request.Correo) ||
                 string.IsNullOrWhiteSpace(request.Contrasena))
             {
-                return "Correo y Contrasena son requeridos.";
+                return "Correo y Contraseña son requeridos.";
             }
 
             return null;
@@ -22,7 +22,7 @@ namespace Concre_Innova_API.Application.Validators
         public string? ValidateClientRegistration(RegisterClientRequest? request)
         {
             if (request == null)
-                return "La informacion de registro es requerida.";
+                return "La información de registro es requerida.";
 
             if (string.IsNullOrWhiteSpace(request.Nombre) ||
                 string.IsNullOrWhiteSpace(request.Apellido) ||
@@ -31,19 +31,19 @@ namespace Concre_Innova_API.Application.Validators
                 string.IsNullOrWhiteSpace(request.Direccion) ||
                 string.IsNullOrWhiteSpace(request.Contrasena))
             {
-                return "Nombre, apellido, correo, telefono, direccion y contrasena son requeridos.";
+                return "Nombre, apellido, correo, teléfono, dirección y contraseña son requeridos.";
             }
 
             if (request.Direccion.Trim().Length > 255)
             {
-                return "La direccion no puede superar 255 caracteres.";
+                return "La dirección no puede superar 255 caracteres.";
             }
 
             if (!EmailAddressValidator.IsValid(request.Correo))
-                return "El formato del correo no es valido.";
+                return "El formato del correo no es válido.";
 
             if (!PhoneNumberValidator.IsValid(request.Telefono))
-                return "El telefono debe contener entre 8 y 15 digitos.";
+                return "El teléfono debe contener entre 8 y 15 digitos.";
 
             return PasswordPolicyValidator.GetValidationMessage(request.Contrasena);
         }
@@ -68,12 +68,12 @@ namespace Concre_Innova_API.Application.Validators
                 string.IsNullOrWhiteSpace(request.Correo) ||
                 string.IsNullOrWhiteSpace(request.Codigo))
             {
-                return "Correo y codigo son requeridos.";
+                return "Correo y código son requeridos.";
             }
 
             return request.Codigo.Trim().Length == 6 && request.Codigo.Trim().All(char.IsDigit)
                 ? null
-                : "El codigo debe tener 6 digitos.";
+                : "El código debe tener 6 digitos.";
         }
 
         public string? ValidatePasswordReset(PasswordResetRequest? request)

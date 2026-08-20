@@ -36,7 +36,7 @@ namespace Concre_Innova_API.Application.Validators
                 return "El nombre del tipo de producto no puede superar 100 caracteres.";
 
             if (!string.IsNullOrWhiteSpace(descripcion) && descripcion.Trim().Length > 255)
-                return "La descripcion del tipo de producto no puede superar 255 caracteres.";
+                return "La descripción del tipo de producto no puede superar 255 caracteres.";
 
             return null;
         }

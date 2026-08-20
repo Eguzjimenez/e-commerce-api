@@ -26,7 +26,7 @@ namespace Concre_Innova_API.Controllers
         {
             var userId = GetAuthenticatedUserId();
             if (!userId.HasValue)
-                return Unauthorized(new { message = "Debe iniciar sesion para consultar favoritos." });
+                return Unauthorized(new { message = "Debe iniciar sesión para consultar favoritos." });
 
             var favorites = await _favoriteService.GetFavoritesAsync(userId.Value);
             return Ok(favorites);
@@ -37,7 +37,7 @@ namespace Concre_Innova_API.Controllers
         {
             var userId = GetAuthenticatedUserId();
             if (!userId.HasValue)
-                return Unauthorized(new { message = "Debe iniciar sesion para consultar favoritos." });
+                return Unauthorized(new { message = "Debe iniciar sesión para consultar favoritos." });
 
             var count = await _favoriteService.GetFavoriteCountAsync(userId.Value);
             return Ok(new { count });
@@ -48,7 +48,7 @@ namespace Concre_Innova_API.Controllers
         {
             var userId = GetAuthenticatedUserId();
             if (!userId.HasValue)
-                return Unauthorized(new { message = "Debe iniciar sesion para consultar favoritos." });
+                return Unauthorized(new { message = "Debe iniciar sesión para consultar favoritos." });
 
             var favoriteIds = await _favoriteService.GetFavoriteProductIdsAsync(userId.Value);
             return Ok(favoriteIds);
@@ -59,7 +59,7 @@ namespace Concre_Innova_API.Controllers
         {
             var userId = GetAuthenticatedUserId();
             if (!userId.HasValue)
-                return Unauthorized(new { message = "Debe iniciar sesion para agregar favoritos." });
+                return Unauthorized(new { message = "Debe iniciar sesión para agregar favoritos." });
 
             if (idProducto <= 0)
                 return BadRequest(new { message = "El producto es requerido." });
@@ -73,7 +73,7 @@ namespace Concre_Innova_API.Controllers
         {
             var userId = GetAuthenticatedUserId();
             if (!userId.HasValue)
-                return Unauthorized(new { message = "Debe iniciar sesion para eliminar favoritos." });
+                return Unauthorized(new { message = "Debe iniciar sesión para eliminar favoritos." });
 
             if (idProducto <= 0)
                 return BadRequest(new { message = "El producto es requerido." });

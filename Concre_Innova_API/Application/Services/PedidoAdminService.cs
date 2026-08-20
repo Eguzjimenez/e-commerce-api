@@ -54,12 +54,12 @@ namespace Concre_Innova_API.Application.Services
 
             if (idPedido <= 0)
             {
-                return CrearError("El pedido no es valido.");
+                return CrearError("El pedido no es válido.");
             }
 
             if (!EstadosValidos.Contains(estadoNormalizado))
             {
-                return CrearError("El estado indicado no es valido.");
+                return CrearError("El estado indicado no es válido.");
             }
 
             var resultado = await _pedidoAdminRepository.ActualizarEstadoAsync(
@@ -75,7 +75,7 @@ namespace Concre_Innova_API.Application.Services
         {
             if (idPedido <= 0)
             {
-                return CrearError("El pedido no es valido.");
+                return CrearError("El pedido no es válido.");
             }
 
             var resultado = await _pedidoAdminRepository.CancelarAsync(idPedido, idUsuario);

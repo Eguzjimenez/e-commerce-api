@@ -85,7 +85,7 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Login
             var result = new RecoveryCodeGenerationResponseDto
             {
                 Codigo = 1,
-                Mensaje = "Codigo de recuperacion generado correctamente.",
+                Mensaje = "Código de recuperación generado correctamente.",
                 ExpiraEn = expirationDate,
                 Correo = normalizedEmail,
                 CodigoRecuperacion = code
@@ -105,7 +105,7 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Login
             if (!RecoveryCodesByEmail.TryGetValue(normalizedEmail, out var codeInfo))
             {
                 result.Codigo = 0;
-                result.Mensaje = "No hay un codigo activo para este correo.";
+                result.Mensaje = "No hay un código activo para este correo.";
                 return Task.FromResult(result);
             }
 
@@ -114,7 +114,7 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Login
                 RecoveryCodesByEmail.TryRemove(normalizedEmail, out _);
 
                 result.Codigo = 0;
-                result.Mensaje = "El codigo de recuperacion ha expirado.";
+                result.Mensaje = "El código de recuperación ha expirado.";
                 return Task.FromResult(result);
             }
 
@@ -129,7 +129,7 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Login
                     RecoveryCodesByEmail.TryRemove(normalizedEmail, out _);
 
                 result.Codigo = 0;
-                result.Mensaje = "El codigo de recuperacion no es valido.";
+                result.Mensaje = "El código de recuperación no es válido.";
                 return Task.FromResult(result);
             }
 
@@ -144,7 +144,7 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Login
             };
 
             result.Codigo = 1;
-            result.Mensaje = "Codigo verificado correctamente.";
+            result.Mensaje = "Código verificado correctamente.";
             result.RecoveryToken = resetToken;
 
             return Task.FromResult(result);
@@ -167,14 +167,14 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Login
             if (string.IsNullOrWhiteSpace(token))
             {
                 result.Codigo = 0;
-                result.Mensaje = "El token de recuperacion es requerido.";
+                result.Mensaje = "El token de recuperación es requerido.";
                 return result;
             }
 
             if (!RecoveryTokens.TryGetValue(token, out var tokenInfo))
             {
                 result.Codigo = 0;
-                result.Mensaje = "El enlace de recuperacion no es valido.";
+                result.Mensaje = "El enlace de recuperación no es válido.";
                 return result;
             }
 
@@ -183,7 +183,7 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Login
                 RecoveryTokens.TryRemove(token, out _);
 
                 result.Codigo = 0;
-                result.Mensaje = "El enlace de recuperacion ha expirado.";
+                result.Mensaje = "El enlace de recuperación ha expirado.";
                 return result;
             }
 
@@ -191,7 +191,7 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Login
                 RecoveryTokens.TryRemove(token, out _);
 
             result.Codigo = 1;
-            result.Mensaje = "El enlace de recuperacion es valido.";
+            result.Mensaje = "El enlace de recuperación es válido.";
             result.IdUsuario = tokenInfo.IdUsuario;
 
             return result;

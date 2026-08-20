@@ -14,7 +14,7 @@ namespace Concre_Innova_API.Controllers
     public class VisualizacionesController : ControllerBase
     {
         private const string MensajeSesionRequerida =
-            "Debe iniciar sesion para gestionar sus visualizaciones.";
+            "Debe iniciar sesión para gestionar sus visualizaciones.";
 
         private readonly IVisualizacionService _visualizacionService;
         private readonly IRequestUserContextService _requestUserContextService;
@@ -91,7 +91,7 @@ namespace Concre_Innova_API.Controllers
                     userContext,
                     "Visualizaciones",
                     request.IdVisualizacion.HasValue ? "UPDATE" : "CREATE",
-                    $"Visualizacion #{resultado.IdVisualizacion} guardada con " +
+                    $"Visualización #{resultado.IdVisualizacion} guardada con " +
                     $"{request.Productos.Count} producto(s).");
 
                 return Ok(resultado);
@@ -104,7 +104,7 @@ namespace Concre_Innova_API.Controllers
             {
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
-                    new { message = "No fue posible guardar la visualizacion." });
+                    new { message = "No fue posible guardar la visualización." });
             }
         }
 
@@ -155,7 +155,7 @@ namespace Concre_Innova_API.Controllers
                     cancellationToken);
 
                 if (visualizacion is null)
-                    return NotFound(new { message = "La visualizacion no existe." });
+                    return NotFound(new { message = "La visualización no existe." });
 
                 return Ok(visualizacion);
             }
@@ -167,7 +167,7 @@ namespace Concre_Innova_API.Controllers
             {
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
-                    new { message = "No fue posible cargar la visualizacion." });
+                    new { message = "No fue posible cargar la visualización." });
             }
         }
 
@@ -189,15 +189,15 @@ namespace Concre_Innova_API.Controllers
                     cancellationToken);
 
                 if (!eliminada)
-                    return NotFound(new { message = "La visualizacion no existe." });
+                    return NotFound(new { message = "La visualización no existe." });
 
                 await _auditService.RecordAsync(
                     userContext,
                     "Visualizaciones",
                     "DELETE",
-                    $"Visualizacion #{idVisualizacion} eliminada.");
+                    $"Visualización #{idVisualizacion} eliminada.");
 
-                return Ok(new { message = "Visualizacion eliminada." });
+                return Ok(new { message = "Visualización eliminada." });
             }
             catch (OperationCanceledException)
             {
@@ -207,7 +207,7 @@ namespace Concre_Innova_API.Controllers
             {
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
-                    new { message = "No fue posible eliminar la visualizacion." });
+                    new { message = "No fue posible eliminar la visualización." });
             }
         }
 

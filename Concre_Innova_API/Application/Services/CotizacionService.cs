@@ -160,7 +160,7 @@ namespace Concre_Innova_API.Application.Services
             if (idUsuario <= 0 || idCotizacion <= 0)
             {
                 return CrearErrorActualizacion(
-                    "La cotizacion solicitada no es valida.");
+                    "La cotización solicitada no es válida.");
             }
 
             var decision = request?.Decision?.Trim();
@@ -189,7 +189,7 @@ namespace Concre_Innova_API.Application.Services
             if (idCotizacion <= 0)
             {
                 return CrearErrorActualizacion(
-                    "La cotizacion solicitada no es valida.");
+                    "La cotización solicitada no es válida.");
             }
 
             var decision = request?.Decision?.Trim();
@@ -217,7 +217,7 @@ namespace Concre_Innova_API.Application.Services
             if (idCotizacion <= 0)
             {
                 return CrearErrorActualizacion(
-                    "La cotizacion solicitada no es valida.");
+                    "La cotización solicitada no es válida.");
             }
 
             var result = await _cotizacionRepository.ConvertirEnPedidoAsync(
@@ -266,18 +266,18 @@ namespace Concre_Innova_API.Application.Services
         {
             if (idUsuario <= 0)
             {
-                return "El usuario de la cotizacion no es valido.";
+                return "El usuario de la cotización no es válido.";
             }
 
             if (request is null || string.IsNullOrWhiteSpace(request.Descripcion))
             {
-                return "La descripcion de la solicitud es requerida.";
+                return "La descripción de la solicitud es requerida.";
             }
 
             if (request.Descripcion.Trim().Length >
                 CotizacionImagenRules.MaximoCaracteresDescripcion)
             {
-                return $"La descripcion no puede superar " +
+                return $"La descripción no puede superar " +
                        $"{CotizacionImagenRules.MaximoCaracteresDescripcion} caracteres.";
             }
 
@@ -321,7 +321,7 @@ namespace Concre_Innova_API.Application.Services
             if (request.Imagenes.Count > CotizacionImagenRules.MaximoImagenes)
             {
                 return $"Solo puedes adjuntar hasta " +
-                       $"{CotizacionImagenRules.MaximoImagenes} imagenes.";
+                       $"{CotizacionImagenRules.MaximoImagenes} imágenes.";
             }
 
             foreach (var imagen in request.Imagenes)
@@ -357,7 +357,7 @@ namespace Concre_Innova_API.Application.Services
 
             if (!TieneFirmaValida(extension, imagen.Contenido))
             {
-                return $"El contenido de '{imagen.NombreOriginal}' no corresponde a una imagen valida.";
+                return $"El contenido de '{imagen.NombreOriginal}' no corresponde a una imagen válida.";
             }
 
             return null;
@@ -411,7 +411,7 @@ namespace Concre_Innova_API.Application.Services
         {
             if (idCotizacion <= 0)
             {
-                return "La cotizacion solicitada no es valida.";
+                return "La cotización solicitada no es válida.";
             }
 
             if (request is null || string.IsNullOrWhiteSpace(request.Respuesta))
@@ -428,13 +428,13 @@ namespace Concre_Innova_API.Application.Services
                 request.Productos.Count == 0 ||
                 request.Productos.Count > MaximoProductos)
             {
-                return $"La cotizacion debe incluir entre 1 y {MaximoProductos} productos.";
+                return $"La cotización debe incluir entre 1 y {MaximoProductos} productos.";
             }
 
             if (request.Productos.GroupBy(producto => producto.IdProducto)
                 .Any(group => group.Count() > 1))
             {
-                return "Un producto no puede aparecer mas de una vez en la cotizacion.";
+                return "Un producto no puede aparecer mas de una vez en la cotización.";
             }
 
             if (request.Productos.Any(producto =>
@@ -451,7 +451,7 @@ namespace Concre_Innova_API.Application.Services
                 producto => producto.PrecioUnitario * producto.Cantidad);
             if (total > MaximoImporteCotizacion)
             {
-                return $"El total de la cotizacion no puede superar " +
+                return $"El total de la cotización no puede superar " +
                        $"{MaximoImporteCotizacion:0.00}.";
             }
 

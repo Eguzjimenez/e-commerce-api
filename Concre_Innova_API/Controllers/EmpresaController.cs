@@ -35,7 +35,7 @@ namespace Concre_Innova_API.Controllers
                 var informacion = await _empresaService.ObtenerInformacionAsync();
 
                 if (informacion is null)
-                    return NotFound(new { message = "No hay informacion de la empresa registrada." });
+                    return NotFound(new { message = "No hay información de la empresa registrada." });
 
                 return Ok(informacion);
             }
@@ -43,7 +43,7 @@ namespace Concre_Innova_API.Controllers
             {
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
-                    new { message = "Error al obtener la informacion de la empresa." });
+                    new { message = "Error al obtener la información de la empresa." });
             }
         }
 
@@ -68,7 +68,7 @@ namespace Concre_Innova_API.Controllers
                         userContext,
                         "Empresa",
                         "SUCCESS",
-                        "Informacion de la empresa actualizada.");
+                        "Información de la empresa actualizada.");
 
                     return Ok(resultado);
                 }
@@ -79,7 +79,7 @@ namespace Concre_Innova_API.Controllers
             {
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
-                    new { message = "Error al actualizar la informacion de la empresa." });
+                    new { message = "Error al actualizar la información de la empresa." });
             }
         }
 
@@ -138,7 +138,7 @@ namespace Concre_Innova_API.Controllers
             string operation)
         {
             if (!userContext.IsAuthenticated || !userContext.RoleId.HasValue)
-                return Unauthorized(new { message = "Debe iniciar sesion para acceder a este recurso." });
+                return Unauthorized(new { message = "Debe iniciar sesión para acceder a este recurso." });
 
             var hasPermission = await _permissionService.RoleHasPermissionAsync(
                 userContext.RoleId.Value,
@@ -155,7 +155,7 @@ namespace Concre_Innova_API.Controllers
 
             return StatusCode(
                 StatusCodes.Status403Forbidden,
-                new { message = "No tiene permisos para realizar esta accion." });
+                new { message = "No tiene permisos para realizar esta acción." });
         }
     }
 }

@@ -42,7 +42,7 @@ namespace Concre_Innova_API.Application.Services
             if (idNotificacion <= 0)
             {
                 return Task.FromResult(
-                    CrearError("La notificacion indicada no es valida."));
+                    CrearError("La notificación indicada no es válida."));
             }
 
             return _notificacionRepository.MarcarLeidaAsync(

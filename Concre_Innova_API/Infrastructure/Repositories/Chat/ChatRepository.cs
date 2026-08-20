@@ -245,7 +245,7 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Chat
                 return new ChatOperacionResponseDto
                 {
                     Exitoso = false,
-                    Mensaje = "No fue posible completar la operacion del chat."
+                    Mensaje = "No fue posible completar la operación del chat."
                 };
             }
 

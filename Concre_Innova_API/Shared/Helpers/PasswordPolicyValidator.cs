@@ -7,22 +7,22 @@ namespace Concre_Innova_API.Shared.Helpers
         public static string? GetValidationMessage(string? password)
         {
             if (string.IsNullOrWhiteSpace(password))
-                return "La contrasena es requerida.";
+                return "La contraseña es requerida.";
 
             if (password.Length < MinimumLength)
-                return "La contrasena debe tener al menos 8 caracteres.";
+                return "La contraseña debe tener al menos 8 caracteres.";
 
             if (!password.Any(char.IsUpper))
-                return "La contrasena debe incluir al menos una letra mayuscula.";
+                return "La contraseña debe incluir al menos una letra mayuscula.";
 
             if (!password.Any(char.IsLower))
-                return "La contrasena debe incluir al menos una letra minuscula.";
+                return "La contraseña debe incluir al menos una letra minuscula.";
 
             if (!password.Any(char.IsDigit))
-                return "La contrasena debe incluir al menos un numero.";
+                return "La contraseña debe incluir al menos un número.";
 
             if (!password.Any(IsSpecialCharacter))
-                return "La contrasena debe incluir al menos un caracter especial.";
+                return "La contraseña debe incluir al menos un caracter especial.";
 
             return null;
         }

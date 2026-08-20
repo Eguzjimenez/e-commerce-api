@@ -88,7 +88,7 @@ namespace Concre_Innova_API.Application.Services
             {
                 Exitoso = resultado.Exitoso,
                 Mensaje = resultado.Exitoso
-                    ? "Visualizacion guardada en tu perfil."
+                    ? "Visualización guardada en tu perfil."
                     : TraducirMensaje(resultado.Mensaje),
                 IdVisualizacion = resultado.IdVisualizacion
             };
@@ -150,18 +150,18 @@ namespace Concre_Innova_API.Application.Services
         private static string TraducirMensaje(string mensajeInterno)
         {
             if (mensajeInterno.Contains("SIN_PRODUCTOS", StringComparison.OrdinalIgnoreCase))
-                return "Agrega al menos un producto a la simulacion.";
+                return "Agrega al menos un producto a la simulación.";
 
             if (mensajeInterno.Contains("PRODUCTO_NO_DISPONIBLE", StringComparison.OrdinalIgnoreCase))
-                return "Uno de los productos de la simulacion ya no esta disponible.";
+                return "Uno de los productos de la simulación ya no esta disponible.";
 
             if (mensajeInterno.Contains("VISUALIZACION_NO_ENCONTRADA", StringComparison.OrdinalIgnoreCase))
-                return "La visualizacion no existe o no pertenece a tu perfil.";
+                return "La visualización no existe o no pertenece a tu perfil.";
 
             if (mensajeInterno.Contains("USUARIO_NO_EXISTE", StringComparison.OrdinalIgnoreCase))
-                return "La sesion no es valida. Vuelve a iniciar sesion.";
+                return "La sesión no es válida. Vuelve a iniciar sesión.";
 
-            return "No fue posible guardar la visualizacion.";
+            return "No fue posible guardar la visualización.";
         }
     }
 }

@@ -45,7 +45,7 @@ namespace Concre_Innova_API.Application.Validators
                 return "El estado del producto es requerido.";
 
             if (!EstadosValidos.Contains(request.Estado.Trim()))
-                return "El estado del producto no es valido.";
+                return "El estado del producto no es válido.";
 
             return ValidateProductFields(
                 request.Nombre,
@@ -77,28 +77,28 @@ namespace Concre_Innova_API.Application.Validators
                 return "El precio del producto debe ser un valor numerico mayor a cero.";
 
             if (precio > PrecioMaximo)
-                return "El precio del producto supera el maximo permitido.";
+                return "El precio del producto supera el máximo permitido.";
 
             if (idCategoria <= 0)
-                return "La categoria del producto es requerida.";
+                return "La categoría del producto es requerida.";
 
             if (idTipo.HasValue && idTipo.Value <= 0)
-                return "El tipo de producto seleccionado no es valido.";
+                return "El tipo de producto seleccionado no es válido.";
 
             if (HasInvalidAttributeLength(tamano))
-                return "El tamano del producto no puede superar 80 caracteres.";
+                return "El tamaño del producto no puede superar 80 caracteres.";
 
             if (HasInvalidAttributeLength(material))
                 return "El material del producto no puede superar 80 caracteres.";
 
             if (!string.IsNullOrWhiteSpace(caracteristicas) && caracteristicas.Trim().Length > 500)
-                return "Las caracteristicas del producto no pueden superar 500 caracteres.";
+                return "Las características del producto no pueden superar 500 caracteres.";
 
             if (cantidadDisponible < 0)
                 return "La cantidad disponible no puede ser negativa.";
 
             if (cantidadMinima < 0)
-                return "La cantidad minima no puede ser negativa.";
+                return "La cantidad mínima no puede ser negativa.";
 
             return null;
         }

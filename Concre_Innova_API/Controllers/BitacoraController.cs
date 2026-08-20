@@ -64,12 +64,12 @@ namespace Concre_Innova_API.Controllers
             var userContext = _requestUserContextService.GetCurrentUser(HttpContext);
 
             if (!userContext.IsAuthenticated)
-                return Unauthorized(new { message = "Debe iniciar sesion para acceder a este recurso." });
+                return Unauthorized(new { message = "Debe iniciar sesión para acceder a este recurso." });
 
             var ruta = request?.Ruta?.Trim();
 
             if (string.IsNullOrWhiteSpace(ruta) || ruta.Length > 255)
-                return BadRequest(new { message = "La ruta reportada no es valida." });
+                return BadRequest(new { message = "La ruta reportada no es válida." });
 
             await _auditService.RecordAsync(
                 userContext,
@@ -86,7 +86,7 @@ namespace Concre_Innova_API.Controllers
         {
             var userContext = _requestUserContextService.GetCurrentUser(HttpContext);
             if (!userContext.IsAuthenticated)
-                return Unauthorized(new { message = "Debe iniciar sesion para registrar auditoria." });
+                return Unauthorized(new { message = "Debe iniciar sesión para registrar auditoria." });
 
             if (request == null)
                 return BadRequest();
@@ -113,7 +113,7 @@ namespace Concre_Innova_API.Controllers
             string operation)
         {
             if (!userContext.IsAuthenticated || !userContext.RoleId.HasValue)
-                return Unauthorized(new { message = "Debe iniciar sesion para acceder a este recurso." });
+                return Unauthorized(new { message = "Debe iniciar sesión para acceder a este recurso." });
 
             var hasPermission = await _permissionService.RoleHasPermissionAsync(
                 userContext.RoleId.Value,
@@ -130,7 +130,7 @@ namespace Concre_Innova_API.Controllers
 
             return StatusCode(
                 StatusCodes.Status403Forbidden,
-                new { message = "No tiene permisos para realizar esta accion." });
+                new { message = "No tiene permisos para realizar esta acción." });
         }
     }
 }
