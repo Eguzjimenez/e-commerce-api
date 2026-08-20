@@ -114,6 +114,11 @@ namespace Concre_Innova_API.Application.Services
             return resetResult;
         }
 
+        public Task<User> RegistrarClienteAsync(RegisterClientRequest request)
+        {
+            return _userRepository.RegistrarClienteAsync(request);
+        }
+
         public Task<User> InsertUserAsync(User user)
         {
             return _userRepository.InsertUserAsync(user);

@@ -28,6 +28,8 @@ namespace Concre_Innova_API.Application.Interfaces.Services
 
         Task<UserInfoResponseDto?> GetUserInfoAsync(int idUsuario);
 
+        Task<User> RegistrarClienteAsync(RegisterClientRequest request);
+
         Task<User> InsertUserAsync(User user);
 
         Task<User> UpdateUserAsync(User user);

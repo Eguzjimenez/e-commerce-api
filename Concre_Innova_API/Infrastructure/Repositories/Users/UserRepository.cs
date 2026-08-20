@@ -106,6 +106,44 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Users
             return result;
         }
 
+        /// <summary>
+        /// Alta de cliente desde el registro publico. Usa un procedimiento propio
+        /// porque ademas de la cuenta crea la ficha en Clientes, que es donde vive
+        /// la direccion de entrega.
+        /// </summary>
+        public async Task<User> RegistrarClienteAsync(RegisterClientRequest request)
+        {
+            var result = new User();
+
+            await using var conn = _connectionFactory.CreateConnection();
+            await using var cmd = new SqlCommand("SP_RegistrarCliente", conn)
+            {
+                CommandType = CommandType.StoredProcedure
+            };
+
+            cmd.Parameters.Add("@Nombre", SqlDbType.VarChar, 100).Value = request.Nombre?.Trim() ?? string.Empty;
+            cmd.Parameters.Add("@Apellido", SqlDbType.VarChar, 100).Value = request.Apellido?.Trim() ?? string.Empty;
+            cmd.Parameters.Add("@Correo", SqlDbType.VarChar, 150).Value = request.Correo?.Trim() ?? string.Empty;
+            cmd.Parameters.Add("@Contrasena", SqlDbType.VarChar, 255).Value = request.Contrasena ?? string.Empty;
+            cmd.Parameters.Add("@Telefono", SqlDbType.VarChar, 20).Value = request.Telefono?.Trim() ?? string.Empty;
+            cmd.Parameters.Add("@Direccion", SqlDbType.VarChar, 255).Value = request.Direccion?.Trim() ?? string.Empty;
+
+            await conn.OpenAsync();
+
+            await using var reader = await cmd.ExecuteReaderAsync();
+            if (await reader.ReadAsync())
+            {
+                result.Codigo = reader.GetInt32(reader.GetOrdinal("Codigo"));
+                result.Mensaje = reader.GetString(reader.GetOrdinal("Mensaje"));
+
+                var ordinalUsuario = reader.GetOrdinal("IdUsuario");
+                if (result.Codigo == 1 && !reader.IsDBNull(ordinalUsuario))
+                    result.IdUsuario = reader.GetInt32(ordinalUsuario);
+            }
+
+            return result;
+        }
+
         public async Task<User> InsertUserAsync(User user)
         {
             var result = new User();

@@ -92,8 +92,8 @@ namespace Concre_Innova_API.Controllers
             if (validationMessage != null)
                 return BadRequest(new { message = validationMessage });
 
-            var user = request!.ToClientUser();
-            var result = await _userService.InsertUserAsync(user);
+            // El alta crea la cuenta y su ficha de cliente con la direccion incluida.
+            var result = await _userService.RegistrarClienteAsync(request!);
 
             if (result == null)
                 return StatusCode(500, "Error creating client");
