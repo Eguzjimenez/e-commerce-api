@@ -2,6 +2,7 @@ using Concre_Innova_API.Application.DTOs.Requests;
 using Concre_Innova_API.Application.DTOs.Responses;
 using Concre_Innova_API.Application.Interfaces.Repositories;
 using Concre_Innova_API.Infrastructure.Data;
+using Concre_Innova_API.Shared.Helpers;
 using Microsoft.Data.SqlClient;
 using System.Data;
 
@@ -322,7 +323,7 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Catalogo
                 CommandType = CommandType.Text
             };
 
-            duplicateCheckCommand.Parameters.Add("@NombreCategoria", SqlDbType.VarChar, 100).Value = request.NombreCategoria.Trim();
+            duplicateCheckCommand.Parameters.Add("@NombreCategoria", SqlDbType.VarChar, 100).Value = NombreCatalogoNormalizer.Normalizar(request.NombreCategoria);
 
             var existingCount = Convert.ToInt32(await duplicateCheckCommand.ExecuteScalarAsync());
             if (existingCount > 0)
@@ -345,7 +346,7 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Catalogo
                 CommandType = CommandType.Text
             };
 
-            insertCommand.Parameters.Add("@NombreCategoria", SqlDbType.VarChar, 100).Value = request.NombreCategoria.Trim();
+            insertCommand.Parameters.Add("@NombreCategoria", SqlDbType.VarChar, 100).Value = NombreCatalogoNormalizer.Normalizar(request.NombreCategoria);
             insertCommand.Parameters.Add("@Descripcion", SqlDbType.VarChar, 255).Value =
                 string.IsNullOrWhiteSpace(request.Descripcion) ? string.Empty : request.Descripcion.Trim();
 
@@ -376,7 +377,7 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Catalogo
                 CommandType = CommandType.Text
             };
 
-            duplicateCheckCommand.Parameters.Add("@NombreCategoria", SqlDbType.VarChar, 100).Value = request.NombreCategoria.Trim();
+            duplicateCheckCommand.Parameters.Add("@NombreCategoria", SqlDbType.VarChar, 100).Value = NombreCatalogoNormalizer.Normalizar(request.NombreCategoria);
             duplicateCheckCommand.Parameters.Add("@IdCategoria", SqlDbType.Int).Value = request.IdCategoria;
 
             var existingCount = Convert.ToInt32(await duplicateCheckCommand.ExecuteScalarAsync());
@@ -403,7 +404,7 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Catalogo
                 CommandType = CommandType.Text
             };
 
-            updateCommand.Parameters.Add("@NombreCategoria", SqlDbType.VarChar, 100).Value = request.NombreCategoria.Trim();
+            updateCommand.Parameters.Add("@NombreCategoria", SqlDbType.VarChar, 100).Value = NombreCatalogoNormalizer.Normalizar(request.NombreCategoria);
             updateCommand.Parameters.Add("@Descripcion", SqlDbType.VarChar, 255).Value =
                 string.IsNullOrWhiteSpace(request.Descripcion) ? string.Empty : request.Descripcion.Trim();
             updateCommand.Parameters.Add("@Estado", SqlDbType.VarChar, 20).Value = request.Estado;
@@ -534,7 +535,7 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Catalogo
                 CommandType = CommandType.Text
             };
 
-            duplicateCheckCommand.Parameters.Add("@NombreTipo", SqlDbType.VarChar, 100).Value = request.NombreTipo.Trim();
+            duplicateCheckCommand.Parameters.Add("@NombreTipo", SqlDbType.VarChar, 100).Value = NombreCatalogoNormalizer.Normalizar(request.NombreTipo);
 
             var existingCount = Convert.ToInt32(await duplicateCheckCommand.ExecuteScalarAsync());
             if (existingCount > 0)
@@ -557,7 +558,7 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Catalogo
                 CommandType = CommandType.Text
             };
 
-            insertCommand.Parameters.Add("@NombreTipo", SqlDbType.VarChar, 100).Value = request.NombreTipo.Trim();
+            insertCommand.Parameters.Add("@NombreTipo", SqlDbType.VarChar, 100).Value = NombreCatalogoNormalizer.Normalizar(request.NombreTipo);
             insertCommand.Parameters.Add("@Descripcion", SqlDbType.VarChar, 255).Value =
                 string.IsNullOrWhiteSpace(request.Descripcion) ? string.Empty : request.Descripcion.Trim();
 
@@ -588,7 +589,7 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Catalogo
                 CommandType = CommandType.Text
             };
 
-            duplicateCheckCommand.Parameters.Add("@NombreTipo", SqlDbType.VarChar, 100).Value = request.NombreTipo.Trim();
+            duplicateCheckCommand.Parameters.Add("@NombreTipo", SqlDbType.VarChar, 100).Value = NombreCatalogoNormalizer.Normalizar(request.NombreTipo);
             duplicateCheckCommand.Parameters.Add("@IdTipo", SqlDbType.Int).Value = request.IdTipo;
 
             var existingCount = Convert.ToInt32(await duplicateCheckCommand.ExecuteScalarAsync());
@@ -615,7 +616,7 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Catalogo
                 CommandType = CommandType.Text
             };
 
-            updateCommand.Parameters.Add("@NombreTipo", SqlDbType.VarChar, 100).Value = request.NombreTipo.Trim();
+            updateCommand.Parameters.Add("@NombreTipo", SqlDbType.VarChar, 100).Value = NombreCatalogoNormalizer.Normalizar(request.NombreTipo);
             updateCommand.Parameters.Add("@Descripcion", SqlDbType.VarChar, 255).Value =
                 string.IsNullOrWhiteSpace(request.Descripcion) ? string.Empty : request.Descripcion.Trim();
             updateCommand.Parameters.Add("@Estado", SqlDbType.VarChar, 20).Value = request.Estado;
