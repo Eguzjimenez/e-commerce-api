@@ -25,11 +25,18 @@ namespace Concre_Innova_API.Application.Validators
                 return "La informacion de registro es requerida.";
 
             if (string.IsNullOrWhiteSpace(request.Nombre) ||
+                string.IsNullOrWhiteSpace(request.Apellido) ||
                 string.IsNullOrWhiteSpace(request.Correo) ||
                 string.IsNullOrWhiteSpace(request.Telefono) ||
+                string.IsNullOrWhiteSpace(request.Direccion) ||
                 string.IsNullOrWhiteSpace(request.Contrasena))
             {
-                return "Nombre, correo, telefono y contrasena son requeridos.";
+                return "Nombre, apellido, correo, telefono, direccion y contrasena son requeridos.";
+            }
+
+            if (request.Direccion.Trim().Length > 255)
+            {
+                return "La direccion no puede superar 255 caracteres.";
             }
 
             if (!EmailAddressValidator.IsValid(request.Correo))

@@ -204,3 +204,72 @@ public class UserRequestValidatorTests
         Assert.Null(_validator.ValidateCreate(solicitud));
     }
 }
+
+public class AuthRequestValidatorTests
+{
+    private readonly AuthRequestValidator _validator = new();
+
+    private static RegisterClientRequest SolicitudValida() => new()
+    {
+        Nombre = "Ana",
+        Apellido = "Rojas",
+        Correo = "ana.rojas@example.com",
+        Telefono = "8888-8888",
+        Direccion = "San Jose, Curridabat, 200m sur de la iglesia",
+        Contrasena = "Aa1!aaaa"
+    };
+
+    [Fact]
+    public void Acepta_un_registro_completo()
+    {
+        Assert.Null(_validator.ValidateClientRegistration(SolicitudValida()));
+    }
+
+    [Fact]
+    public void Exige_el_apellido()
+    {
+        var solicitud = SolicitudValida();
+        solicitud.Apellido = "   ";
+
+        var mensaje = _validator.ValidateClientRegistration(solicitud);
+
+        Assert.NotNull(mensaje);
+        Assert.Contains("apellido", mensaje, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Exige_la_direccion_de_entrega()
+    {
+        var solicitud = SolicitudValida();
+        solicitud.Direccion = null;
+
+        var mensaje = _validator.ValidateClientRegistration(solicitud);
+
+        Assert.NotNull(mensaje);
+        Assert.Contains("direccion", mensaje, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Rechaza_una_direccion_demasiado_larga()
+    {
+        var solicitud = SolicitudValida();
+        solicitud.Direccion = new string('a', 256);
+
+        var mensaje = _validator.ValidateClientRegistration(solicitud);
+
+        Assert.NotNull(mensaje);
+        Assert.Contains("255", mensaje);
+    }
+
+    [Fact]
+    public void Rechaza_un_telefono_invalido()
+    {
+        var solicitud = SolicitudValida();
+        solicitud.Telefono = "abcdefgh";
+
+        var mensaje = _validator.ValidateClientRegistration(solicitud);
+
+        Assert.NotNull(mensaje);
+        Assert.Contains("telefono", mensaje, StringComparison.OrdinalIgnoreCase);
+    }
+}
