@@ -15,6 +15,7 @@ using Concre_Innova_API.Infrastructure.Repositories.Catalogo;
 using Concre_Innova_API.Infrastructure.Repositories.Chat;
 using Concre_Innova_API.Infrastructure.Repositories.Cotizaciones;
 using Concre_Innova_API.Infrastructure.Repositories.Empresa;
+using Concre_Innova_API.Infrastructure.Repositories.Facturas;
 using Concre_Innova_API.Infrastructure.Repositories.Inventario;
 using Concre_Innova_API.Infrastructure.Repositories.Notificaciones;
 using Concre_Innova_API.Infrastructure.Repositories.Pagos;
@@ -71,6 +72,7 @@ namespace Concre_Innova_API.Configuration
             services.AddScoped<INotificacionRepository, NotificacionRepository>();
             services.AddScoped<IPagoRepository, PagoRepository>();
             services.AddScoped<IInventarioRepository, InventarioRepository>();
+            services.AddScoped<IFacturaRepository, FacturaRepository>();
             services.AddScoped<IAsesorRepository, AsesorRepository>();
             services.AddScoped<IChatRepository, ChatRepository>();
             services.AddScoped<IChatBotRepository, ChatBotRepository>();
@@ -99,6 +101,7 @@ namespace Concre_Innova_API.Configuration
             services.AddScoped<INotificacionService, NotificacionService>();
             services.AddScoped<IPagoService, PagoService>();
             services.AddScoped<IInventarioService, InventarioService>();
+            services.AddScoped<IFacturaService, FacturaService>();
             services.AddScoped<IAlmacenamientoComprobantePago, AlmacenamientoComprobantePago>();
             services.AddScoped<INotificacionEventoService, NotificacionEventoService>();
             services.AddScoped<IAsesorService, AsesorService>();

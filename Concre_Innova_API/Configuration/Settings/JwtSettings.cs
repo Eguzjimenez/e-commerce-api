@@ -5,6 +5,6 @@ namespace Concre_Innova_API.Configuration.Settings
         public string? Key { get; set; }
         public string? Issuer { get; set; }
         public string? Audience { get; set; }
-        public int ExpireMinutes { get; set; } = 10;
+        public int ExpireMinutes { get; set; } = 60;
     }
 }
