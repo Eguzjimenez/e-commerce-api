@@ -86,7 +86,7 @@ namespace Concre_Innova_API.Controllers
             {
                 return Unauthorized(new
                 {
-                    message = "Debe iniciar sesion para reiniciar el cuestionario."
+                    message = "Debe iniciar sesión para reiniciar el cuestionario."
                 });
             }
 

@@ -67,7 +67,7 @@ namespace Concre_Innova_API.Application.Services
         {
             if (request.IdProducto <= 0)
             {
-                return "El producto indicado no es valido.";
+                return "El producto indicado no es válido.";
             }
 
             if (request.CantidadDisponible < 0 || request.CantidadMinima < 0)

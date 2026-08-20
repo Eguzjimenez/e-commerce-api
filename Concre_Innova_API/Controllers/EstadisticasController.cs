@@ -106,7 +106,7 @@ namespace Concre_Innova_API.Controllers
             {
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
-                    new { message = "Error al obtener las estadisticas por categoria." });
+                    new { message = "Error al obtener las estadisticas por categoría." });
             }
         }
 
@@ -136,7 +136,7 @@ namespace Concre_Innova_API.Controllers
             string operation)
         {
             if (!userContext.IsAuthenticated || !userContext.RoleId.HasValue)
-                return Unauthorized(new { message = "Debe iniciar sesion para acceder a este recurso." });
+                return Unauthorized(new { message = "Debe iniciar sesión para acceder a este recurso." });
 
             var hasPermission = await _permissionService.RoleHasPermissionAsync(
                 userContext.RoleId.Value,
@@ -153,7 +153,7 @@ namespace Concre_Innova_API.Controllers
 
             return StatusCode(
                 StatusCodes.Status403Forbidden,
-                new { message = "No tiene permisos para realizar esta accion." });
+                new { message = "No tiene permisos para realizar esta acción." });
         }
     }
 }

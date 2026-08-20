@@ -12,7 +12,7 @@ namespace Concre_Innova_API.Controllers
     public class ChatController : ControllerBase
     {
         private const string MensajeSesionRequerida =
-            "Debe iniciar sesion para gestionar su conversacion.";
+            "Debe iniciar sesión para gestionar su conversacion.";
 
         private readonly IChatService _chatService;
         private readonly IChatAdminService _chatAdminService;
@@ -307,7 +307,7 @@ namespace Concre_Innova_API.Controllers
                     userContext,
                     "Chats",
                     "UPDATE",
-                    $"Conversacion #{idChat} cerrada por el personal de atencion.");
+                    $"Conversacion #{idChat} cerrada por el personal de atención.");
 
                 return Ok(resultado);
             }

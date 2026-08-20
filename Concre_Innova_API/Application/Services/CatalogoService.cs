@@ -159,7 +159,7 @@ namespace Concre_Innova_API.Application.Services
                 return new OperacionResponseDto
                 {
                     Codigo = 0,
-                    Mensaje = "La categoria seleccionada no existe."
+                    Mensaje = "La categoría seleccionada no existe."
                 };
             }
 
@@ -186,7 +186,7 @@ namespace Concre_Innova_API.Application.Services
                 : new OperacionResponseDto
                 {
                     Codigo = 0,
-                    Mensaje = "La combinacion de categoria y tipo de producto seleccionada no es valida."
+                    Mensaje = "La combinacion de categoría y tipo de producto seleccionada no es válida."
                 };
         }
 
@@ -202,7 +202,7 @@ namespace Concre_Innova_API.Application.Services
                 return Task.FromResult(new OperacionResponseDto
                 {
                     Codigo = 0,
-                    Mensaje = "El producto indicado no es valido."
+                    Mensaje = "El producto indicado no es válido."
                 });
             }
 

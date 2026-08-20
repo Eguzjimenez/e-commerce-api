@@ -47,7 +47,7 @@ namespace Concre_Innova_API.Application.Validators
 
             return perteneceALaPregunta
                 ? null
-                : $"La respuesta seleccionada no es valida para la pregunta: {pregunta.Texto}";
+                : $"La respuesta seleccionada no es válida para la pregunta: {pregunta.Texto}";
         }
     }
 }

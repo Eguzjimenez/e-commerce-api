@@ -64,7 +64,7 @@ namespace Concre_Innova_API.Application.Services
                     Tipo = NotificacionTipos.Pedido,
                     Titulo = EsPedidoCancelado(estado)
                         ? "Pedido cancelado"
-                        : "Actualizacion de tu pedido",
+                        : "Actualización de tu pedido",
                     Mensaje = ConstruirMensajeEstadoPedido(idPedido, estado),
                     Enlace = NotificacionEnlaces.MisPedidos,
                     Referencia = idPedido
@@ -84,14 +84,14 @@ namespace Concre_Innova_API.Application.Services
                 {
                     IdUsuario = idUsuario,
                     Tipo = NotificacionTipos.Cotizacion,
-                    Titulo = "Actualizacion de tu cotizacion",
+                    Titulo = "Actualización de tu cotización",
                     Mensaje =
-                        $"Tu cotizacion #{idCotizacion} cambio al estado " +
+                        $"Tu cotización #{idCotizacion} cambio al estado " +
                         $"{Normalizar(estado, "actualizada")}.",
                     Enlace = NotificacionEnlaces.MisCotizaciones,
                     Referencia = idCotizacion
                 },
-                $"cotizacion {idCotizacion}",
+                $"cotización {idCotizacion}",
                 cancellationToken);
         }
 
@@ -127,7 +127,7 @@ namespace Concre_Innova_API.Application.Services
                 if (!idUsuario.HasValue)
                 {
                     _logger.LogInformation(
-                        "No se encontro un usuario destinatario para el evento del {Origen}.",
+                        "No se encontró un usuario destinatario para el evento del {Origen}.",
                         origen);
                     return;
                 }
@@ -142,14 +142,14 @@ namespace Concre_Innova_API.Application.Services
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
                 _logger.LogInformation(
-                    "El registro de la notificacion del {Origen} fue cancelado.",
+                    "El registro de la notificación del {Origen} fue cancelado.",
                     origen);
             }
             catch (Exception exception)
             {
                 _logger.LogWarning(
                     exception,
-                    "No se pudo registrar la notificacion del {Origen}.",
+                    "No se pudo registrar la notificación del {Origen}.",
                     origen);
             }
         }

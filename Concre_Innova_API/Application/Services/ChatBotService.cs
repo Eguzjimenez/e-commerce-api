@@ -12,8 +12,8 @@ namespace Concre_Innova_API.Application.Services
     {
         private const string RespuestaSinCoincidencia =
             "No estoy seguro de como responder esa pregunta. Puedes preguntarme sobre " +
-            "metodos de pago, productos, pedidos, cotizaciones, envios, horarios o " +
-            "informacion de contacto.";
+            "métodos de pago, productos, pedidos, cotizaciones, envios, horarios o " +
+            "información de contacto.";
 
         private const int MaximoTerminosBusqueda = 3;
         private const int LongitudMinimaTermino = 4;

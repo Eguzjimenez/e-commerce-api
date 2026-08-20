@@ -9,7 +9,7 @@ namespace Concre_Innova_API.Application.Validators
         public string? ValidateCreate(CreateUserRequest? request)
         {
             if (request == null)
-                return "La informacion del usuario es requerida.";
+                return "La información del usuario es requerida.";
 
             if (string.IsNullOrWhiteSpace(request.Nombre) ||
                 string.IsNullOrWhiteSpace(request.Apellido) ||
@@ -22,10 +22,10 @@ namespace Concre_Innova_API.Application.Validators
             }
 
             if (!EmailAddressValidator.IsValid(request.Correo))
-                return "El formato del correo no es valido.";
+                return "El formato del correo no es válido.";
 
             if (!PhoneNumberValidator.IsValid(request.Telefono))
-                return "El telefono debe contener entre 8 y 15 digitos.";
+                return "El teléfono debe contener entre 8 y 15 digitos.";
 
             return PasswordPolicyValidator.GetValidationMessage(request.Contrasena);
         }
@@ -33,7 +33,7 @@ namespace Concre_Innova_API.Application.Validators
         public string? ValidateUpdate(UpdateUserRequest? request)
         {
             if (request == null || request.IdUsuario <= 0)
-                return "La informacion del usuario es requerida.";
+                return "La información del usuario es requerida.";
 
             if (string.IsNullOrWhiteSpace(request.Nombre) ||
                 string.IsNullOrWhiteSpace(request.Apellido) ||
@@ -41,14 +41,14 @@ namespace Concre_Innova_API.Application.Validators
                 string.IsNullOrWhiteSpace(request.Telefono) ||
                 request.IdRol <= 0)
             {
-                return "Nombre, apellido, correo, telefono e IdRol son requeridos.";
+                return "Nombre, apellido, correo, teléfono e IdRol son requeridos.";
             }
 
             if (!EmailAddressValidator.IsValid(request.Correo))
-                return "El formato del correo no es valido.";
+                return "El formato del correo no es válido.";
 
             if (!PhoneNumberValidator.IsValid(request.Telefono))
-                return "El telefono debe contener entre 8 y 15 digitos.";
+                return "El teléfono debe contener entre 8 y 15 digitos.";
 
             return string.IsNullOrWhiteSpace(request.Contrasena)
                 ? null

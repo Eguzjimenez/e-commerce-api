@@ -182,8 +182,8 @@ namespace Concre_Innova_API.Application.Services
             var contacto = _soporteHumanoSettings.ContactoAlternativo;
 
             return string.IsNullOrWhiteSpace(contacto)
-                ? "La atencion con un agente no esta habilitada en este momento."
-                : $"La atencion con un agente no esta habilitada en este momento. {contacto}";
+                ? "La atención con un agente no esta habilitada en este momento."
+                : $"La atención con un agente no esta habilitada en este momento. {contacto}";
         }
 
         private static string ConstruirMensajeNotificacionSoporte(int idChat)

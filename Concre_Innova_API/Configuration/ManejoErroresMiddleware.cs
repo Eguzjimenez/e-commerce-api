@@ -33,7 +33,7 @@ namespace Concre_Innova_API.Configuration
             catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested)
             {
                 _logger.LogInformation(
-                    "La solicitud {Metodo} {Ruta} fue cancelada por el cliente.",
+                    "La solicitud {Método} {Ruta} fue cancelada por el cliente.",
                     context.Request.Method,
                     context.Request.Path);
 
@@ -44,7 +44,7 @@ namespace Concre_Innova_API.Configuration
             {
                 _logger.LogError(
                     exception,
-                    "Error no controlado en {Metodo} {Ruta}.",
+                    "Error no controlado en {Método} {Ruta}.",
                     context.Request.Method,
                     context.Request.Path);
 

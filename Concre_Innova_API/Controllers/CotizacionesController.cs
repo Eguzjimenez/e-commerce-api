@@ -42,7 +42,7 @@ namespace Concre_Innova_API.Controllers
             {
                 return Unauthorized(new
                 {
-                    message = "Debe iniciar sesion para crear una cotizacion."
+                    message = "Debe iniciar sesión para crear una cotización."
                 });
             }
 
@@ -50,7 +50,7 @@ namespace Concre_Innova_API.Controllers
             {
                 return BadRequest(new
                 {
-                    message = "Selecciona al menos un producto para solicitar la cotizacion."
+                    message = "Selecciona al menos un producto para solicitar la cotización."
                 });
             }
 
@@ -69,7 +69,7 @@ namespace Concre_Innova_API.Controllers
             {
                 return BadRequest(new
                 {
-                    message = "La lista de productos de la cotizacion no es valida."
+                    message = "La lista de productos de la cotización no es válida."
                 });
             }
 
@@ -77,7 +77,7 @@ namespace Concre_Innova_API.Controllers
             {
                 return BadRequest(new
                 {
-                    message = "Selecciona al menos un producto para solicitar la cotizacion."
+                    message = "Selecciona al menos un producto para solicitar la cotización."
                 });
             }
 
@@ -89,7 +89,7 @@ namespace Concre_Innova_API.Controllers
             {
                 return BadRequest(new
                 {
-                    message = "Puedes adjuntar hasta 5 imagenes de 5 MB cada una."
+                    message = "Puedes adjuntar hasta 5 imágenes de 5 MB cada una."
                 });
             }
 
@@ -138,7 +138,7 @@ namespace Concre_Innova_API.Controllers
                     userContext,
                     "Cotizaciones",
                     "CREATE",
-                    $"Cotizacion {result.NumeroSeguimiento} creada con " +
+                    $"Cotización {result.NumeroSeguimiento} creada con " +
                     $"{result.CantidadImagenes} imagen(es).");
 
                 return StatusCode(StatusCodes.Status201Created, result);
@@ -153,7 +153,7 @@ namespace Concre_Innova_API.Controllers
                     StatusCodes.Status500InternalServerError,
                     new
                     {
-                        message = "No fue posible guardar la cotizacion."
+                        message = "No fue posible guardar la cotización."
                     });
             }
         }
@@ -172,7 +172,7 @@ namespace Concre_Innova_API.Controllers
             {
                 return Unauthorized(new
                 {
-                    message = "Debe iniciar sesion para consultar sus cotizaciones."
+                    message = "Debe iniciar sesión para consultar sus cotizaciones."
                 });
             }
 
@@ -198,7 +198,7 @@ namespace Concre_Innova_API.Controllers
             {
                 return Unauthorized(new
                 {
-                    message = "Debe iniciar sesion para decidir una cotizacion."
+                    message = "Debe iniciar sesión para decidir una cotización."
                 });
             }
 
@@ -217,7 +217,7 @@ namespace Concre_Innova_API.Controllers
                 userContext,
                 "Cotizaciones",
                 "UPDATE",
-                $"Cotizacion #{idCotizacion} actualizada a {result.Estado}. " +
+                $"Cotización #{idCotizacion} actualizada a {result.Estado}. " +
                 $"Pedido asociado: {result.IdPedido?.ToString() ?? "N/A"}.");
 
             return Ok(result);
@@ -263,7 +263,7 @@ namespace Concre_Innova_API.Controllers
                 userContext,
                 "Cotizaciones",
                 "UPDATE",
-                $"Cotizacion #{idCotizacion} respondida por " +
+                $"Cotización #{idCotizacion} respondida por " +
                 $"{FormatCurrency(result.Total)}.");
 
             return Ok(result);
@@ -292,7 +292,7 @@ namespace Concre_Innova_API.Controllers
                 userContext,
                 "Cotizaciones",
                 "UPDATE",
-                $"Cotizacion #{idCotizacion} resuelta por ventas como " +
+                $"Cotización #{idCotizacion} resuelta por ventas como " +
                 $"{result.Estado}.");
 
             return Ok(result);
@@ -319,7 +319,7 @@ namespace Concre_Innova_API.Controllers
                 userContext,
                 "Cotizaciones",
                 "CREATE",
-                $"Cotizacion #{idCotizacion} convertida en pedido " +
+                $"Cotización #{idCotizacion} convertida en pedido " +
                 $"#{result.IdPedido}.");
 
             return Ok(result);
@@ -367,29 +367,29 @@ namespace Concre_Innova_API.Controllers
         {
             if (message.Contains("NO_PERTENECE", StringComparison.OrdinalIgnoreCase))
             {
-                return "La cotizacion no existe o no pertenece al usuario autenticado.";
+                return "La cotización no existe o no pertenece al usuario autenticado.";
             }
 
             if (message.Contains("NO_EXISTE", StringComparison.OrdinalIgnoreCase))
             {
-                return "La cotizacion solicitada no existe.";
+                return "La cotización solicitada no existe.";
             }
 
             if (message.Contains("ESTADO_INVALIDO", StringComparison.OrdinalIgnoreCase))
             {
-                return "La cotizacion ya fue decidida o todavia no ha sido respondida.";
+                return "La cotización ya fue decidida o todavia no ha sido respondida.";
             }
 
             if (message.Contains(
                     "REQUIERE_ACEPTACION",
                     StringComparison.OrdinalIgnoreCase))
             {
-                return "El cliente debe aceptar la cotizacion antes de que ventas pueda resolverla.";
+                return "El cliente debe aceptar la cotización antes de que ventas pueda resolverla.";
             }
 
             if (message.Contains("NO_APROBADA", StringComparison.OrdinalIgnoreCase))
             {
-                return "La cotizacion debe estar aprobada antes de convertirla en pedido.";
+                return "La cotización debe estar aprobada antes de convertirla en pedido.";
             }
 
             if (message.Contains("STOCK_INSUFICIENTE", StringComparison.OrdinalIgnoreCase))
@@ -399,17 +399,17 @@ namespace Concre_Innova_API.Controllers
 
             if (message.Contains("YA_PROCESADA", StringComparison.OrdinalIgnoreCase))
             {
-                return "La cotizacion ya tiene un pedido asociado.";
+                return "La cotización ya tiene un pedido asociado.";
             }
 
             if (message.Contains("SIN_PRODUCTOS", StringComparison.OrdinalIgnoreCase))
             {
-                return "La cotizacion no contiene productos para crear el pedido.";
+                return "La cotización no contiene productos para crear el pedido.";
             }
 
             if (message.Contains("PRODUCTO_NO_DISPONIBLE", StringComparison.OrdinalIgnoreCase))
             {
-                return "Uno o mas productos seleccionados no estan disponibles.";
+                return "Uno o mas productos seleccionados no están disponibles.";
             }
 
             return message;

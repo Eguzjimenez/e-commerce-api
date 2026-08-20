@@ -72,7 +72,7 @@ namespace Concre_Innova_API.Application.Services
                 return new ChatOperacionResponseDto
                 {
                     Exitoso = false,
-                    Mensaje = "La conversacion indicada no es valida."
+                    Mensaje = "La conversacion indicada no es válida."
                 };
             }
 

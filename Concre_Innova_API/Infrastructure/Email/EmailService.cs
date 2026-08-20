@@ -40,18 +40,18 @@ namespace Concre_Innova_API.Infrastructure.Email
                 "Hola," +
                 Environment.NewLine +
                 Environment.NewLine +
-                "Recibimos una solicitud para restablecer la contrasena de tu cuenta en Concre Innova." +
+                "Recibimos una solicitud para restablecer la contraseña de tu cuenta en Concre Innova." +
                 Environment.NewLine +
-                $"Tu codigo de verificacion es: {code}" +
+                $"Tu código de verificacion es: {code}" +
                 Environment.NewLine +
-                $"Este codigo expira el {expiresAt:yyyy-MM-dd HH:mm:ss} UTC." +
+                $"Este código expira el {expiresAt:yyyy-MM-dd HH:mm:ss} UTC." +
                 Environment.NewLine +
                 Environment.NewLine +
                 "Si no solicitaste este cambio, puedes ignorar este correo.";
 
             await SendEmailAsync(
                 toEmail,
-                "Codigo de recuperacion de contrasena",
+                "Código de recuperación de contraseña",
                 body);
         }
 
@@ -117,7 +117,7 @@ namespace Concre_Innova_API.Infrastructure.Email
                 $"Hola {customerName}," +
                 Environment.NewLine +
                 Environment.NewLine +
-                $"La cotizacion {trackingNumber} cambio de " +
+                $"La cotización {trackingNumber} cambio de " +
                 $"{previousStatus} a {newStatus}." +
                 Environment.NewLine +
                 $"Fecha del cambio: {changedAt:yyyy-MM-dd HH:mm:ss}." +
@@ -128,7 +128,7 @@ namespace Concre_Innova_API.Infrastructure.Email
 
             return SendEmailAsync(
                 toEmail,
-                $"Cotizacion {trackingNumber}: {newStatus}",
+                $"Cotización {trackingNumber}: {newStatus}",
                 body);
         }
 

@@ -24,25 +24,25 @@ namespace Concre_Innova_API.Application.Validators
         public string? ValidateGuardar(GuardarVisualizacionRequest? request)
         {
             if (request is null)
-                return "Los datos de la visualizacion son requeridos.";
+                return "Los datos de la visualización son requeridos.";
 
             if (string.IsNullOrWhiteSpace(request.Nombre))
-                return "Asigna un nombre a la visualizacion.";
+                return "Asigna un nombre a la visualización.";
 
             if (request.Nombre.Trim().Length > VisualizacionRules.MaximoCaracteresNombre)
                 return $"El nombre no puede superar {VisualizacionRules.MaximoCaracteresNombre} caracteres.";
 
             if (string.IsNullOrWhiteSpace(request.RutaImagenEspacio))
-                return "Sube la imagen de tu espacio antes de guardar la visualizacion.";
+                return "Sube la imagen de tu espacio antes de guardar la visualización.";
 
             if (request.AnchoLienzo <= 0 || request.AltoLienzo <= 0)
-                return "Las dimensiones de la visualizacion no son validas.";
+                return "Las dimensiones de la visualización no son validas.";
 
             if (request.Productos.Count == 0)
-                return "Agrega al menos un producto a la simulacion.";
+                return "Agrega al menos un producto a la simulación.";
 
             if (request.Productos.Count > VisualizacionRules.MaximoProductosPorVisualizacion)
-                return $"Puedes guardar hasta {VisualizacionRules.MaximoProductosPorVisualizacion} productos por visualizacion.";
+                return $"Puedes guardar hasta {VisualizacionRules.MaximoProductosPorVisualizacion} productos por visualización.";
 
             return ValidateProductos(request.Productos);
         }
@@ -64,7 +64,7 @@ namespace Concre_Innova_API.Application.Validators
         private static string? ValidateProducto(VisualizacionProductoRequestDto producto)
         {
             if (producto.IdProducto <= 0)
-                return "Uno de los productos de la simulacion no es valido.";
+                return "Uno de los productos de la simulación no es válido.";
 
             if (producto.Cantidad <= 0 ||
                 producto.Cantidad > VisualizacionRules.MaximoCantidadPorProducto)
@@ -73,7 +73,7 @@ namespace Concre_Innova_API.Application.Validators
             }
 
             if (producto.Ancho <= 0 || producto.Alto <= 0)
-                return "El tamano de un producto en la simulacion no es valido.";
+                return "El tamaño de un producto en la simulación no es válido.";
 
             if (producto.Color.Length > VisualizacionRules.MaximoCaracteresColor)
                 return $"El color no puede superar {VisualizacionRules.MaximoCaracteresColor} caracteres.";

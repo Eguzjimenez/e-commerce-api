@@ -49,7 +49,7 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Cotizaciones
                 return new CrearCotizacionResponseDto
                 {
                     Exitoso = false,
-                    Mensaje = "La base de datos no devolvio el resultado de la cotizacion."
+                    Mensaje = "La base de datos no devolvio el resultado de la cotización."
                 };
             }
 
@@ -394,7 +394,7 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Cotizaciones
                 return new ActualizarCotizacionResponseDto
                 {
                     Exitoso = false,
-                    Mensaje = "La base de datos no devolvio el resultado de la operacion."
+                    Mensaje = "La base de datos no devolvio el resultado de la operación."
                 };
             }
 

@@ -13,7 +13,7 @@ namespace Concre_Innova_API.Controllers
     public class NotificacionesController : ControllerBase
     {
         private const string MensajeSesionRequerida =
-            "Debe iniciar sesion para consultar sus notificaciones.";
+            "Debe iniciar sesión para consultar sus notificaciones.";
 
         private readonly INotificacionService _notificacionService;
         private readonly IRequestUserContextService _requestUserContextService;
@@ -121,7 +121,7 @@ namespace Concre_Innova_API.Controllers
             {
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
-                    new { message = "No fue posible actualizar la notificacion." });
+                    new { message = "No fue posible actualizar la notificación." });
             }
         }
 

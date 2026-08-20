@@ -60,7 +60,7 @@ namespace Concre_Innova_API.Application.Services
             "COMPROBANTE_REGISTRADO" => "El comprobante quedo registrado y esta en verificacion.",
             "COMPROBANTE_REQUERIDO" =>
                 "SINPE Movil requiere adjuntar el comprobante de la transferencia.",
-            "VENTA_NO_ENCONTRADA" => "No se encontro un pago pendiente para ese pedido.",
+            "VENTA_NO_ENCONTRADA" => "No se encontró un pago pendiente para ese pedido.",
             _ => "No fue posible registrar el comprobante del pago."
         };
 
@@ -98,7 +98,7 @@ namespace Concre_Innova_API.Application.Services
         {
             if (request.IdPedido <= 0)
             {
-                return CrearError("El pedido indicado no es valido.");
+                return CrearError("El pedido indicado no es válido.");
             }
 
             var referencia = request.Referencia?.Trim() ?? string.Empty;
@@ -107,7 +107,7 @@ namespace Concre_Innova_API.Application.Services
                 referencia.Length > ComprobantePagoRules.MaximoCaracteresReferencia)
             {
                 return CrearError(
-                    "El numero de referencia del comprobante no es valido.");
+                    "El número de referencia del comprobante no es válido.");
             }
 
             if (request.Comprobante is null || request.Comprobante.Length == 0)
@@ -117,7 +117,7 @@ namespace Concre_Innova_API.Application.Services
 
             if (request.Comprobante.Length > ComprobantePagoRules.MaximoBytes)
             {
-                return CrearError("El comprobante supera el tamano maximo permitido.");
+                return CrearError("El comprobante supera el tamaño máximo permitido.");
             }
 
             var extension = Path.GetExtension(request.Comprobante.FileName).ToLowerInvariant();

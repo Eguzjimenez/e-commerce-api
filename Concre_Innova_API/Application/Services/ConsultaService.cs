@@ -38,7 +38,7 @@ namespace Concre_Innova_API.Application.Services
         {
             if (idConsulta <= 0)
             {
-                return CrearError("La consulta indicada no es valida.");
+                return CrearError("La consulta indicada no es válida.");
             }
 
             var respuesta = request?.Respuesta?.Trim() ?? string.Empty;
@@ -98,7 +98,7 @@ namespace Concre_Innova_API.Application.Services
             {
                 _logger.LogWarning(
                     exception,
-                    "La respuesta de la consulta se guardo pero no se pudo notificar por correo.");
+                    "La respuesta de la consulta se guardó pero no se pudo notificar por correo.");
             }
         }
 

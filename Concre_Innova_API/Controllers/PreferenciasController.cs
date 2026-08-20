@@ -27,7 +27,7 @@ namespace Concre_Innova_API.Controllers
             var userContext = _requestUserContextService.GetCurrentUser(HttpContext);
 
             if (!userContext.IsAuthenticated || !userContext.UserId.HasValue)
-                return Unauthorized(new { message = "Debe iniciar sesion para consultar sus preferencias." });
+                return Unauthorized(new { message = "Debe iniciar sesión para consultar sus preferencias." });
 
             try
             {
@@ -49,7 +49,7 @@ namespace Concre_Innova_API.Controllers
             var userContext = _requestUserContextService.GetCurrentUser(HttpContext);
 
             if (!userContext.IsAuthenticated || !userContext.UserId.HasValue)
-                return Unauthorized(new { message = "Debe iniciar sesion para actualizar sus preferencias." });
+                return Unauthorized(new { message = "Debe iniciar sesión para actualizar sus preferencias." });
 
             try
             {

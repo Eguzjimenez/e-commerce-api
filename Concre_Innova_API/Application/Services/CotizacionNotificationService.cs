@@ -49,14 +49,14 @@ namespace Concre_Innova_API.Application.Services
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
                 _logger.LogInformation(
-                    "El envio de notificaciones de la cotizacion {QuotationId} fue cancelado.",
+                    "El envío de notificaciones de la cotización {QuotationId} fue cancelado.",
                     idCotizacion);
             }
             catch (Exception exception)
             {
                 _logger.LogWarning(
                     exception,
-                    "No se pudieron procesar las notificaciones de la cotizacion {QuotationId}.",
+                    "No se pudieron procesar las notificaciones de la cotización {QuotationId}.",
                     idCotizacion);
             }
         }

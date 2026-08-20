@@ -63,11 +63,11 @@ namespace Concre_Innova_API.Controllers
                     correo,
                     wasSuccessful: false,
                     ipAddress,
-                    "Intento de inicio de sesion bloqueado por multiples fallos.");
+                    "Intento de inicio de sesión bloqueado por multiples fallos.");
 
                 return StatusCode(StatusCodes.Status429TooManyRequests, new
                 {
-                    message = $"Cuenta temporalmente bloqueada. Intente nuevamente despues de {blockedUntil:O}."
+                    message = $"Cuenta temporalmente bloqueada. Intente nuevamente después de {blockedUntil:O}."
                 });
             }
 
@@ -82,7 +82,7 @@ namespace Concre_Innova_API.Controllers
                     correo,
                     wasSuccessful: false,
                     ipAddress,
-                    result.Mensaje ?? "Inicio de sesion fallido.");
+                    result.Mensaje ?? "Inicio de sesión fallido.");
 
                 return Unauthorized(result);
             }
@@ -94,7 +94,7 @@ namespace Concre_Innova_API.Controllers
                 correo,
                 wasSuccessful: true,
                 ipAddress,
-                result.Mensaje ?? "Inicio de sesion exitoso.");
+                result.Mensaje ?? "Inicio de sesión exitoso.");
 
             return Ok(result);
         }
@@ -237,7 +237,7 @@ namespace Concre_Innova_API.Controllers
             var userContext = _requestUserContextService.GetCurrentUser(HttpContext);
 
             if (!userContext.IsAuthenticated || !userContext.UserId.HasValue || !userContext.RoleId.HasValue)
-                return Unauthorized(new { message = "La sesion no esta activa." });
+                return Unauthorized(new { message = "La sesión no esta activa." });
 
             var nombreRol = AppRoles.GetName(userContext.RoleId.Value);
 

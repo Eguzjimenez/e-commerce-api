@@ -185,7 +185,7 @@ namespace Concre_Innova_API.Infrastructure.Repositories.Favorites
                 return new OperacionResponseDto
                 {
                     Codigo = 0,
-                    Mensaje = "No se pudo procesar la operacion."
+                    Mensaje = "No se pudo procesar la operación."
                 };
             }
 

@@ -44,7 +44,7 @@ namespace Concre_Innova_API.Controllers
             {
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
-                    new { message = "Error al obtener las categorias." });
+                    new { message = "Error al obtener las categorías." });
             }
         }
 
@@ -65,7 +65,7 @@ namespace Concre_Innova_API.Controllers
             {
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
-                    new { message = "Error al obtener las categorias." });
+                    new { message = "Error al obtener las categorías." });
             }
         }
 
@@ -86,7 +86,7 @@ namespace Concre_Innova_API.Controllers
                 userContext,
                 "Categorias",
                 "CREATE",
-                $"Intento de insertar categoria: {request.NombreCategoria}");
+                $"Intento de insertar categoría: {request.NombreCategoria}");
 
             try
             {
@@ -98,7 +98,7 @@ namespace Concre_Innova_API.Controllers
                         userContext,
                         "Categorias",
                         "SUCCESS",
-                        $"Categoria '{request.NombreCategoria}' insertada exitosamente. ID: {result.IdCategoria}");
+                        $"Categoría '{request.NombreCategoria}' insertada exitosamente. ID: {result.IdCategoria}");
 
                     return Ok(result);
                 }
@@ -107,7 +107,7 @@ namespace Concre_Innova_API.Controllers
                     userContext,
                     "Categorias",
                     "FAILED",
-                    $"Error al insertar categoria: {result.Mensaje}");
+                    $"Error al insertar categoría: {result.Mensaje}");
 
                 return BadRequest(result);
             }
@@ -117,11 +117,11 @@ namespace Concre_Innova_API.Controllers
                     userContext,
                     "Categorias",
                     "ERROR",
-                    $"Excepcion al insertar categoria: {ex.Message}");
+                    $"Excepcion al insertar categoría: {ex.Message}");
 
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
-                    new { message = "Error al insertar la categoria." });
+                    new { message = "Error al insertar la categoría." });
             }
         }
 
@@ -141,14 +141,14 @@ namespace Concre_Innova_API.Controllers
 
             if (idCategoria != request.IdCategoria)
             {
-                return BadRequest(new { message = "El ID de la categoria en la URL no coincide con el del cuerpo de la solicitud." });
+                return BadRequest(new { message = "El ID de la categoría en la URL no coincide con el del cuerpo de la solicitud." });
             }
 
             await _auditService.RecordAsync(
                 userContext,
                 "Categorias",
                 "UPDATE",
-                $"Intento de actualizar categoria ID: {idCategoria}");
+                $"Intento de actualizar categoría ID: {idCategoria}");
 
             try
             {
@@ -160,7 +160,7 @@ namespace Concre_Innova_API.Controllers
                         userContext,
                         "Categorias",
                         "SUCCESS",
-                        $"Categoria ID: {idCategoria} actualizada exitosamente.");
+                        $"Categoría ID: {idCategoria} actualizada exitosamente.");
 
                     return Ok(result);
                 }
@@ -169,7 +169,7 @@ namespace Concre_Innova_API.Controllers
                     userContext,
                     "Categorias",
                     "FAILED",
-                    $"Error al actualizar categoria ID: {idCategoria}. {result.Mensaje}");
+                    $"Error al actualizar categoría ID: {idCategoria}. {result.Mensaje}");
 
                 return BadRequest(result);
             }
@@ -179,11 +179,11 @@ namespace Concre_Innova_API.Controllers
                     userContext,
                     "Categorias",
                     "ERROR",
-                    $"Excepcion al actualizar categoria ID: {idCategoria}. {ex.Message}");
+                    $"Excepcion al actualizar categoría ID: {idCategoria}. {ex.Message}");
 
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
-                    new { message = "Error al actualizar la categoria." });
+                    new { message = "Error al actualizar la categoría." });
             }
         }
 
@@ -199,7 +199,7 @@ namespace Concre_Innova_API.Controllers
                 userContext,
                 "Categorias",
                 "DELETE",
-                $"Intento de eliminar categoria ID: {idCategoria}");
+                $"Intento de eliminar categoría ID: {idCategoria}");
 
             try
             {
@@ -211,7 +211,7 @@ namespace Concre_Innova_API.Controllers
                         userContext,
                         "Categorias",
                         "SUCCESS",
-                        $"Categoria ID: {idCategoria} desactivada exitosamente.");
+                        $"Categoría ID: {idCategoria} desactivada exitosamente.");
 
                     return Ok(result);
                 }
@@ -220,7 +220,7 @@ namespace Concre_Innova_API.Controllers
                     userContext,
                     "Categorias",
                     "FAILED",
-                    $"Error al eliminar categoria ID: {idCategoria}. {result.Mensaje}");
+                    $"Error al eliminar categoría ID: {idCategoria}. {result.Mensaje}");
 
                 return BadRequest(result);
             }
@@ -230,11 +230,11 @@ namespace Concre_Innova_API.Controllers
                     userContext,
                     "Categorias",
                     "ERROR",
-                    $"Excepcion al eliminar categoria ID: {idCategoria}. {ex.Message}");
+                    $"Excepcion al eliminar categoría ID: {idCategoria}. {ex.Message}");
 
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
-                    new { message = "Error al eliminar la categoria." });
+                    new { message = "Error al eliminar la categoría." });
             }
         }
 
@@ -244,7 +244,7 @@ namespace Concre_Innova_API.Controllers
             string operation)
         {
             if (!userContext.IsAuthenticated || !userContext.RoleId.HasValue)
-                return Unauthorized(new { message = "Debe iniciar sesion para acceder a este recurso." });
+                return Unauthorized(new { message = "Debe iniciar sesión para acceder a este recurso." });
 
             var hasPermission = await _permissionService.RoleHasPermissionAsync(
                 userContext.RoleId.Value,
@@ -261,7 +261,7 @@ namespace Concre_Innova_API.Controllers
 
             return StatusCode(
                 StatusCodes.Status403Forbidden,
-                new { message = "No tiene permisos para realizar esta accion." });
+                new { message = "No tiene permisos para realizar esta acción." });
         }
     }
 }

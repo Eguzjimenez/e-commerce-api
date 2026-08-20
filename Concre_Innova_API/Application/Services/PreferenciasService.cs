@@ -34,7 +34,7 @@ namespace Concre_Innova_API.Application.Services
                 return new OperacionResponseDto
                 {
                     Codigo = 0,
-                    Mensaje = "La solicitud no es valida."
+                    Mensaje = "La solicitud no es válida."
                 };
             }
 
@@ -45,7 +45,7 @@ namespace Concre_Innova_API.Application.Services
                 return new OperacionResponseDto
                 {
                     Codigo = 0,
-                    Mensaje = "El tema indicado no es valido."
+                    Mensaje = "El tema indicado no es válido."
                 };
             }
 

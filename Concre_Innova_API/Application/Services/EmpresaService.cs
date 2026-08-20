@@ -30,7 +30,7 @@ namespace Concre_Innova_API.Application.Services
         {
             if (request is null)
             {
-                return CrearError("La solicitud no es valida.");
+                return CrearError("La solicitud no es válida.");
             }
 
             if (string.IsNullOrWhiteSpace(request.NombreEmpresa))
@@ -40,7 +40,7 @@ namespace Concre_Innova_API.Application.Services
 
             if (!string.IsNullOrWhiteSpace(request.Correo) && !EsCorreoValido(request.Correo))
             {
-                return CrearError("El correo de contacto no es valido.");
+                return CrearError("El correo de contacto no es válido.");
             }
 
             return await _empresaRepository.ActualizarInformacionAsync(request, idUsuario);
@@ -52,7 +52,7 @@ namespace Concre_Innova_API.Application.Services
         {
             if (request is null)
             {
-                return CrearError("La solicitud no es valida.");
+                return CrearError("La solicitud no es válida.");
             }
 
             var nombre = request.Nombre?.Trim() ?? string.Empty;
@@ -67,7 +67,7 @@ namespace Concre_Innova_API.Application.Services
 
             if (!EsCorreoValido(correo))
             {
-                return CrearError("El correo electronico no es valido.");
+                return CrearError("El correo electrónico no es válido.");
             }
 
             if (string.IsNullOrWhiteSpace(asunto) || asunto.Length > LongitudMaximaAsunto)
@@ -83,7 +83,7 @@ namespace Concre_Innova_API.Application.Services
             // El telefono es opcional, pero si se envia debe ser utilizable para responder.
             if (!PhoneNumberValidator.IsValidOrEmpty(request.Telefono))
             {
-                return CrearError("El telefono debe contener entre 8 y 15 digitos.");
+                return CrearError("El teléfono debe contener entre 8 y 15 digitos.");
             }
 
             return await _empresaRepository.RegistrarMensajeAsync(request, idUsuario);
