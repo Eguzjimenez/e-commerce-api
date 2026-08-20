@@ -5,6 +5,11 @@ using Concre_Innova_API.Application.Interfaces.Services;
 using Concre_Innova_API.Application.Interfaces.Validators;
 using Concre_Innova_API.Application.DTOs.Requests.Login;
 using Concre_Innova_API.Application.DTOs.Requests;
+using Concre_Innova_API.Application.DTOs.Responses;
+using Concre_Innova_API.Configuration.Settings;
+using Concre_Innova_API.Domain.Constants;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace Concre_Innova_API.Controllers
 {
@@ -17,19 +22,28 @@ namespace Concre_Innova_API.Controllers
         private readonly IAuthRequestValidator _validator;
         private readonly ILoginAttemptService _loginAttemptService;
         private readonly IAuditService _auditService;
+        private readonly ITokenService _tokenService;
+        private readonly IRequestUserContextService _requestUserContextService;
+        private readonly JwtSettings _jwtSettings;
 
         public AuthController(
             IUserService userService,
             IEmailService emailService,
             IAuthRequestValidator validator,
             ILoginAttemptService loginAttemptService,
-            IAuditService auditService)
+            IAuditService auditService,
+            ITokenService tokenService,
+            IRequestUserContextService requestUserContextService,
+            JwtSettings jwtSettings)
         {
             _userService = userService;
             _emailService = emailService;
             _validator = validator;
             _loginAttemptService = loginAttemptService;
             _auditService = auditService;
+            _tokenService = tokenService;
+            _requestUserContextService = requestUserContextService;
+            _jwtSettings = jwtSettings;
         }
 
         [HttpPost("login")]
@@ -210,6 +224,36 @@ namespace Concre_Innova_API.Controllers
                 return BadRequest(result);
 
             return Ok(result);
+        }
+        /// <summary>
+        /// Renueva el token de una sesion que sigue activa. El cliente lo llama
+        /// mientras la persona trabaja, para que no se le expulse a mitad de una
+        /// tarea solo porque el token original ya cumplio su vigencia.
+        /// </summary>
+        [Authorize]
+        [HttpPost("refresh")]
+        public ActionResult<SesionRenovadaResponseDto> RefrescarSesion()
+        {
+            var userContext = _requestUserContextService.GetCurrentUser(HttpContext);
+
+            if (!userContext.IsAuthenticated || !userContext.UserId.HasValue || !userContext.RoleId.HasValue)
+                return Unauthorized(new { message = "La sesion no esta activa." });
+
+            var nombreRol = AppRoles.GetName(userContext.RoleId.Value);
+
+            var token = _tokenService.GenerateToken(new[]
+            {
+                new Claim(ClaimTypes.NameIdentifier, userContext.UserId.Value.ToString()),
+                new Claim(ClaimTypes.Role, nombreRol),
+                new Claim("idRol", userContext.RoleId.Value.ToString()),
+                new Claim("nombreRol", nombreRol)
+            });
+
+            return Ok(new SesionRenovadaResponseDto
+            {
+                Token = token,
+                MinutosVigencia = _jwtSettings.ExpireMinutes
+            });
         }
 
     }
