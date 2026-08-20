@@ -1,5 +1,6 @@
 using Concre_Innova_API.Application.DTOs.Requests;
 using Concre_Innova_API.Application.Validators;
+using Concre_Innova_API.Domain.Constants;
 using Concre_Innova_API.Shared.Helpers;
 using Xunit;
 
@@ -271,5 +272,57 @@ public class AuthRequestValidatorTests
 
         Assert.NotNull(mensaje);
         Assert.Contains("telefono", mensaje, StringComparison.OrdinalIgnoreCase);
+    }
+}
+
+public class NombreCatalogoNormalizerTests
+{
+    [Theory]
+    [InlineData("  Macetas Interior  ", "Macetas Interior")]
+    [InlineData("Macetas  Interior", "Macetas Interior")]
+    [InlineData("Macetas\tInterior", "Macetas Interior")]
+    [InlineData("Macetas   de    Concreto", "Macetas de Concreto")]
+    public void Colapsa_los_espacios_repetidos(string entrada, string esperado)
+    {
+        Assert.Equal(esperado, NombreCatalogoNormalizer.Normalizar(entrada));
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("    ")]
+    public void Devuelve_vacio_cuando_no_hay_nombre(string? entrada)
+    {
+        Assert.Equal(string.Empty, NombreCatalogoNormalizer.Normalizar(entrada));
+    }
+
+    [Fact]
+    public void Dos_formas_de_teclear_el_mismo_nombre_coinciden()
+    {
+        Assert.Equal(
+            NombreCatalogoNormalizer.Normalizar("Macetas Interior"),
+            NombreCatalogoNormalizer.Normalizar("  Macetas   Interior "));
+    }
+}
+
+public class InventarioRulesTests
+{
+    [Theory]
+    [InlineData("disponible")]
+    [InlineData("BAJO")]
+    [InlineData("  agotado  ")]
+    public void Acepta_los_estados_conocidos(string estado)
+    {
+        Assert.True(InventarioRules.EsEstadoValido(estado));
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("pendiente")]
+    [InlineData("'; DROP TABLE Inventario; --")]
+    public void Rechaza_cualquier_otro_estado(string? estado)
+    {
+        Assert.False(InventarioRules.EsEstadoValido(estado));
     }
 }
