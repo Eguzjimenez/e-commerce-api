@@ -1,0 +1,7 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    { "name": "concre-innova-web", "runtimeExecutable": "npm", "runtimeArgs": ["start", "--prefix", "C:/Users/valve/source/repos/e-commerce/concre_innova_website"], "port": 3000 },
+    { "name": "concre-innova-web-revision", "runtimeExecutable": "npm", "runtimeArgs": ["start", "--prefix", "C:/Users/valve/source/repos/e-commerce/concre_innova_website"], "port": 3000, "autoPort": true }
+  ]
+}
