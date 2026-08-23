@@ -89,6 +89,7 @@ namespace Concre_Innova_API.Application.Services
             request.MetodoPago = metodoPagoNormalizado;
 
             var resultado = await _carritoRepository.RegistrarPedidoAsync(request);
+            resultado.Mensaje = Traducir(resultado.Mensaje, resultado.Exitoso);
 
             if (resultado.Exitoso && resultado.IdPedido.HasValue)
             {
@@ -152,6 +153,21 @@ namespace Concre_Innova_API.Application.Services
                 idUsuario,
                 idPedido);
         }
+
+        /// <summary>
+        /// El procedimiento responde con códigos internos y, ante un error
+        /// inesperado, con el texto del motor. Aquí se convierten en un mensaje
+        /// que la persona pueda entender y que no revele detalles del SQL.
+        /// </summary>
+        private static string Traducir(string? codigo, bool exitoso) => codigo switch
+        {
+            "PEDIDO_REGISTRADO" => "Tu pedido fue registrado correctamente.",
+            "STOCK_INSUFICIENTE" =>
+                "Uno o más productos ya no tienen existencias suficientes. Revisa tu carrito e inténtalo de nuevo.",
+            _ => exitoso
+                ? "Tu pedido fue registrado correctamente."
+                : "No fue posible registrar el pedido. Inténtalo nuevamente."
+        };
 
         private static RegistrarPedidoResponseDto CrearError(string mensaje)
         {

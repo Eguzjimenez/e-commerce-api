@@ -67,6 +67,8 @@ namespace Concre_Innova_API.Application.Services
                 estadoNormalizado,
                 idUsuario);
 
+            resultado.Mensaje = Traducir(resultado.Mensaje, resultado.Exitoso);
+
             await NotificarCambioDeEstadoAsync(resultado, idPedido, estadoNormalizado);
             return resultado;
         }
@@ -79,6 +81,7 @@ namespace Concre_Innova_API.Application.Services
             }
 
             var resultado = await _pedidoAdminRepository.CancelarAsync(idPedido, idUsuario);
+            resultado.Mensaje = Traducir(resultado.Mensaje, resultado.Exitoso);
 
             await NotificarCambioDeEstadoAsync(resultado, idPedido, EstadoCancelado);
             return resultado;
@@ -96,6 +99,23 @@ namespace Concre_Innova_API.Application.Services
                     CancellationToken.None)
                 : Task.CompletedTask;
         }
+
+        /// <summary>
+        /// Convierte los códigos internos del procedimiento, y cualquier error
+        /// inesperado del motor, en un mensaje legible que no expone el SQL.
+        /// </summary>
+        private static string Traducir(string? codigo, bool exitoso) => codigo switch
+        {
+            "ESTADO_ACTUALIZADO" => "El estado del pedido se actualizó correctamente.",
+            "PEDIDO_CANCELADO" => "El pedido se canceló y las existencias se restauraron.",
+            "PEDIDO_NO_ENCONTRADO" => "El pedido indicado no existe.",
+            "PEDIDO_NO_MODIFICABLE" => "El pedido ya no admite cambios de estado.",
+            "PEDIDO_NO_CANCELABLE" => "El pedido ya no se puede cancelar.",
+            "ESTADO_INVALIDO" => "El estado indicado no es válido.",
+            _ => exitoso
+                ? "La operación se completó correctamente."
+                : "No fue posible completar la operación sobre el pedido."
+        };
 
         private static OperacionPedidoResultDto CrearError(string mensaje)
         {
